@@ -1,0 +1,670 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Leavara LeaveIQ API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: cases
+    description: Leave of Absence case management
+  - name: hr
+    description: HR review and decisions
+  - name: audit
+    description: Audit log
+  - name: ai
+    description: AI-powered recommendations and notice drafting
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /cases:
+    get:
+      operationId: listCases
+      tags: [cases]
+      summary: List all leave cases
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of leave cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseListResponse"
+
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a new leave case (intake)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCaseRequest"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveCase"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}:
+    get:
+      operationId: getCase
+      tags: [cases]
+      summary: Get a specific leave case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Leave case details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveCaseDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}/analyze:
+    post:
+      operationId: analyzeCase
+      tags: [cases]
+      summary: Trigger eligibility analysis for a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeCaseRequest"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveCaseDetail"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}/transition:
+    post:
+      operationId: transitionCase
+      tags: [cases]
+      summary: Transition case state
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionRequest"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveCaseDetail"
+        "400":
+          description: Invalid transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}/hr-decision:
+    post:
+      operationId: recordHrDecision
+      tags: [hr]
+      summary: Record an HR decision on a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HrDecisionRequest"
+      responses:
+        "201":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveCaseDetail"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}/audit-log:
+    get:
+      operationId: getCaseAuditLog
+      tags: [audit]
+      summary: Get audit log for a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogResponse"
+
+  /cases/{caseId}/ai-recommendation:
+    post:
+      operationId: getAiRecommendation
+      tags: [ai]
+      summary: Generate AI recommendation and notice drafts for a case
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiRecommendationRequest"
+      responses:
+        "200":
+          description: AI recommendation and notice drafts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiRecommendationResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseId}/send-notices:
+    post:
+      operationId: sendNotices
+      tags: [ai]
+      summary: Send HR-approved notices to employee via email
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendNoticesRequest"
+      responses:
+        "200":
+          description: Notices sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendNoticesResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+      required: [error]
+
+    LeaveState:
+      type: string
+      enum:
+        - INTAKE
+        - ELIGIBILITY_ANALYSIS
+        - HR_REVIEW_QUEUE
+        - NOTICE_DRAFTED
+        - CLOSED
+        - CANCELLED
+
+    LeaveReasonCategory:
+      type: string
+      enum:
+        - own_health
+        - care_family
+        - pregnancy_disability
+        - bonding
+        - military
+        - personal
+
+    HrDecisionType:
+      type: string
+      enum:
+        - APPROVE
+        - DENY
+        - APPROVE_PARTIAL
+        - REQUEST_MORE_INFO
+
+    LeaveCase:
+      type: object
+      properties:
+        id:
+          type: string
+        caseNumber:
+          type: string
+        employeeNumber:
+          type: string
+        employeeEmail:
+          type: string
+          nullable: true
+        state:
+          $ref: "#/components/schemas/LeaveState"
+        requestedStart:
+          type: string
+          format: date
+        requestedEnd:
+          type: string
+          format: date
+          nullable: true
+        leaveReasonCategory:
+          $ref: "#/components/schemas/LeaveReasonCategory"
+        intermittent:
+          type: boolean
+        analysisResult:
+          $ref: "#/components/schemas/AnalysisResult"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseNumber
+        - employeeNumber
+        - state
+        - requestedStart
+        - leaveReasonCategory
+        - intermittent
+        - createdAt
+        - updatedAt
+
+    LeaveCaseDetail:
+      allOf:
+        - $ref: "#/components/schemas/LeaveCase"
+        - type: object
+          properties:
+            hrDecisions:
+              type: array
+              items:
+                $ref: "#/components/schemas/HrDecision"
+            auditLog:
+              type: array
+              items:
+                $ref: "#/components/schemas/AuditEntry"
+
+    AnalysisResult:
+      type: object
+      properties:
+        eligiblePrograms:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgramEligibility"
+        summary:
+          type: string
+        requiresHrReview:
+          type: boolean
+        reviewReason:
+          type: string
+          nullable: true
+        confidenceScore:
+          type: number
+        analyzedAt:
+          type: string
+          format: date-time
+        avgHoursPerWeek:
+          type: number
+          nullable: true
+        lookbackMonths:
+          type: integer
+      required:
+        - eligiblePrograms
+        - summary
+        - requiresHrReview
+        - confidenceScore
+        - analyzedAt
+        - lookbackMonths
+
+    ProgramEligibility:
+      type: object
+      properties:
+        program:
+          type: string
+          enum: [CFRA, FMLA, PDL, PERSONAL]
+        eligible:
+          type: boolean
+        entitlementWeeks:
+          type: number
+          nullable: true
+        reason:
+          type: string
+      required: [program, eligible, reason]
+
+    HrDecision:
+      type: object
+      properties:
+        id:
+          type: string
+        leaveCaseId:
+          type: string
+        decisionType:
+          $ref: "#/components/schemas/HrDecisionType"
+        decidedBy:
+          type: string
+        decisionNotes:
+          type: string
+          nullable: true
+        decidedAt:
+          type: string
+          format: date-time
+      required: [id, leaveCaseId, decisionType, decidedBy, decidedAt]
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: string
+        action:
+          type: string
+        actor:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, entity, entityId, action, actor, createdAt]
+
+    CaseListResponse:
+      type: object
+      properties:
+        cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaveCase"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+      required: [cases, total, limit, offset]
+
+    CreateCaseRequest:
+      type: object
+      properties:
+        employeeNumber:
+          type: string
+        employeeEmail:
+          type: string
+          nullable: true
+        requestedStart:
+          type: string
+          description: "ISO date string (YYYY-MM-DD)"
+        requestedEnd:
+          type: string
+          nullable: true
+          description: "ISO date string (YYYY-MM-DD)"
+        leaveReasonCategory:
+          $ref: "#/components/schemas/LeaveReasonCategory"
+        intermittent:
+          type: boolean
+          default: false
+        submittedBy:
+          type: string
+      required: [employeeNumber, requestedStart, leaveReasonCategory, submittedBy]
+
+    AnalyzeCaseRequest:
+      type: object
+      properties:
+        avgHoursPerWeek:
+          type: number
+          description: Average hours per week from timecards (rolling 12-month)
+        employeeHireDate:
+          type: string
+          format: date
+          description: Employee hire date for eligibility
+        employeeCount:
+          type: integer
+          description: Employer headcount (for FMLA 50-employee threshold)
+        analyzedBy:
+          type: string
+      required: [avgHoursPerWeek, employeeHireDate, employeeCount, analyzedBy]
+
+    TransitionRequest:
+      type: object
+      properties:
+        event:
+          type: string
+          enum:
+            - ROUTE_HR_REVIEW
+            - DRAFT_NOTICE
+            - CANCEL
+        actor:
+          type: string
+        notes:
+          type: string
+          nullable: true
+      required: [event, actor]
+
+    HrDecisionRequest:
+      type: object
+      properties:
+        decisionType:
+          $ref: "#/components/schemas/HrDecisionType"
+        decidedBy:
+          type: string
+        decisionNotes:
+          type: string
+          nullable: true
+      required: [decisionType, decidedBy]
+
+    AuditLogResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntry"
+        total:
+          type: integer
+      required: [entries, total]
+
+    AiRecommendationRequest:
+      type: object
+      properties:
+        requestedBy:
+          type: string
+      required: [requestedBy]
+
+    AiNoticeDraft:
+      type: object
+      properties:
+        noticeType:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+      required: [noticeType, title, content]
+
+    AiRecommendation:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [APPROVE, DENY, REQUEST_MORE_INFO]
+        reasoning:
+          type: string
+        confidenceScore:
+          type: number
+        keyFactors:
+          type: array
+          items:
+            type: string
+      required: [action, reasoning, confidenceScore, keyFactors]
+
+    AiRecommendationResponse:
+      type: object
+      properties:
+        recommendation:
+          $ref: "#/components/schemas/AiRecommendation"
+        notices:
+          type: array
+          items:
+            $ref: "#/components/schemas/AiNoticeDraft"
+      required: [recommendation, notices]
+
+    SendNoticeItem:
+      type: object
+      properties:
+        noticeType:
+          type: string
+        content:
+          type: string
+      required: [noticeType, content]
+
+    SendNoticesRequest:
+      type: object
+      properties:
+        notices:
+          type: array
+          items:
+            $ref: "#/components/schemas/SendNoticeItem"
+        approvedBy:
+          type: string
+        employeeEmail:
+          type: string
+      required: [notices, approvedBy, employeeEmail]
+
+    SendNoticesResponse:
+      type: object
+      properties:
+        sent:
+          type: integer
+        auditEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEntry"
+      required: [sent, auditEntries]
