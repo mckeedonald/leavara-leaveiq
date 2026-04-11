@@ -1,4 +1,4 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { anthropic } from "./anthropic";
 import { logger } from "./logger";
 
 export type AiAction = "APPROVE" | "DENY" | "APPROVE_PARTIAL" | "REQUEST_MORE_INFO";
@@ -52,39 +52,8 @@ const REASON_LABELS: Record<string, string> = {
   personal: "Personal leave",
 };
 
-function noticeTypesForCase(
-  eligiblePrograms: CaseInput["analysisResult"]["eligiblePrograms"],
-  action: AiAction,
-): string[] {
-  const programs = eligiblePrograms.filter((p) => p.eligible).map((p) => p.program);
-  const types: string[] = [];
-
-  const hasStatutory = programs.some((p) => ["FMLA", "CFRA", "PDL"].includes(p));
-
-  if (hasStatutory) {
-    types.push("ELIGIBILITY_NOTICE");
-    if (action === "APPROVE" || action === "APPROVE_PARTIAL") {
-      types.push("DESIGNATION_NOTICE_APPROVAL");
-    } else if (action === "DENY") {
-      types.push("DESIGNATION_NOTICE_DENIAL");
-    } else {
-      types.push("CERTIFICATION_REQUEST");
-    }
-  }
-
-  if (action === "APPROVE" || action === "APPROVE_PARTIAL") {
-    types.push("APPROVAL_LETTER");
-  } else if (action === "DENY") {
-    types.push("DENIAL_LETTER");
-  } else if (action === "REQUEST_MORE_INFO") {
-    types.push("INFO_REQUEST_LETTER");
-  }
-
-  return types;
-}
-
 function buildSystemPrompt(): string {
-  return `You are an expert HR compliance specialist with deep knowledge of the Family and Medical Leave Act (FMLA), state leave laws (CFRA, PDL, WFMLA, etc.), and company leave policies. 
+  return `You are an expert HR compliance specialist with deep knowledge of the Family and Medical Leave Act (FMLA), state leave laws (CFRA, PDL, WFMLA, etc.), and company leave policies.
 
 Your role is to:
 1. Review leave of absence cases and provide a clear recommendation
@@ -148,16 +117,18 @@ Draft the notices appropriate to the eligibility determination and your recommen
 export async function generateAiRecommendation(c: CaseInput): Promise<AiAgentResult> {
   logger.info({ caseNumber: c.caseNumber }, "Generating AI recommendation");
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-5.2",
-    max_completion_tokens: 8192,
-    messages: [
-      { role: "system", content: buildSystemPrompt() },
-      { role: "user", content: buildUserPrompt(c) },
-    ],
+  const stream = anthropic.messages.stream({
+    model: "claude-opus-4-6",
+    max_tokens: 8192,
+    thinking: { type: "adaptive" },
+    system: buildSystemPrompt(),
+    messages: [{ role: "user", content: buildUserPrompt(c) }],
   });
 
-  const raw = completion.choices[0]?.message?.content ?? "";
+  const message = await stream.finalMessage();
+
+  const textBlock = message.content.find((b) => b.type === "text");
+  const raw = textBlock?.type === "text" ? textBlock.text : "";
 
   let parsed: AiAgentResult;
   try {

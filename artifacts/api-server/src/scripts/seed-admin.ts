@@ -32,6 +32,7 @@ await db.insert(usersTable).values({
   lastName,
   position,
   role: "admin",
+  isSuperAdmin: true,
 });
 
 console.log("✓ Initial administrator created:");

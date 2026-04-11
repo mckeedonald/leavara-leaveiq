@@ -1,20 +1,5 @@
-import { pgTable, uuid, text, integer, timestamp, customType } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
-
-const vector = customType<{ data: number[]; driverData: string; config: { dimensions: number } }>({
-  dataType(config) {
-    return `vector(${config?.dimensions ?? 1536})`;
-  },
-  toDriver(value: number[]): string {
-    return `[${value.join(",")}]`;
-  },
-  fromDriver(value: unknown): number[] {
-    if (typeof value === "string") {
-      return JSON.parse(value.replace(/^\[/, "[").replace(/\]$/, "]"));
-    }
-    return value as number[];
-  },
-});
 
 export const ragDocumentsTable = pgTable("rag_document", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -34,7 +19,6 @@ export const ragChunksTable = pgTable("rag_chunk", {
   organizationId: uuid("organization_id").references(() => organizationsTable.id, { onDelete: "cascade" }),
   chunkIndex: integer("chunk_index").notNull(),
   content: text("content").notNull(),
-  embedding: vector("embedding", { dimensions: 1536 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

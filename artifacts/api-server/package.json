@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
-    "start": "node --enable-source-maps ./dist/index.mjs",
+    "start": "node --enable-source-maps --env-file-if-exists=.env ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "seed-admin": "tsx src/scripts/seed-admin.ts"
+    "seed-admin": "tsx --env-file-if-exists=.env src/scripts/seed-admin.ts",
+    "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
-    "@workspace/integrations-openai-ai-server": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2",

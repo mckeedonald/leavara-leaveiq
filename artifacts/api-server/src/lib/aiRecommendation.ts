@@ -1,4 +1,4 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { anthropic } from "./anthropic";
 import { logger } from "./logger";
 import type { AnalysisResult } from "./eligibility";
 import { retrieveRelevantChunks } from "./rag";
@@ -59,7 +59,7 @@ const NOTICE_TITLES: Record<string, string> = {
 };
 
 function buildSystemPrompt(hasRagContext: boolean): string {
-  return `You are an expert HR leave administration specialist and employment law paralegal. 
+  return `You are an expert HR leave administration specialist and employment law paralegal.
 Your role is to assist HR professionals at US-based companies with California and federal leave law (FMLA, CFRA, PDL, and company personal leave policies).
 
 When analyzing a leave case:
@@ -128,7 +128,7 @@ Based on this analysis${ragChunks.length > 0 ? " and the regulatory/policy conte
 
 Select notices based on the recommended action:
 - APPROVE: Include ELIGIBILITY_NOTICE, DESIGNATION_NOTICE, and APPROVAL_LETTER
-- DENY: Include ELIGIBILITY_NOTICE and DENIAL_LETTER  
+- DENY: Include ELIGIBILITY_NOTICE and DENIAL_LETTER
 - REQUEST_MORE_INFO: Include ELIGIBILITY_NOTICE and MORE_INFO_REQUEST
 
 Use current date: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
@@ -151,16 +151,18 @@ export async function generateAiRecommendation(
 
   logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0 }, "Generating AI recommendation");
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: { type: "json_object" },
+  const stream = anthropic.messages.stream({
+    model: "claude-opus-4-6",
+    max_tokens: 16000,
+    thinking: { type: "adaptive" },
+    system: systemPrompt,
+    messages: [{ role: "user", content: userPrompt }],
   });
 
-  const content = response.choices[0]?.message?.content;
+  const message = await stream.finalMessage();
+
+  const textBlock = message.content.find((b) => b.type === "text");
+  const content = textBlock?.type === "text" ? textBlock.text : null;
   if (!content) {
     throw new Error("No content returned from AI");
   }
