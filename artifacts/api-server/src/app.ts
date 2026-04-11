@@ -60,11 +60,14 @@ app.use(
 );
 
 // --- Regulatory docs seed + cron ---
+// On startup: ingest all static (CA, OR, WA, NY, CO) and live federal (eCFR) documents
 refreshRegulatoryDocs().catch((err) => logger.error({ err }, "Initial regulatory seed failed"));
 
+// Daily at 3 AM: re-fetch live federal FMLA from eCFR + re-ingest static state docs.
+// Keeps the RAG corpus current with any eCFR amendments published since the last run.
 cron.schedule("0 3 * * *", () => {
-  logger.info("Scheduled regulatory refresh starting");
-  refreshRegulatoryDocs().catch((err) => logger.error({ err }, "Scheduled regulatory refresh failed"));
+  logger.info("Daily regulatory refresh starting");
+  refreshRegulatoryDocs().catch((err) => logger.error({ err }, "Daily regulatory refresh failed"));
 });
 
 // --- Request logging ---
