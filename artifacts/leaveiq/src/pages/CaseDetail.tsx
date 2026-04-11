@@ -193,7 +193,7 @@ export default function CaseDetail() {
                 </button>
               </>
             )}
-            {caseData.state === LeaveState.HR_REVIEW_QUEUE && (
+            {(caseData.state === LeaveState.HR_REVIEW_QUEUE || caseData.state === LeaveState.ELIGIBILITY_ANALYSIS) && (
               <button
                 onClick={() => setActiveModal("DECISION")}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl font-medium shadow-md transition-all flex items-center gap-2"
