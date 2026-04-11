@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { EmployeeLayout } from "@/components/layout/EmployeeLayout";
 import { Upload, FileText, Download, CheckCircle2, AlertTriangle, Loader2, File, X } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useOrgBranding } from "@/lib/useOrgBranding";
 
 interface CaseDoc {
   id: string;
@@ -49,6 +50,7 @@ function formatBytes(bytes: number | null): string {
 }
 
 export default function EmployeePortalCase() {
+  const { logoUrl: orgLogoUrl, orgName } = useOrgBranding();
   const token = new URLSearchParams(window.location.search).get("token") ?? "";
 
   const [caseData, setCaseData] = useState<CaseSummary | null>(null);
@@ -152,7 +154,7 @@ export default function EmployeePortalCase() {
 
   if (isLoading) {
     return (
-      <EmployeeLayout>
+      <EmployeeLayout orgLogoUrl={orgLogoUrl} orgName={orgName}>
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -162,7 +164,7 @@ export default function EmployeePortalCase() {
 
   if (error || !caseData) {
     return (
-      <EmployeeLayout>
+      <EmployeeLayout orgLogoUrl={orgLogoUrl} orgName={orgName}>
         <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto px-4 text-center">
           <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
             <AlertTriangle className="w-8 h-8 text-destructive" />
@@ -176,7 +178,7 @@ export default function EmployeePortalCase() {
   }
 
   return (
-    <EmployeeLayout>
+    <EmployeeLayout orgLogoUrl={orgLogoUrl} orgName={orgName}>
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-8 space-y-6">
         {/* Case Summary Card */}
         <div className="rounded-2xl border bg-white overflow-hidden shadow-sm">

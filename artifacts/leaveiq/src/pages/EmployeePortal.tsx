@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { EmployeeLayout } from "@/components/layout/EmployeeLayout";
 import { Send, UserRound, User, CheckCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useOrgBranding } from "@/lib/useOrgBranding";
 
 function getOrgSlug(): string {
   if (typeof window === "undefined") return "";
@@ -86,6 +87,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 export default function EmployeePortal() {
+  const { logoUrl: orgLogoUrl, orgName } = useOrgBranding();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [step, setStep] = useState<Step>("welcome");
   const [data, setData] = useState<IntakeData>({});
@@ -362,7 +364,7 @@ export default function EmployeePortal() {
   const currentInputType = messages.filter((m) => m.role === "bot").slice(-1)[0]?.inputType;
 
   return (
-    <EmployeeLayout showBack>
+    <EmployeeLayout showBack orgLogoUrl={orgLogoUrl} orgName={orgName}>
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-6 gap-4">
         {/* Chat window */}
         <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">

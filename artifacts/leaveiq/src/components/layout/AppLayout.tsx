@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -44,6 +44,18 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
+  const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("leaveiq_token");
+    if (!token) return;
+    fetch("/api/orgs/me", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.logoUrl) setOrgLogoUrl(data.logoUrl);
+      })
+      .catch(() => {});
+  }, []);
 
   const isSuperAdmin = user?.isSuperAdmin ?? false;
 
@@ -77,13 +89,18 @@ export function AppLayout({ children }: AppLayoutProps) {
         style={{ background: S.sidebar, borderRight: `1px solid ${S.sidebarBorder}` }}
       >
         {/* Logo */}
-        <div className="p-6 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
+        <div className="p-6 flex items-center gap-3" style={{ borderBottom: orgLogoUrl ? "none" : `1px solid ${S.sidebarBorder}` }}>
           <img src="/leavara-logo.png" alt="Leavara" className="h-9 w-9 object-contain" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>LeaveIQ</h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>HR Decision Support</p>
           </div>
         </div>
+        {orgLogoUrl && (
+          <div className="px-6 py-3 flex items-center" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
+            <img src={orgLogoUrl} alt="Organization Logo" className="h-8 max-h-8 max-w-[140px] object-contain" />
+          </div>
+        )}
 
         <nav className="flex-1 px-4 space-y-1 mt-4">
           {navItems

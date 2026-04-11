@@ -8,6 +8,7 @@ import superAdminRouter from "./superAdmin";
 import knowledgeRouter from "./knowledge";
 import hrisRouter from "./hris";
 import portalRouter from "./portal";
+import orgRouter from "./org";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(superAdminRouter);
 router.use(knowledgeRouter);
 router.use(hrisRouter);
 router.use(portalRouter);
+router.use(orgRouter);
 
 export default router;

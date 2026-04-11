@@ -5,9 +5,11 @@ import { ArrowLeft } from "lucide-react";
 interface EmployeeLayoutProps {
   children: React.ReactNode;
   showBack?: boolean;
+  orgLogoUrl?: string | null;
+  orgName?: string | null;
 }
 
-export function EmployeeLayout({ children, showBack = false }: EmployeeLayoutProps) {
+export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName }: EmployeeLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F0EEE9" }}>
       {/* Header */}
@@ -30,6 +32,12 @@ export function EmployeeLayout({ children, showBack = false }: EmployeeLayoutPro
             <h1 className="font-bold text-lg leading-none" style={{ color: "#3D2010" }}>Leavara LeaveIQ</h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold leading-none mt-0.5" style={{ color: "#EAA292" }}>Employee Portal</p>
           </div>
+          {orgLogoUrl && (
+            <>
+              <span className="text-muted-foreground mx-2 text-lg">|</span>
+              <img src={orgLogoUrl} alt={orgName ?? "Organization"} className="h-8 max-w-[120px] object-contain" />
+            </>
+          )}
         </div>
         <div className="ml-auto">
           <Link

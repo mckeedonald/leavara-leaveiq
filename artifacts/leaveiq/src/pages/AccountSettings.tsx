@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth, apiFetch } from "@/lib/auth";
-import { User, Lock, Shield, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Shield, CheckCircle, Eye, EyeOff, Building2, Upload, Image, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function SectionCard({
@@ -104,6 +104,14 @@ export default function AccountSettings() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  // --- Logo upload state (admin only) ---
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoLoading, setLogoLoading] = useState(false);
+  const [logoSuccess, setLogoSuccess] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoDragging, setLogoDragging] = useState(false);
+  const logoFileRef = useRef<HTMLInputElement>(null);
+
   async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
     setProfileError(null);
@@ -156,6 +164,30 @@ export default function AccountSettings() {
       setPasswordError(err instanceof Error ? err.message : "Failed to change password");
     } finally {
       setPasswordLoading(false);
+    }
+  }
+
+  async function handleLogoUpload(file: File) {
+    setLogoError(null);
+    setLogoSuccess(false);
+    setLogoLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+      const token = localStorage.getItem("leaveiq_token");
+      const res = await fetch("/api/orgs/logo", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error((result as { error?: string }).error ?? "Upload failed");
+      setLogoSuccess(true);
+      setLogoPreview(URL.createObjectURL(file));
+    } catch (err) {
+      setLogoError(err instanceof Error ? err.message : "Failed to upload logo");
+    } finally {
+      setLogoLoading(false);
     }
   }
 
@@ -343,6 +375,90 @@ export default function AccountSettings() {
             </div>
           </form>
         </SectionCard>
+
+        {/* Organization Logo (admin only) */}
+        {user?.role === "admin" && (
+          <SectionCard
+            title="Organization Logo"
+            description="Upload your organization's logo. It will appear on the employee portal, case page, and HR sidebar."
+            icon={Building2}
+          >
+            <div className="space-y-4">
+              {/* Drop zone */}
+              <div
+                className={cn(
+                  "relative border-2 border-dashed rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center gap-3 py-10 px-6 text-center",
+                  logoDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"
+                )}
+                onClick={() => logoFileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setLogoDragging(true); }}
+                onDragLeave={() => setLogoDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setLogoDragging(false);
+                  const file = e.dataTransfer.files[0];
+                  if (file) handleLogoUpload(file);
+                }}
+              >
+                <input
+                  ref={logoFileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoUpload(file);
+                    e.target.value = "";
+                  }}
+                />
+
+                {logoPreview ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <img
+                      src={logoPreview}
+                      alt="Organization logo preview"
+                      className="max-h-[80px] max-w-[180px] object-contain rounded-lg"
+                    />
+                    <p className="text-xs text-muted-foreground">Click to replace</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "#F5E8DF" }}>
+                      {logoLoading ? (
+                        <Upload className="w-6 h-6 animate-bounce" style={{ color: "#C97E59" }} />
+                      ) : (
+                        <Image className="w-6 h-6" style={{ color: "#C97E59" }} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {logoLoading ? "Uploading…" : "Click to upload or drag & drop"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, JPG, SVG, GIF, WebP — max 5 MB
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {logoSuccess && (
+                <SuccessBanner message="Logo uploaded successfully. It will appear across the portal." />
+              )}
+              {logoError && <ErrorBanner message={logoError} />}
+
+              {logoPreview && (
+                <button
+                  type="button"
+                  onClick={() => { setLogoPreview(null); setLogoSuccess(false); setLogoError(null); }}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-3 h-3" /> Clear preview
+                </button>
+              )}
+            </div>
+          </SectionCard>
+        )}
 
         {/* Session info */}
         <SectionCard

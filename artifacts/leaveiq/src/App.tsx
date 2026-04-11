@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
 import Landing from "@/pages/Landing";
+import OrgLanding from "@/pages/OrgLanding";
 import Interest from "@/pages/Interest";
 import Dashboard from "@/pages/Dashboard";
 import Cases from "@/pages/Cases";
@@ -58,11 +59,18 @@ function GuestRoute({ component: Component }: { component: React.ComponentType }
   return <Component />;
 }
 
+const isOrgSubdomain = (() => {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  const parts = h.split(".");
+  return parts.length >= 3 && parts.slice(-2).join(".") === "leavara.net";
+})();
+
 function Router() {
   return (
     <Switch>
-      {/* Public landing page */}
-      <Route path="/" component={Landing} />
+      {/* Public landing page — swapped for org landing on org subdomains */}
+      <Route path="/" component={isOrgSubdomain ? OrgLanding : Landing} />
 
       {/* Public interest / get-started form */}
       <Route path="/interest" component={Interest} />
