@@ -92,6 +92,7 @@ export default function EmployeePortal() {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [caseNumber, setCaseNumber] = useState<string | null>(null);
+  const [portalToken, setPortalToken] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -326,10 +327,13 @@ export default function EmployeePortal() {
       const result = await res.json();
       if (!res.ok) throw new Error((result as { error?: string }).error ?? "Submission failed");
       setIsTyping(false);
-      const cn = (result as { caseNumber?: string }).caseNumber ?? "N/A";
+      const submitted = result as { caseNumber?: string; id?: string };
+      const cn = submitted.caseNumber ?? "N/A";
       setCaseNumber(cn);
+      // Extract portal token from magic link if the server includes it
+      // (we don't get it directly, but the email is sent — show a friendly message)
       addBotMessage(
-        `🎉 You're all set! Your leave request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your eligibility and reach out to you — typically within 2–3 business days. If you provided an email, you'll also receive a confirmation there.`
+        `🎉 You're all set! Your leave request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your eligibility and reach out to you — typically within 2–3 business days.\n\nIf you provided an email address, a confirmation has been sent there with a secure link to upload supporting documents and track your case status.`
       );
       setStep("submitted");
     } catch {
@@ -390,9 +394,18 @@ export default function EmployeePortal() {
                 </div>
               </div>
               <p className="font-bold text-lg" style={{ color: "#3D2010" }}>Request Submitted</p>
+              <div className="rounded-xl px-4 py-3" style={{ background: "#F5E8DF", border: "1px solid #C97E5933" }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#A47864" }}>Your Case Number</p>
+                <p className="font-mono font-bold text-xl" style={{ color: "#9E5D38" }}>{caseNumber}</p>
+              </div>
               <p className="text-sm" style={{ color: "#5C3D28" }}>
-                Case <span className="font-mono font-semibold" style={{ color: "#9E5D38" }}>{caseNumber}</span> has been created. HR will review and contact you soon.
+                HR will review your eligibility and contact you — typically within 2–3 business days.
               </p>
+              {data.employeeEmail && (
+                <p className="text-xs" style={{ color: "#A47864" }}>
+                  A confirmation with your secure case portal link has been sent to <strong>{data.employeeEmail}</strong>. Check your inbox (and spam folder) for next steps.
+                </p>
+              )}
               <button
                 onClick={() => {
                   setMessages(INITIAL_MESSAGES);
@@ -400,6 +413,7 @@ export default function EmployeePortal() {
                   setData({});
                   setInputValue("");
                   setCaseNumber(null);
+                  setPortalToken(null);
                 }}
                 className="mx-auto flex items-center gap-2 text-sm font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
                 style={{ color: "#A47864" }}

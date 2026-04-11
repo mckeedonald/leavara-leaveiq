@@ -67,11 +67,15 @@ interface Props {
   caseId: string;
   employeeEmail?: string | null;
   caseState: string;
+  /** Called after notices are successfully sent — parent should transition the case state */
+  onNoticesSent?: () => void;
+  /** When true, auto-trigger AI generation on mount */
+  autoGenerate?: boolean;
 }
 
 type DisclaimerAction = "generate" | "regenerate";
 
-export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
+export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSent, autoGenerate }: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +91,15 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
   const [disclaimerAction, setDisclaimerAction] = useState<DisclaimerAction | null>(null);
   const [pendingRegenerateType, setPendingRegenerateType] = useState<string | null>(null);
+
+  // Auto-generate on mount when parent requests it
+  React.useEffect(() => {
+    if (autoGenerate && !result && !loading) {
+      setDisclaimerAction("generate");
+      setDisclaimerOpen(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerate]);
 
   function requestGenerate() {
     setDisclaimerAction("generate");
@@ -116,7 +129,10 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
     setPendingRegenerateType(null);
   }
 
+  // Show AI panel for both ELIGIBILITY_ANALYSIS and HR_REVIEW_QUEUE states
+  const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
   const isHrReview = caseState === "HR_REVIEW_QUEUE";
+  const showAiPanel = isEligibility || isHrReview;
 
   const fetchRecommendation = useCallback(async () => {
     setLoading(true);
@@ -214,6 +230,8 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
         }),
       });
       setSendSuccess(true);
+      // Notify parent so it can transition case state (e.g. ELIGIBILITY_ANALYSIS → NOTICE_DRAFTED)
+      onNoticesSent?.();
     } catch (err) {
       setSendError(err instanceof Error ? err.message : "Failed to send");
     } finally {
@@ -221,7 +239,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
     }
   };
 
-  if (!isHrReview) return null;
+  if (!showAiPanel) return null;
 
   return (
     <>
@@ -260,7 +278,9 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState }: Props) {
           )}
         </div>
         <p className="text-sm mt-1.5" style={{ color: "#FDDBB4" }}>
-          AI-powered case analysis, recommended actions, and legally-required notice drafts
+          {isEligibility
+            ? "Generate AI-drafted notices for this case — review, edit, and send directly from here"
+            : "AI-powered case analysis, recommended actions, and legally-required notice drafts"}
         </p>
       </div>
 

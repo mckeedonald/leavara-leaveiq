@@ -172,19 +172,28 @@ export async function sendMagicLinkEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `LeaveIQ — Your Leave Case Portal (${caseNumber})`,
+    `✅ Leave Request Received — Case ${caseNumber}`,
     `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
-        <h2 style="color:#fff;margin:0">Your Leave Case Has Been Created</h2>
-        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: ${caseNumber}</p>
+        <h2 style="color:#fff;margin:0">Leave Request Received</h2>
+        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: <strong>${caseNumber}</strong></p>
       </div>
       <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
-        <p>Your leave of absence case has been created and is being reviewed by your HR team.</p>
-        <p>You can upload supporting documentation (medical certifications, doctor's notes, etc.) using the secure link below.</p>
-        <a href="${magicLinkUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Access Your Case Portal</a>
-        <p style="color:#8C7058;font-size:13px">This link is unique to you. Please do not share it with others. The link is valid for 30 days.</p>
-        <p style="color:#8C7058;font-size:13px">If you have questions about your case, please contact your HR department directly.</p>
+        <p>Your leave of absence request has been received and is now under review by your HR team. You can expect to hear back within <strong>2–3 business days</strong>.</p>
+        <div style="background:#F7F4F0;border:1px solid #D4C9BB;border-radius:8px;padding:16px;margin:16px 0;text-align:center">
+          <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#8C7058;text-transform:uppercase;letter-spacing:0.05em">Your Case Number</p>
+          <p style="margin:0;font-size:24px;font-weight:700;color:#9E5D38;font-family:monospace">${caseNumber}</p>
+        </div>
+        <p>Use the button below to:</p>
+        <ul style="color:#5C3D28;margin:0 0 16px;padding-left:20px">
+          <li style="margin-bottom:6px">Check your case status</li>
+          <li style="margin-bottom:6px">Upload supporting documents (medical certifications, doctor's notes, etc.)</li>
+          <li>View any notices sent by HR</li>
+        </ul>
+        <a href="${magicLinkUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0;font-size:15px">View My Case Status →</a>
+        <p style="color:#8C7058;font-size:13px;margin-top:16px">This link is private and unique to you — please do not share it. It expires in 30 days.</p>
+        <p style="color:#8C7058;font-size:13px">If you have questions, contact your HR department directly.</p>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
       <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>

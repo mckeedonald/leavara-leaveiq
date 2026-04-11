@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql, and, ne, gte, lte, isNull, or } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
-import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable } from "@workspace/db";
-import { caseAccessTokensTable, caseDocumentsTable } from "@workspace/db/schema";
+import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable } from "@workspace/db";
 import {
   ListCasesQueryParams,
   CreateCaseBody,
@@ -22,7 +21,6 @@ import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
 import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
 import { sendNoticeEmail, sendMagicLinkEmail } from "../lib/email";
-import { getPresignedUrl } from "../lib/storage";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -135,80 +133,139 @@ router.get("/cases", requireAuth, async (req, res): Promise<void> => {
 
 // POST /cases  (public — employee portal; org resolved via orgSlug query param or JWT)
 router.post("/cases", async (req, res): Promise<void> => {
-  const body = req.body as Record<string, unknown>;
-  const parsed = CreateCaseBody.safeParse(body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  try {
+    const body = req.body as Record<string, unknown>;
+    const parsed = CreateCaseBody.safeParse(body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const data = parsed.data;
+    const caseNumber = generateCaseNumber();
+
+    // Resolve org: prefer ?org=slug (employee portal), then fall back to JWT org (HR dashboard)
+    let organizationId: string | null = null;
+    const orgSlug = typeof req.query["org"] === "string" ? req.query["org"] : null;
+    if (orgSlug) {
+      const [org] = await db
+        .select({ id: organizationsTable.id, isActive: organizationsTable.isActive })
+        .from(organizationsTable)
+        .where(eq(organizationsTable.slug, orgSlug));
+      if (!org || !org.isActive) {
+        res.status(404).json({ error: "Organization not found" });
+        return;
+      }
+      organizationId = org.id;
+    } else {
+      // No slug — check if the request carries a valid HR user JWT
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith("Bearer ")) {
+        const payload = verifyToken(authHeader.slice(7));
+        if (payload?.organizationId) {
+          organizationId = payload.organizationId;
+        }
+      }
+    }
+
+    const [newCase] = await db
+      .insert(leaveCasesTable)
+      .values({
+        organizationId,
+        caseNumber,
+        employeeNumber: data.employeeNumber,
+        employeeFirstName: data.employeeFirstName ?? null,
+        employeeLastName: data.employeeLastName ?? null,
+        employeeEmail: data.employeeEmail ?? null,
+        state: "INTAKE",
+        requestedStart: data.requestedStart,
+        requestedEnd: data.requestedEnd ?? null,
+        leaveReasonCategory: data.leaveReasonCategory,
+        intermittent: data.intermittent ?? false,
+      })
+      .returning();
+
+    await logAudit(newCase.id, "CASE_CREATED", data.submittedBy);
+
+    // Send magic link / confirmation email to employee if email is available
+    if (data.employeeEmail) {
+      try {
+        const token = randomBytes(64).toString("hex");
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        await db.insert(caseAccessTokensTable).values({
+          caseId: newCase.id,
+          token,
+          employeeEmail: data.employeeEmail,
+          expiresAt,
+        });
+
+        const appUrl = process.env["APP_URL"] ?? "https://leavara.net";
+        const magicLinkUrl = `${appUrl}/portal?token=${token}`;
+        await sendMagicLinkEmail(data.employeeEmail, newCase.caseNumber, magicLinkUrl);
+        logger.info({ caseId: newCase.id, to: data.employeeEmail }, "Confirmation/magic-link email sent");
+      } catch (err) {
+        logger.warn({ err, caseId: newCase.id }, "Magic link email failed — case still created");
+      }
+    }
+
+    res.status(201).json(newCase);
+  } catch (err) {
+    logger.error({ err }, "POST /cases — unexpected error creating case");
+    res.status(500).json({ error: "Failed to create case. Please try again." });
+  }
+});
+
+// GET /cases/calendar?start=YYYY-MM-DD&end=YYYY-MM-DD (requires auth)
+// IMPORTANT: Must be registered BEFORE /cases/:caseId or Express will match "calendar" as a caseId
+router.get("/cases/calendar", requireAuth, async (req, res): Promise<void> => {
+  const authed = req as AuthenticatedRequest;
+
+  const startParam = typeof req.query["start"] === "string" ? req.query["start"] : null;
+  const endParam = typeof req.query["end"] === "string" ? req.query["end"] : null;
+
+  if (!startParam || !endParam) {
+    res.status(400).json({ error: "start and end query params are required (YYYY-MM-DD)." });
     return;
   }
 
-  const data = parsed.data;
-  const caseNumber = generateCaseNumber();
+  const orgFilter = authed.user.organizationId
+    ? eq(leaveCasesTable.organizationId, authed.user.organizationId)
+    : undefined;
 
-  // Resolve org: prefer ?org=slug (employee portal), then fall back to JWT org (HR dashboard)
-  let organizationId: string | null = null;
-  const orgSlug = typeof req.query["org"] === "string" ? req.query["org"] : null;
-  if (orgSlug) {
-    const [org] = await db
-      .select({ id: organizationsTable.id, isActive: organizationsTable.isActive })
-      .from(organizationsTable)
-      .where(eq(organizationsTable.slug, orgSlug));
-    if (!org || !org.isActive) {
-      res.status(404).json({ error: "Organization not found" });
-      return;
-    }
-    organizationId = org.id;
-  } else {
-    // No slug — check if the request carries a valid HR user JWT
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith("Bearer ")) {
-      const payload = verifyToken(authHeader.slice(7));
-      if (payload?.organizationId) {
-        organizationId = payload.organizationId;
-      }
-    }
-  }
+  const notDeleted = isNull(leaveCasesTable.deletedAt);
+  // Cases that overlap the requested window
+  const overlapFilter = and(
+    lte(leaveCasesTable.requestedStart, endParam),
+    or(
+      isNull(leaveCasesTable.requestedEnd),
+      gte(leaveCasesTable.requestedEnd, startParam),
+    ),
+  );
 
-  const [newCase] = await db
-    .insert(leaveCasesTable)
-    .values({
-      organizationId,
-      caseNumber,
-      employeeNumber: data.employeeNumber,
-      employeeFirstName: data.employeeFirstName ?? null,
-      employeeLastName: data.employeeLastName ?? null,
-      employeeEmail: data.employeeEmail ?? null,
-      state: "INTAKE",
-      requestedStart: data.requestedStart,
-      requestedEnd: data.requestedEnd ?? null,
-      leaveReasonCategory: data.leaveReasonCategory,
-      intermittent: data.intermittent ?? false,
+  const filters = [notDeleted, overlapFilter, orgFilter].filter(Boolean) as ReturnType<typeof eq>[];
+  const whereClause = filters.length > 1 ? and(...filters) : filters[0];
+
+  let query = db
+    .select({
+      caseId: leaveCasesTable.id,
+      caseNumber: leaveCasesTable.caseNumber,
+      employeeFirstName: leaveCasesTable.employeeFirstName,
+      employeeLastName: leaveCasesTable.employeeLastName,
+      leaveReasonCategory: leaveCasesTable.leaveReasonCategory,
+      requestedStart: leaveCasesTable.requestedStart,
+      requestedEnd: leaveCasesTable.requestedEnd,
+      state: leaveCasesTable.state,
+      intermittent: leaveCasesTable.intermittent,
     })
-    .returning();
+    .from(leaveCasesTable)
+    .$dynamic();
 
-  await logAudit(newCase.id, "CASE_CREATED", data.submittedBy);
-
-  // Send magic link to employee if email is available
-  if (data.employeeEmail) {
-    try {
-      const token = randomBytes(64).toString("hex");
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-      await db.insert(caseAccessTokensTable).values({
-        caseId: newCase.id,
-        token,
-        employeeEmail: data.employeeEmail,
-        expiresAt,
-      });
-
-      const appUrl = process.env["APP_URL"] ?? "https://leavara.net";
-      const magicLinkUrl = `${appUrl}/portal?token=${token}`;
-      await sendMagicLinkEmail(data.employeeEmail, newCase.caseNumber, magicLinkUrl);
-    } catch (err) {
-      logger.warn({ err, caseId: newCase.id }, "Magic link email failed — case still created");
-    }
+  if (whereClause) {
+    query = query.where(whereClause);
   }
 
-  res.status(201).json(newCase);
+  const cases = await query.orderBy(leaveCasesTable.requestedStart);
+  res.json({ cases });
 });
 
 // GET /cases/:caseId
@@ -644,59 +701,6 @@ router.post(
   },
 );
 
-// GET /cases/calendar?start=YYYY-MM-DD&end=YYYY-MM-DD (requires auth)
-router.get("/cases/calendar", requireAuth, async (req, res): Promise<void> => {
-  const authed = req as AuthenticatedRequest;
-
-  const startParam = typeof req.query["start"] === "string" ? req.query["start"] : null;
-  const endParam = typeof req.query["end"] === "string" ? req.query["end"] : null;
-
-  if (!startParam || !endParam) {
-    res.status(400).json({ error: "start and end query params are required (YYYY-MM-DD)." });
-    return;
-  }
-
-  const orgFilter = authed.user.organizationId
-    ? eq(leaveCasesTable.organizationId, authed.user.organizationId)
-    : undefined;
-
-  const notDeleted = isNull(leaveCasesTable.deletedAt);
-  // Cases that overlap the requested window
-  const overlapFilter = and(
-    lte(leaveCasesTable.requestedStart, endParam),
-    or(
-      isNull(leaveCasesTable.requestedEnd),
-      gte(leaveCasesTable.requestedEnd, startParam),
-    ),
-  );
-
-  const filters = [notDeleted, overlapFilter, orgFilter].filter(Boolean) as ReturnType<typeof eq>[];
-  const whereClause = filters.length > 1 ? and(...filters) : filters[0];
-
-  let query = db
-    .select({
-      caseId: leaveCasesTable.id,
-      caseNumber: leaveCasesTable.caseNumber,
-      employeeFirstName: leaveCasesTable.employeeFirstName,
-      employeeLastName: leaveCasesTable.employeeLastName,
-      leaveReasonCategory: leaveCasesTable.leaveReasonCategory,
-      requestedStart: leaveCasesTable.requestedStart,
-      requestedEnd: leaveCasesTable.requestedEnd,
-      state: leaveCasesTable.state,
-      intermittent: leaveCasesTable.intermittent,
-      analysisResult: leaveCasesTable.analysisResult,
-    })
-    .from(leaveCasesTable)
-    .$dynamic();
-
-  if (whereClause) {
-    query = query.where(whereClause);
-  }
-
-  const cases = await query.orderBy(leaveCasesTable.requestedStart);
-  res.json({ cases });
-});
-
 // GET /cases/:caseId/documents (HR — requires auth)
 router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<void> => {
   const authed = req as AuthenticatedRequest;
@@ -769,6 +773,7 @@ router.get(
       return;
     }
 
+    const { getPresignedUrl } = await import("../lib/storage.js");
     const url = await getPresignedUrl(doc.storageKey, 3600);
     res.json({ url, fileName: doc.fileName });
   },

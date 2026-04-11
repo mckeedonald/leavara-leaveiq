@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useGetCase, LeaveState } from "@workspace/api-client-react";
+import { useGetCase, useTransitionCase, getGetCaseQueryKey, LeaveState, TransitionRequestEvent } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { StatusBadge, ReasonBadge, LEAVE_REASON_LABELS } from "@/components/ui/StatusBadge";
 import { formatDate, formatDateTime, cn } from "@/lib/utils";
-import { 
-  ArrowLeft, Calendar, User, Clock, ShieldAlert, 
-  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw
+import {
+  ArrowLeft, Calendar, User, Clock, ShieldAlert,
+  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw, Sparkles
 } from "lucide-react";
 import { AnalyzeCaseModal } from "@/components/cases/AnalyzeCaseModal";
 import { TransitionCaseModal } from "@/components/cases/TransitionCaseModal";
@@ -29,6 +30,34 @@ export default function CaseDetail() {
   const [activeModal, setActiveModal] = useState<"ANALYZE" | "TRANSITION" | "DECISION" | null>(null);
   const [transitionEvent, setTransitionEvent] = useState<"ROUTE_HR_REVIEW" | "DRAFT_NOTICE" | "CANCEL" | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [autoGenerateAi, setAutoGenerateAi] = useState(false);
+
+  const aiPanelRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const transitionCase = useTransitionCase();
+
+  const scrollToAiPanel = useCallback(() => {
+    aiPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handleDraftNoticeClick = useCallback(() => {
+    setAutoGenerateAi(true);
+    setTimeout(scrollToAiPanel, 100);
+  }, [scrollToAiPanel]);
+
+  const handleNoticesSent = useCallback(() => {
+    // After HR sends notices from ELIGIBILITY_ANALYSIS, transition case to NOTICE_DRAFTED
+    if (caseData?.state === LeaveState.ELIGIBILITY_ANALYSIS) {
+      transitionCase.mutate(
+        { caseId, data: { event: TransitionRequestEvent.DRAFT_NOTICE, actor: user?.email ?? "HR" } },
+        {
+          onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) }),
+          onError: (err) => console.error("Failed to transition case after sending notices:", err),
+        },
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseData?.state, caseId, user?.email]);
 
   if (isLoading) return (
     <AppLayout>
@@ -122,13 +151,13 @@ export default function CaseDetail() {
                   Route to HR Review
                 </button>
                 <button
-                  onClick={() => { setTransitionEvent("DRAFT_NOTICE"); setActiveModal("TRANSITION"); }}
-                  className="text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
+                  onClick={handleDraftNoticeClick}
+                  className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
                   style={{ background: "#A47864" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#9E5D38")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "#A47864")}
                 >
-                  Draft Notice Directly
+                  <Sparkles className="w-4 h-4" /> Draft Notices with AI
                 </button>
               </>
             )}
@@ -267,11 +296,15 @@ export default function CaseDetail() {
               </div>
             )}
             {/* AI Assistant Panel */}
-            <AiAssistantPanel
-              caseId={caseId}
-              employeeEmail={caseData.employeeEmail}
-              caseState={caseData.state}
-            />
+            <div ref={aiPanelRef}>
+              <AiAssistantPanel
+                caseId={caseId}
+                employeeEmail={caseData.employeeEmail}
+                caseState={caseData.state}
+                onNoticesSent={handleNoticesSent}
+                autoGenerate={autoGenerateAi}
+              />
+            </div>
 
             {/* Case Documents */}
             <CaseDocumentsPanel caseId={caseId} />
