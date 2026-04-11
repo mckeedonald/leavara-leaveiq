@@ -1,15 +1,17 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  Files, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Files,
+  Settings,
   LogOut,
   Bell,
   Search,
   MessageSquare,
   Users,
-  ShieldAlert
+  ShieldAlert,
+  CalendarDays,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -52,8 +54,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     : [
         { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", adminOnly: false },
         { icon: Files, label: "All Cases", href: "/cases", adminOnly: false },
+        { icon: CalendarDays, label: "Leave Calendar", href: "/calendar", adminOnly: false },
         { icon: MessageSquare, label: "Employee Portal", href: "/request", adminOnly: false },
         { icon: Users, label: "Users", href: "/users", adminOnly: true },
+        { icon: Building2, label: "HRIS Integration", href: "/hris-settings", adminOnly: true },
       ];
 
   const initials = user

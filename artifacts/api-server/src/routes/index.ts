@@ -6,6 +6,8 @@ import interestRouter from "./interest";
 import aiAgentRouter from "./aiAgent";
 import superAdminRouter from "./superAdmin";
 import knowledgeRouter from "./knowledge";
+import hrisRouter from "./hris";
+import portalRouter from "./portal";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use(aiAgentRouter);
 router.use(interestRouter);
 router.use(superAdminRouter);
 router.use(knowledgeRouter);
+router.use(hrisRouter);
+router.use(portalRouter);
 
 export default router;

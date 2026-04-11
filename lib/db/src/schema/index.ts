@@ -8,3 +8,7 @@ export * from "./invites";
 export * from "./passwordResets";
 export * from "./orgLocations";
 export * from "./ragDocuments";
+export * from "./hrisConnections";
+export * from "./hrisEmployeeCache";
+export * from "./caseDocuments";
+export * from "./caseAccessTokens";

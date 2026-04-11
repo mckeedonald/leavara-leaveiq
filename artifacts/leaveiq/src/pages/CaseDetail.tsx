@@ -12,6 +12,7 @@ import { AnalyzeCaseModal } from "@/components/cases/AnalyzeCaseModal";
 import { TransitionCaseModal } from "@/components/cases/TransitionCaseModal";
 import { RecordDecisionModal } from "@/components/cases/RecordDecisionModal";
 import { AiAssistantPanel } from "@/components/cases/AiAssistantPanel";
+import { CaseDocumentsPanel } from "@/components/cases/CaseDocumentsPanel";
 import { useAuth, apiFetch } from "@/lib/auth";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -271,6 +272,9 @@ export default function CaseDetail() {
               employeeEmail={caseData.employeeEmail}
               caseState={caseData.state}
             />
+
+            {/* Case Documents */}
+            <CaseDocumentsPanel caseId={caseId} />
           </div>
 
           {/* Right column */}

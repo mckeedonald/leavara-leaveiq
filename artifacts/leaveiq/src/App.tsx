@@ -11,6 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import Cases from "@/pages/Cases";
 import CaseDetail from "@/pages/CaseDetail";
 import EmployeePortal from "@/pages/EmployeePortal";
+import EmployeePortalCase from "@/pages/EmployeePortalCase";
 import Login from "@/pages/Login";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
@@ -18,6 +19,8 @@ import Register from "@/pages/Register";
 import Users from "@/pages/Users";
 import AccountSettings from "@/pages/AccountSettings";
 import SuperAdmin from "@/pages/SuperAdmin";
+import HrisSettings from "@/pages/HrisSettings";
+import Calendar from "@/pages/Calendar";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -72,6 +75,8 @@ function Router() {
 
       {/* Employee portal — public (no HR account required) */}
       <Route path="/request" component={EmployeePortal} />
+      {/* Employee case portal — magic link (public) */}
+      <Route path="/portal" component={EmployeePortalCase} />
 
       {/* Protected HR routes */}
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
@@ -79,6 +84,8 @@ function Router() {
       <Route path="/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
       <Route path="/users" component={() => <ProtectedRoute component={Users} />} />
       <Route path="/account" component={() => <ProtectedRoute component={AccountSettings} />} />
+      <Route path="/calendar" component={() => <ProtectedRoute component={Calendar} />} />
+      <Route path="/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
 
       {/* Super admin route */}
       <Route path="/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />

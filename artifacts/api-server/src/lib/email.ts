@@ -165,6 +165,77 @@ export async function sendWelcomeEmail(data: {
   );
 }
 
+export async function sendMagicLinkEmail(
+  to: string,
+  caseNumber: string,
+  magicLinkUrl: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    `LeaveIQ — Your Leave Case Portal (${caseNumber})`,
+    `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
+        <h2 style="color:#fff;margin:0">Your Leave Case Has Been Created</h2>
+        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: ${caseNumber}</p>
+      </div>
+      <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
+        <p>Your leave of absence case has been created and is being reviewed by your HR team.</p>
+        <p>You can upload supporting documentation (medical certifications, doctor's notes, etc.) using the secure link below.</p>
+        <a href="${magicLinkUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Access Your Case Portal</a>
+        <p style="color:#8C7058;font-size:13px">This link is unique to you. Please do not share it with others. The link is valid for 30 days.</p>
+        <p style="color:#8C7058;font-size:13px">If you have questions about your case, please contact your HR department directly.</p>
+      </div>
+      <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
+      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+    </div>
+    `,
+  );
+}
+
+export async function sendDocumentUploadNotification(
+  to: string,
+  caseNumber: string,
+  fileName: string,
+  employeeName: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    `LeaveIQ — Document Uploaded for Case ${caseNumber}`,
+    `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
+        <h2 style="color:#fff;margin:0">New Document Uploaded</h2>
+        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: ${caseNumber}</p>
+      </div>
+      <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
+        <p><strong>${employeeName}</strong> has uploaded a new document to their leave case.</p>
+        <div style="background:#F7F4F0;border:1px solid #D4C9BB;border-radius:8px;padding:16px;margin:16px 0">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap;width:30%">Case</td>
+              <td style="padding:6px 0;color:#3D2010">${caseNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Employee</td>
+              <td style="padding:6px 0;color:#3D2010">${employeeName}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">File</td>
+              <td style="padding:6px 0;color:#3D2010;font-family:monospace">${fileName}</td>
+            </tr>
+          </table>
+        </div>
+        <p>Please log in to LeaveIQ to review the uploaded documentation.</p>
+        <a href="${getAppUrl()}/cases" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Cases in LeaveIQ</a>
+      </div>
+      <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
+      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+    </div>
+    `,
+  );
+}
+
 export async function sendInterestEmail(data: {
   companyName: string;
   contactName: string;

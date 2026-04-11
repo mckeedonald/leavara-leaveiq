@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { EmployeeLayout } from "@/components/layout/EmployeeLayout";
-import { Send, UserRound, User, CheckCircle, Loader2, RotateCcw, ExternalLink } from "lucide-react";
+import { Send, UserRound, User, CheckCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function getOrgSlug(): string {
@@ -13,14 +13,14 @@ function getOrgSlug(): string {
   return new URLSearchParams(window.location.search).get("org") ?? "";
 }
 
-type LeaveReason = "own_health" | "care_family" | "pregnancy_disability" | "bonding" | "military" | "personal";
+type LeaveReason = "own_health" | "care_family" | "pregnancy_disability" | "bonding" | "personal";
 
 interface ChatMessage {
   id: string;
   role: "bot" | "user";
   text: string;
   options?: { label: string; value: string }[];
-  inputType?: "text" | "date" | "confirm";
+  inputType?: "text" | "date";
 }
 
 type Step =
@@ -32,7 +32,6 @@ type Step =
   | "end_date"
   | "intermittent"
   | "your_name"
-  | "employee_email"
   | "summary"
   | "submitted";
 
@@ -44,24 +43,21 @@ interface IntakeData {
   requestedEnd?: string | null;
   intermittent?: boolean;
   submittedBy?: string;
-  employeeEmail?: string;
 }
 
 const REASON_OPTIONS = [
-  { label: "Employee's Own Care", value: "own_health" },
-  { label: "Care for a Family Member", value: "care_family" },
+  { label: "My Own Health Condition", value: "own_health" },
+  { label: "Caring for a Family Member", value: "care_family" },
   { label: "Pregnancy Disability", value: "pregnancy_disability" },
   { label: "Bonding with a New Child", value: "bonding" },
-  { label: "Military", value: "military" },
   { label: "Personal", value: "personal" },
 ];
 
 const REASON_LABELS: Record<string, string> = {
-  own_health: "Employee's Own Care",
+  own_health: "Employee's Own Health",
   care_family: "Care for a Family Member",
   pregnancy_disability: "Pregnancy Disability",
   bonding: "Bonding with a New Child",
-  military: "Military",
   personal: "Personal",
 };
 
@@ -79,13 +75,13 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: "welcome-1",
     role: "bot",
-    text: "👋 Hi! I'm Ava, your leave request assistant. I'll guide you through submitting a leave of absence request in just a few steps.",
+    text: "👋 Hi! I'm Ava, your leave request assistant. I'll walk you through submitting a leave of absence — it only takes a few minutes.",
   },
   {
     id: "welcome-2",
     role: "bot",
-    text: "Your request will be reviewed by HR — they'll reach out once the analysis is complete. Ready to get started?",
-    options: [{ label: "Yes, let's begin", value: "begin" }],
+    text: "Once submitted, your HR team will review the request and reach out to you directly. Whenever you're ready, let's get started!",
+    options: [{ label: "Let's begin", value: "begin" }],
   },
 ];
 
@@ -105,16 +101,14 @@ export default function EmployeePortal() {
   }, [messages, isTyping]);
 
   const addBotMessage = (text: string, opts?: Partial<Omit<ChatMessage, "id" | "role" | "text">>) => {
-    const msg: ChatMessage = { id: genId(), role: "bot", text, ...opts };
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, { id: genId(), role: "bot", text, ...opts }]);
   };
 
   const addUserMessage = (text: string) => {
-    const msg: ChatMessage = { id: genId(), role: "user", text };
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, { id: genId(), role: "user", text }]);
   };
 
-  const botDelay = (fn: () => void, ms = 700) => {
+  const botDelay = (fn: () => void, ms = 650) => {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
@@ -127,7 +121,7 @@ export default function EmployeePortal() {
 
     if (step === "welcome") {
       botDelay(() => {
-        addBotMessage("What is your employee number? (e.g., EMP-1023)", { inputType: "text" });
+        addBotMessage("To start, what's your employee number?", { inputType: "text" });
         setStep("employee_number");
         setTimeout(() => inputRef.current?.focus(), 100);
       });
@@ -138,7 +132,7 @@ export default function EmployeePortal() {
       const reason = value as LeaveReason;
       setData((d) => ({ ...d, leaveReasonCategory: reason }));
       botDelay(() => {
-        addBotMessage("Got it. When do you need your leave to start?", { inputType: "date" });
+        addBotMessage("Got it. What date do you need your leave to start?", { inputType: "date" });
         setStep("start_date");
         setTimeout(() => inputRef.current?.focus(), 100);
       });
@@ -149,15 +143,12 @@ export default function EmployeePortal() {
       if (value === "no_end") {
         setData((d) => ({ ...d, requestedEnd: null }));
         botDelay(() => {
-          addBotMessage(
-            "Will this be intermittent leave? (e.g., a few hours or days at a time, rather than one continuous block)",
-            {
-              options: [
-                { label: "Yes, intermittent", value: "yes" },
-                { label: "No, continuous leave", value: "no" },
-              ],
-            }
-          );
+          addBotMessage("No problem — we can revisit that later. Will this be intermittent leave? That means taking leave in separate blocks (like a few hours or days at a time) rather than all at once.", {
+            options: [
+              { label: "Yes, intermittent", value: "yes" },
+              { label: "No, continuous", value: "no" },
+            ],
+          });
           setStep("intermittent");
         });
       }
@@ -168,7 +159,7 @@ export default function EmployeePortal() {
       const intermittent = value === "yes";
       setData((d) => ({ ...d, intermittent }));
       botDelay(() => {
-        addBotMessage("Almost done! What is your full name? (This is how your request will be submitted)", {
+        addBotMessage("Great. Last thing — what's your full name so we can submit the request properly?", {
           inputType: "text",
         });
         setStep("your_name");
@@ -181,7 +172,6 @@ export default function EmployeePortal() {
       if (value === "confirm") {
         submitCase();
       } else {
-        // restart
         setMessages(INITIAL_MESSAGES);
         setStep("welcome");
         setData({});
@@ -201,7 +191,7 @@ export default function EmployeePortal() {
       setData((d) => ({ ...d, employeeNumber: trimmed }));
       botDelay(() => {
         addBotMessage(
-          "What is your work or personal email address? HR will use this to send you required notices about your leave request.",
+          "Thanks! What email address should HR use to send you leave notices and updates?",
           { inputType: "text" }
         );
         setStep("email");
@@ -211,9 +201,16 @@ export default function EmployeePortal() {
     }
 
     if (step === "email") {
+      if (!trimmed.includes("@") || !trimmed.includes(".")) {
+        botDelay(() => {
+          addBotMessage("Hmm, that doesn't look quite right. Could you double-check and enter a valid email address? (e.g., jane@company.com)", { inputType: "text" });
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }, 350);
+        return;
+      }
       setData((d) => ({ ...d, employeeEmail: trimmed }));
       botDelay(() => {
-        addBotMessage("What is the reason for your leave request?", {
+        addBotMessage("Perfect. What's the reason for your leave request?", {
           options: REASON_OPTIONS,
         });
         setStep("reason");
@@ -224,16 +221,16 @@ export default function EmployeePortal() {
     if (step === "start_date") {
       if (!isValidDate(trimmed)) {
         botDelay(() => {
-          addBotMessage("Please enter a valid date (e.g., 2026-04-15 or April 15, 2026).", { inputType: "date" });
+          addBotMessage("I couldn't quite parse that date. Try entering it like \"2026-04-15\" or \"April 15, 2026\".", { inputType: "date" });
           setTimeout(() => inputRef.current?.focus(), 100);
-        }, 300);
+        }, 350);
         return;
       }
       const normalized = normalizeDate(trimmed);
       setData((d) => ({ ...d, requestedStart: normalized }));
       botDelay(() => {
         addBotMessage(
-          `Do you know when you'll be returning? You can give an expected end date or say "not sure".`,
+          `Got it — ${formatDateDisplay(normalized)}. Do you have an expected return date, or is that still up in the air?`,
           {
             options: [{ label: "Not sure yet", value: "no_end" }],
             inputType: "date",
@@ -246,24 +243,25 @@ export default function EmployeePortal() {
     }
 
     if (step === "end_date") {
-      if (trimmed.toLowerCase().includes("not") || trimmed.toLowerCase().includes("sure") || trimmed.toLowerCase().includes("unknown")) {
+      const lower = trimmed.toLowerCase();
+      if (lower.includes("not") || lower.includes("sure") || lower.includes("unknown") || lower.includes("tbd") || lower.includes("unsure")) {
         setData((d) => ({ ...d, requestedEnd: null }));
       } else if (isValidDate(trimmed)) {
         setData((d) => ({ ...d, requestedEnd: normalizeDate(trimmed) }));
       } else {
         botDelay(() => {
-          addBotMessage(`Please enter a valid end date or click "Not sure yet".`, { inputType: "date" });
+          addBotMessage(`No worries if it's uncertain — just click "Not sure yet" or enter a date like "2026-06-01".`, { inputType: "date" });
           setTimeout(() => inputRef.current?.focus(), 100);
-        }, 300);
+        }, 350);
         return;
       }
       botDelay(() => {
         addBotMessage(
-          "Will this be intermittent leave? (e.g., a few hours or days at a time, rather than one continuous block)",
+          "Will this be intermittent leave? That means taking leave in separate blocks (like a few hours or days at a time) rather than all at once.",
           {
             options: [
               { label: "Yes, intermittent", value: "yes" },
-              { label: "No, continuous leave", value: "no" },
+              { label: "No, continuous", value: "no" },
             ],
           }
         );
@@ -273,30 +271,11 @@ export default function EmployeePortal() {
     }
 
     if (step === "your_name") {
-      setData((d) => ({ ...d, submittedBy: trimmed }));
-      botDelay(() => {
-        addBotMessage(
-          "What is your work email address? HR will use this to send you leave notices and updates.",
-          { inputType: "text" },
-        );
-        setStep("employee_email");
-        setTimeout(() => inputRef.current?.focus(), 100);
-      });
-      return;
-    }
-
-    if (step === "employee_email") {
-      if (!trimmed.includes("@") || !trimmed.includes(".")) {
-        botDelay(() => {
-          addBotMessage("Please enter a valid email address (e.g., jane@company.com).", { inputType: "text" });
-          setTimeout(() => inputRef.current?.focus(), 100);
-        }, 300);
-        return;
-      }
-      setData((d) => ({ ...d, employeeEmail: trimmed }));
-      const updated = { ...data, submittedBy: data.submittedBy, employeeEmail: trimmed };
-      botDelay(() => {
-        showSummary(updated);
+      setData((prev) => {
+        const updated = { ...prev, submittedBy: trimmed };
+        // Show summary with fully updated data
+        botDelay(() => showSummary(updated));
+        return updated;
       });
       return;
     }
@@ -305,13 +284,12 @@ export default function EmployeePortal() {
   const showSummary = (finalData: IntakeData) => {
     const lines = [
       `**Employee number:** ${finalData.employeeNumber}`,
-      `**Email:** ${finalData.employeeEmail || "Not provided"}`,
+      `**Email:** ${finalData.employeeEmail ?? "Not provided"}`,
       `**Reason:** ${REASON_LABELS[finalData.leaveReasonCategory ?? ""] ?? finalData.leaveReasonCategory}`,
       `**Start date:** ${formatDateDisplay(finalData.requestedStart ?? "")}`,
       `**End date:** ${finalData.requestedEnd ? formatDateDisplay(finalData.requestedEnd) : "Not specified"}`,
       `**Intermittent:** ${finalData.intermittent ? "Yes" : "No"}`,
       `**Submitted by:** ${finalData.submittedBy}`,
-      `**Email:** ${finalData.employeeEmail}`,
     ];
     addBotMessage(
       `Here's a summary of your request:\n\n${lines.join("\n")}\n\nDoes everything look correct?`,
@@ -336,6 +314,8 @@ export default function EmployeePortal() {
         body: JSON.stringify({
           employeeNumber: data.employeeNumber!,
           employeeEmail: data.employeeEmail ?? undefined,
+          employeeFirstName: data.submittedBy?.split(" ")[0] ?? undefined,
+          employeeLastName: data.submittedBy?.split(" ").slice(1).join(" ") || undefined,
           requestedStart: data.requestedStart!,
           requestedEnd: data.requestedEnd ?? undefined,
           leaveReasonCategory: data.leaveReasonCategory! as string,
@@ -344,18 +324,18 @@ export default function EmployeePortal() {
         }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result?.error ?? "Submission failed");
+      if (!res.ok) throw new Error((result as { error?: string }).error ?? "Submission failed");
       setIsTyping(false);
       const cn = (result as { caseNumber?: string }).caseNumber ?? "N/A";
       setCaseNumber(cn);
       addBotMessage(
-        `🎉 Your leave request has been submitted successfully!\n\n**Case number: ${cn}**\n\nHR will review your eligibility and reach out to you. You'll typically hear back within 2–3 business days.`
+        `🎉 You're all set! Your leave request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your eligibility and reach out to you — typically within 2–3 business days. If you provided an email, you'll also receive a confirmation there.`
       );
       setStep("submitted");
     } catch {
       setIsTyping(false);
       addBotMessage(
-        "Hmm, something went wrong when submitting your request. Please try again or contact HR directly.",
+        "Something went wrong on our end when submitting your request. Please try again, or reach out to HR directly.",
         {
           options: [{ label: "Try again", value: "confirm" }],
         }
@@ -369,14 +349,10 @@ export default function EmployeePortal() {
   };
 
   const normalizeDate = (str: string): string => {
-    // Use midday to avoid UTC/local timezone off-by-one issues
     const withTime = str.match(/^\d{4}-\d{2}-\d{2}$/) ? str + "T12:00:00" : str;
     const d = new Date(withTime);
     if (isNaN(d.getTime())) return str;
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
   const currentInputType = messages.filter((m) => m.role === "bot").slice(-1)[0]?.inputType;
@@ -448,20 +424,18 @@ export default function EmployeePortal() {
           >
             <input
               ref={inputRef}
-              type={step === "employee_email" ? "email" : "text"}
+              type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={
                 currentInputType === "date"
                   ? "e.g. 2025-08-01 or August 1, 2025"
                   : step === "employee_number"
-                  ? "e.g. EMP-1023"
+                  ? "e.g. 1023 or EMP-1023"
                   : step === "email"
                   ? "your.email@company.com"
                   : step === "your_name"
                   ? "Your full name"
-                  : step === "employee_email"
-                  ? "your.name@company.com"
                   : "Type your answer…"
               }
               className="flex-1 text-sm bg-transparent outline-none py-1"
@@ -543,8 +517,20 @@ function MessageBubble({
                     ? { background: "#F7F4F0", borderColor: "#D4C9BB", color: "#8C7058" }
                     : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#7A5540" }
                 }
-                onMouseEnter={(e) => { if (!disabled) { (e.currentTarget as HTMLButtonElement).style.background = "#C97E59"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E59"; (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF"; } }}
-                onMouseLeave={(e) => { if (!disabled) { (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E5966"; (e.currentTarget as HTMLButtonElement).style.color = "#7A5540"; } }}
+                onMouseEnter={(e) => {
+                  if (!disabled) {
+                    (e.currentTarget as HTMLButtonElement).style.background = "#C97E59";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E59";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!disabled) {
+                    (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E5966";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#7A5540";
+                  }
+                }}
               >
                 {opt.label}
               </button>

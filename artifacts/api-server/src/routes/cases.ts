@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and, ne, gte, isNull } from "drizzle-orm";
+import { eq, desc, sql, and, ne, gte, lte, isNull, or } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
 import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable } from "@workspace/db";
+import { caseAccessTokensTable, caseDocumentsTable } from "@workspace/db/schema";
 import {
   ListCasesQueryParams,
   CreateCaseBody,
@@ -19,7 +21,9 @@ import {
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
 import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
-import { sendNoticeEmail } from "../lib/email";
+import { sendNoticeEmail, sendMagicLinkEmail } from "../lib/email";
+import { getPresignedUrl } from "../lib/storage";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -183,6 +187,26 @@ router.post("/cases", async (req, res): Promise<void> => {
     .returning();
 
   await logAudit(newCase.id, "CASE_CREATED", data.submittedBy);
+
+  // Send magic link to employee if email is available
+  if (data.employeeEmail) {
+    try {
+      const token = randomBytes(64).toString("hex");
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      await db.insert(caseAccessTokensTable).values({
+        caseId: newCase.id,
+        token,
+        employeeEmail: data.employeeEmail,
+        expiresAt,
+      });
+
+      const appUrl = process.env["APP_URL"] ?? "https://leavara.net";
+      const magicLinkUrl = `${appUrl}/portal?token=${token}`;
+      await sendMagicLinkEmail(data.employeeEmail, newCase.caseNumber, magicLinkUrl);
+    } catch (err) {
+      logger.warn({ err, caseId: newCase.id }, "Magic link email failed — case still created");
+    }
+  }
 
   res.status(201).json(newCase);
 });
@@ -617,6 +641,136 @@ router.post(
     }
 
     res.json({ sent: notices.length, auditEntries });
+  },
+);
+
+// GET /cases/calendar?start=YYYY-MM-DD&end=YYYY-MM-DD (requires auth)
+router.get("/cases/calendar", requireAuth, async (req, res): Promise<void> => {
+  const authed = req as AuthenticatedRequest;
+
+  const startParam = typeof req.query["start"] === "string" ? req.query["start"] : null;
+  const endParam = typeof req.query["end"] === "string" ? req.query["end"] : null;
+
+  if (!startParam || !endParam) {
+    res.status(400).json({ error: "start and end query params are required (YYYY-MM-DD)." });
+    return;
+  }
+
+  const orgFilter = authed.user.organizationId
+    ? eq(leaveCasesTable.organizationId, authed.user.organizationId)
+    : undefined;
+
+  const notDeleted = isNull(leaveCasesTable.deletedAt);
+  // Cases that overlap the requested window
+  const overlapFilter = and(
+    lte(leaveCasesTable.requestedStart, endParam),
+    or(
+      isNull(leaveCasesTable.requestedEnd),
+      gte(leaveCasesTable.requestedEnd, startParam),
+    ),
+  );
+
+  const filters = [notDeleted, overlapFilter, orgFilter].filter(Boolean) as ReturnType<typeof eq>[];
+  const whereClause = filters.length > 1 ? and(...filters) : filters[0];
+
+  let query = db
+    .select({
+      caseId: leaveCasesTable.id,
+      caseNumber: leaveCasesTable.caseNumber,
+      employeeFirstName: leaveCasesTable.employeeFirstName,
+      employeeLastName: leaveCasesTable.employeeLastName,
+      leaveReasonCategory: leaveCasesTable.leaveReasonCategory,
+      requestedStart: leaveCasesTable.requestedStart,
+      requestedEnd: leaveCasesTable.requestedEnd,
+      state: leaveCasesTable.state,
+      intermittent: leaveCasesTable.intermittent,
+      analysisResult: leaveCasesTable.analysisResult,
+    })
+    .from(leaveCasesTable)
+    .$dynamic();
+
+  if (whereClause) {
+    query = query.where(whereClause);
+  }
+
+  const cases = await query.orderBy(leaveCasesTable.requestedStart);
+  res.json({ cases });
+});
+
+// GET /cases/:caseId/documents (HR — requires auth)
+router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<void> => {
+  const authed = req as AuthenticatedRequest;
+  const { caseId } = req.params;
+
+  const [leaveCase] = await db
+    .select({ organizationId: leaveCasesTable.organizationId })
+    .from(leaveCasesTable)
+    .where(eq(leaveCasesTable.id, caseId))
+    .limit(1);
+
+  if (!leaveCase) {
+    res.status(404).json({ error: "Case not found." });
+    return;
+  }
+
+  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    res.status(403).json({ error: "Access denied." });
+    return;
+  }
+
+  const documents = await db
+    .select({
+      id: caseDocumentsTable.id,
+      fileName: caseDocumentsTable.fileName,
+      mimeType: caseDocumentsTable.mimeType,
+      sizeBytes: caseDocumentsTable.sizeBytes,
+      uploadedBy: caseDocumentsTable.uploadedBy,
+      createdAt: caseDocumentsTable.createdAt,
+    })
+    .from(caseDocumentsTable)
+    .where(eq(caseDocumentsTable.caseId, caseId))
+    .orderBy(desc(caseDocumentsTable.createdAt));
+
+  res.json({ documents });
+});
+
+// GET /cases/:caseId/documents/:docId/download (HR — requires auth)
+router.get(
+  "/cases/:caseId/documents/:docId/download",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId, docId } = req.params;
+
+    const [leaveCase] = await db
+      .select({ organizationId: leaveCasesTable.organizationId })
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) {
+      res.status(404).json({ error: "Case not found." });
+      return;
+    }
+
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." });
+      return;
+    }
+
+    const [doc] = await db
+      .select()
+      .from(caseDocumentsTable)
+      .where(and(eq(caseDocumentsTable.id, docId), eq(caseDocumentsTable.caseId, caseId)))
+      .limit(1);
+
+    if (!doc) {
+      res.status(404).json({ error: "Document not found." });
+      return;
+    }
+
+    const url = await getPresignedUrl(doc.storageKey, 3600);
+    res.json({ url, fileName: doc.fileName });
   },
 );
 
