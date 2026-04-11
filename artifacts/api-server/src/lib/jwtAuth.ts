@@ -22,7 +22,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET!, { expiresIn: "8h" });
+  return jwt.sign(payload, JWT_SECRET!, { expiresIn: "24h" });
 }
 
 export function verifyToken(token: string): JwtPayload | null {

@@ -45,7 +45,16 @@ export async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> 
   }
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const data = await res.json();
-  if (!res.ok) throw new Error((data as { error?: string }).error ?? "Request failed");
+  if (!res.ok) {
+    // Session expired or token invalid — clear stored credentials and send to login
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      window.location.href = "/login?reason=session_expired";
+      throw new Error("Your session has expired. Please log in again.");
+    }
+    throw new Error((data as { error?: string }).error ?? "Request failed");
+  }
   return data as T;
 }
 

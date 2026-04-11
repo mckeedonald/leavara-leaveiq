@@ -31,6 +31,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Show a banner if redirected here due to session expiry
+  const sessionExpired = new URLSearchParams(window.location.search).get("reason") === "session_expired";
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -57,6 +60,12 @@ export default function Login() {
         {/* Card */}
         <div className="rounded-2xl p-8 shadow-lg border" style={{ background: C.card, borderColor: C.border }}>
           <h2 className="text-xl font-semibold mb-6" style={{ color: C.textDark }}>Sign in to your account</h2>
+
+          {sessionExpired && !error && (
+            <div className="mb-4 px-4 py-3 rounded-xl text-sm border" style={{ background: "#FFF8E7", borderColor: "#F5C842", color: "#7A5A00" }}>
+              Your session expired. Please sign in again to continue.
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 px-4 py-3 rounded-xl text-sm border" style={{ background: C.errorBg, borderColor: C.errorBorder, color: C.errorText }}>

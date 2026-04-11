@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useRecordHrDecision, getGetCaseQueryKey, HrDecisionType } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
 import { X, Loader2 } from "lucide-react";
 
 export function RecordDecisionModal({ isOpen, onClose, caseId }: { isOpen: boolean; onClose: () => void; caseId: string }) {
   const queryClient = useQueryClient();
   const recordDecision = useRecordHrDecision();
+  const { user } = useAuth();
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
@@ -15,9 +17,12 @@ export function RecordDecisionModal({ isOpen, onClose, caseId }: { isOpen: boole
     setError("");
     const fd = new FormData(e.currentTarget);
     
+    const decidedBy = user
+      ? `${user.firstName} ${user.lastName}${user.position ? ` (${user.position})` : ""}`.trim()
+      : "HR";
     const data = {
       decisionType: fd.get("decisionType") as HrDecisionType,
-      decidedBy: "Jane Doe (HR)", // Demo
+      decidedBy,
       decisionNotes: (fd.get("decisionNotes") as string) || null,
     };
 
