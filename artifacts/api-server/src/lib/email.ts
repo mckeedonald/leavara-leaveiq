@@ -3,13 +3,23 @@ import { logger } from "./logger";
 const RESEND_API_KEY = process.env["RESEND_API_KEY"];
 const FROM_EMAIL = process.env["RESEND_FROM_EMAIL"] ?? "noreply@leavara.net";
 
+export interface EmailAttachment {
+  filename: string;
+  content: string; // base64-encoded file content
+}
+
 function getAppUrl(): string {
   const domain = process.env["REPLIT_DOMAINS"]?.split(",")[0];
   if (domain) return `https://${domain}`;
   return process.env["APP_URL"] ?? "http://localhost:3000";
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: EmailAttachment[],
+): Promise<void> {
   if (!RESEND_API_KEY) {
     logger.warn({ to, subject }, "RESEND_API_KEY not set — email not sent");
     return;
@@ -21,7 +31,13 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to,
+      subject,
+      html,
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
+    }),
   });
 
   if (!res.ok) {
@@ -81,6 +97,7 @@ export async function sendNoticeEmail(data: {
   content: string;
   caseNumber: string;
   employeeNumber: string;
+  attachments?: EmailAttachment[];
 }): Promise<void> {
   const noticeTitles: Record<string, string> = {
     ELIGIBILITY_NOTICE: "Notice of Eligibility & Rights",
@@ -120,6 +137,7 @@ export async function sendNoticeEmail(data: {
       </p>
     </div>
     `,
+    data.attachments,
   );
 }
 

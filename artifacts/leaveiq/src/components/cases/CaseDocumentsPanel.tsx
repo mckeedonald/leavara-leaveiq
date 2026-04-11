@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FileText, Download, RefreshCw, Upload, Loader2, AlertTriangle, File } from "lucide-react";
+import { FileText, FileCheck, Download, RefreshCw, Upload, Loader2, AlertTriangle, File } from "lucide-react";
 import { apiFetch } from "@/lib/auth";
 import { formatDateTime } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ interface CaseDocument {
   fileName: string;
   mimeType: string | null;
   sizeBytes: number | null;
-  uploadedBy: "employee" | "hr";
+  uploadedBy: "employee" | "hr" | "notice";
   createdAt: string;
 }
 
@@ -162,13 +162,22 @@ export function CaseDocumentsPanel({ caseId }: Props) {
           <div className="divide-y divide-border">
             {documents.map((doc) => (
               <div key={doc.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-primary" />
+                <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+                  doc.uploadedBy === "notice" ? "bg-blue-50" : "bg-primary/10"
+                }`}>
+                  {doc.uploadedBy === "notice"
+                    ? <FileCheck className="w-4 h-4 text-blue-600" />
+                    : <FileText className="w-4 h-4 text-primary" />
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{doc.fileName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {doc.uploadedBy === "employee" ? "Employee" : "HR"} · {formatDateTime(doc.createdAt)}
+                    {doc.uploadedBy === "employee"
+                      ? "Employee"
+                      : doc.uploadedBy === "notice"
+                        ? "Sent Notice"
+                        : "HR"} · {formatDateTime(doc.createdAt)}
                     {doc.sizeBytes ? ` · ${formatBytes(doc.sizeBytes)}` : ""}
                   </p>
                 </div>

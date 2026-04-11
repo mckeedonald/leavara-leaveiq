@@ -52,12 +52,13 @@ const REASON_LABELS: Record<string, string> = {
   personal: "Company personal leave (unpaid, up to 30 days)",
 };
 
-// Always draft these two notices — the Designation Notice carries the approval/denial decision
-const REQUIRED_NOTICE_TYPES = ["ELIGIBILITY_NOTICE", "DESIGNATION_NOTICE"];
+// Always draft these three notices — the Designation Notice carries the approval/denial decision
+const REQUIRED_NOTICE_TYPES = ["ELIGIBILITY_NOTICE", "DESIGNATION_NOTICE", "MEDICAL_CERTIFICATION"];
 
 const NOTICE_TITLES: Record<string, string> = {
   ELIGIBILITY_NOTICE: "Notice of Eligibility & Rights",
   DESIGNATION_NOTICE: "Leave Designation Notice",
+  MEDICAL_CERTIFICATION: "Medical Certification Form",
 };
 
 // States with additional leave law requirements beyond federal FMLA
@@ -172,11 +173,13 @@ function buildStateGuidance(states: string[]): string {
 function buildSystemPrompt(hasRagContext: boolean, hasStateRequirements: boolean): string {
   return `You are an expert HR leave administration specialist and employment law paralegal with deep expertise in federal FMLA and state leave laws.
 
-Your role is to assist HR professionals with legally compliant leave administration. You draft two required notices for every leave case:
+Your role is to assist HR professionals with legally compliant leave administration. You draft three required documents for every leave case:
 
 1. NOTICE OF ELIGIBILITY & RIGHTS — equivalent to FMLA Form WH-381. Must be provided to the employee within 5 business days of learning leave may be needed.
 
 2. LEAVE DESIGNATION NOTICE — equivalent to FMLA Form WH-382. Must be provided within 5 business days of having sufficient information to designate leave. This notice conveys the final decision (approved, conditionally approved pending certification, or denied).
+
+3. MEDICAL CERTIFICATION FORM — a complete, fillable form the employee takes to their healthcare provider (or completes themselves for bonding/military/personal leave). This is attached to the Eligibility Notice so the employee can begin the certification process immediately.
 
 The Designation Notice replaces any separate approval or denial letter — it is the official document communicating the leave decision.
 
@@ -263,6 +266,332 @@ California Designation Notice additions:
 ` : ""}`;
 }
 
+function buildMedicalCertRequirements(ctx: CaseContext, states: string[]): string {
+  const hasCA = states.includes("CA");
+  const hasWA = states.includes("WA");
+  const hasOR = states.includes("OR");
+  const hasNY = states.includes("NY");
+  const hasCO = states.includes("CO");
+
+  const reason = ctx.leaveReasonCategory;
+
+  let formType = "";
+  let formInstructions = "";
+
+  if (reason === "own_health") {
+    formType = "FMLA WH-380-E — Certification of Health Care Provider for Employee's Serious Health Condition";
+    formInstructions = `This form is completed by the employee's treating healthcare provider. It certifies the employee's serious health condition under 29 CFR § 825.306.
+
+Required sections:
+1. PATIENT / EMPLOYEE INFORMATION
+   - Employee Name: ___________________________________________
+   - Date of Birth: ____________________________________________
+   - Patient's Date of Admission (if hospitalized): _______________
+
+2. HEALTHCARE PROVIDER INFORMATION
+   - Provider Name: ___________________________________________
+   - License Number: __________________________________________
+   - Medical Specialty / Type of Practice: _______________________
+   - Practice / Clinic Name: _____________________________________
+   - Address: _________________________________________________
+   - City, State, ZIP: __________________________________________
+   - Phone: __________________________________________________
+   - Fax: ____________________________________________________
+
+3. DESCRIPTION OF MEDICAL CONDITION
+   a. Approximate date condition commenced: ____________________
+   b. Probable duration of condition: ___________________________
+   c. Briefly describe the medical facts, including symptoms, diagnosis, and any regimen of continuing treatment (do not provide information that is not directly relevant to the employee's need for leave):
+      ________________________________________________________
+      ________________________________________________________
+      ________________________________________________________
+
+4. INCAPACITY AND TREATMENT
+   a. Was / will the patient be incapacitated for a single continuous period due to the medical condition?
+      [ ] Yes   [ ] No
+      If Yes — Beginning date: ______________  End date: _________
+   b. Will the patient need to attend follow-up treatment appointments or work part-time due to the condition?
+      [ ] Yes   [ ] No
+      If Yes, please describe the schedule of treatment or part-time schedule: ________________________
+   c. Will the condition cause episodic flare-ups periodically preventing the employee from performing job functions?
+      [ ] Yes   [ ] No
+      If Yes — Estimated frequency of flare-ups: [ ] 1–2 per week  [ ] 3–4 per week  [ ] 1–3 per month  [ ] Other: _______
+      Estimated duration of each flare-up: [ ] Hours  [ ] 1–2 days  [ ] 3–5 days  [ ] Other: __________
+
+5. MEDICAL NECESSITY STATEMENT
+   Is the employee's leave medically necessary?   [ ] Yes   [ ] No
+   Brief statement of medical necessity: _______________________
+   ________________________________________________________
+
+6. PROGNOSIS / EXPECTED DURATION
+   Expected return to full duty: _______________________________
+   Any permanent limitations or restrictions: [ ] None  [ ] Yes — describe: _________________________
+
+7. HEALTHCARE PROVIDER CERTIFICATION
+   I certify that the above information is true and correct to the best of my knowledge. I understand that this form is subject to audit by the U.S. Department of Labor.
+
+   Provider Signature: ________________________  Date: _________
+   Printed Name: _____________________________________________`;
+  } else if (reason === "care_family") {
+    formType = "FMLA WH-380-F — Certification of Health Care Provider for Family Member's Serious Health Condition";
+    formInstructions = `This form is completed by the treating healthcare provider of the employee's seriously ill family member. It certifies the family member's serious health condition under 29 CFR § 825.306.
+
+Required sections:
+1. PATIENT (FAMILY MEMBER) INFORMATION
+   - Patient Name: ____________________________________________
+   - Date of Birth: ____________________________________________
+   - Relationship to Employee: [ ] Spouse  [ ] Child  [ ] Parent  [ ] Next of Kin  [ ] Other: __________
+   - Employee Name: ___________________________________________
+
+2. HEALTHCARE PROVIDER INFORMATION
+   - Provider Name: ___________________________________________
+   - License Number: __________________________________________
+   - Medical Specialty / Type of Practice: _______________________
+   - Practice / Clinic Name: _____________________________________
+   - Address: _________________________________________________
+   - City, State, ZIP: __________________________________________
+   - Phone: __________________________________________________
+   - Fax: ____________________________________________________
+
+3. DESCRIPTION OF FAMILY MEMBER'S MEDICAL CONDITION
+   a. Approximate date condition commenced: ____________________
+   b. Probable duration of condition: ___________________________
+   c. Briefly describe the medical facts, including symptoms, diagnosis, and any regimen of continuing treatment:
+      ________________________________________________________
+      ________________________________________________________
+
+4. CARE REQUIREMENT
+   a. Will the family member need care for a single continuous period?   [ ] Yes   [ ] No
+      Beginning date: ________________  Estimated end date: _____
+   b. Will the family member require intermittent care or a reduced schedule?   [ ] Yes   [ ] No
+      Estimated frequency: _____________________________________
+      Estimated duration per episode: ____________________________
+   c. Describe the type of care the employee is needed to provide (e.g., physical care, psychological comfort, transportation, arranging third-party care): ____________________________________
+      ________________________________________________________
+
+5. MEDICAL NECESSITY STATEMENT
+   Is the employee's presence medically necessary?   [ ] Yes   [ ] No
+   Statement of necessity: ____________________________________
+   ________________________________________________________
+
+6. PROGNOSIS / EXPECTED DURATION
+   Expected duration of care need: _____________________________
+
+7. HEALTHCARE PROVIDER CERTIFICATION
+   Provider Signature: ________________________  Date: _________
+   Printed Name: _____________________________________________`;
+  } else if (reason === "pregnancy_disability") {
+    formType = hasCA
+      ? "FMLA WH-380-E combined with California PDL Medical Certification"
+      : "FMLA WH-380-E — Certification for Pregnancy-Related Serious Health Condition";
+    formInstructions = `This form is completed by the employee's obstetric care provider or treating physician. It certifies the employee's pregnancy-related serious health condition.
+
+Required sections:
+1. PATIENT / EMPLOYEE INFORMATION
+   - Employee Name: ___________________________________________
+   - Date of Birth: ____________________________________________
+   - Expected Due Date: ________________________________________
+
+2. HEALTHCARE PROVIDER INFORMATION
+   - Provider Name: ___________________________________________
+   - License Number: __________________________________________
+   - Specialty (OB/GYN, Maternal-Fetal Medicine, etc.): ____________
+   - Practice / Clinic Name: _____________________________________
+   - Address: _________________________________________________
+   - City, State, ZIP: __________________________________________
+   - Phone: __________________________________________________
+
+3. DESCRIPTION OF PREGNANCY-RELATED CONDITION
+   a. Diagnosis or condition (e.g., hyperemesis gravidarum, gestational hypertension, pregnancy-induced disability):
+      ________________________________________________________
+   b. Date condition commenced or is expected to commence: _______
+   c. Expected delivery date: ____________________________________
+   d. Expected duration of disability (before and after delivery):
+      Pre-delivery: ____________________________________________
+      Post-delivery (recovery): __________________________________
+
+4. INCAPACITY
+   a. Is the employee currently incapacitated?   [ ] Yes   [ ] No
+   b. Is the employee able to perform any work?   [ ] Yes   [ ] No
+   c. If partially able, describe limitations: ______________________
+
+5. MEDICAL NECESSITY STATEMENT
+   Is leave medically necessary?   [ ] Yes   [ ] No
+   Describe medical necessity: _________________________________
+
+6. PROGNOSIS
+   Expected date of full recovery: _______________________________
+   Anticipated restrictions upon return: [ ] None  [ ] Light duty  [ ] Modified schedule  [ ] Other: _______
+
+${hasCA ? `7. CALIFORNIA PDL / SDI SECTION (California Employees Only)
+   Is this leave qualifying for California Pregnancy Disability Leave (PDL)?   [ ] Yes   [ ] No
+   Estimated PDL duration: _____________________________________
+   Is the patient expected to be eligible for California SDI benefits?   [ ] Yes   [ ] No
+   EDD Claim Number (if known): ________________________________
+   Note: Employees may contact EDD at edd.ca.gov or 1-800-480-3287 to file an SDI claim.
+
+8. HEALTHCARE PROVIDER CERTIFICATION` : "7. HEALTHCARE PROVIDER CERTIFICATION"}
+   Provider Signature: ________________________  Date: _________
+   Printed Name: _____________________________________________`;
+  } else if (reason === "bonding") {
+    formType = "Bonding Leave — Birth / Adoption / Foster Placement Confirmation";
+    formInstructions = `This form does not require a medical provider. It is completed by the employee and supported by official documentation confirming the qualifying event.
+
+Required sections:
+1. EMPLOYEE INFORMATION
+   - Employee Name: ___________________________________________
+   - Employee Number: _________________________________________
+   - Department: ______________________________________________
+
+2. QUALIFYING EVENT
+   Please check the applicable event:
+   [ ] Birth of a child
+   [ ] Adoption of a child
+   [ ] Foster care placement of a child
+
+   Child's Name (if known): ____________________________________
+   Date of Birth / Placement: ___________________________________
+
+3. SUPPORTING DOCUMENTATION (attach one of the following)
+   [ ] Birth certificate or hospital birth record
+   [ ] Adoption decree or court order
+   [ ] Foster placement agreement from authorized agency
+   [ ] Letter from licensed adoption or foster agency
+   [ ] Other official documentation: ____________________________
+
+4. REQUESTED LEAVE DATES
+   Bonding Leave Start Date: ___________________________________
+   Bonding Leave End Date: ____________________________________
+   [ ] Continuous leave   [ ] Intermittent leave
+
+5. EMPLOYEE CERTIFICATION
+   I certify that the information above is accurate and that I will provide the required supporting documentation. I understand that falsification of this form may result in disciplinary action.
+
+   Employee Signature: ______________________  Date: ___________`;
+  } else if (reason === "military") {
+    formType = "FMLA WH-384 — Certification of Qualifying Exigency for Military Family Leave";
+    formInstructions = `This form is completed by the employee to document the qualifying military exigency under 29 CFR § 825.309.
+
+Required sections:
+1. EMPLOYEE INFORMATION
+   - Employee Name: ___________________________________________
+   - Employee Number: _________________________________________
+
+2. MILITARY MEMBER INFORMATION
+   - Name of Military Member: __________________________________
+   - Relationship to Employee: [ ] Spouse  [ ] Child  [ ] Parent  [ ] Next of Kin
+   - Branch of Military Service: _________________________________
+   - Military Unit: _____________________________________________
+   - Deployment Location (country/region, if known): _______________
+
+3. QUALIFYING EXIGENCY — check all that apply:
+   [ ] Short-notice deployment (deployment notice of 7 days or less)
+   [ ] Military events and related activities
+   [ ] Childcare and school activities
+   [ ] Financial and legal arrangements
+   [ ] Counseling
+   [ ] Rest and recuperation (up to 15 days of leave per instance)
+   [ ] Post-deployment activities
+   [ ] Parental care (if military member is the sole caregiver for a parent)
+   [ ] Additional activities (explain): ___________________________
+
+4. DESCRIPTION OF EXIGENCY
+   Describe the circumstances and why leave is needed: ___________
+   ________________________________________________________
+   ________________________________________________________
+
+5. DATES AND DURATION
+   Leave Start Date: __________________________________________
+   Leave End Date: ____________________________________________
+   [ ] Continuous   [ ] Intermittent / Reduced schedule
+
+6. DOCUMENTATION
+   Attach a copy of the covered military member's active duty orders or other official military documentation.
+   [ ] Active duty orders attached   [ ] Other documentation attached: _________
+
+7. EMPLOYEE CERTIFICATION
+   Employee Signature: ______________________  Date: ___________`;
+  } else {
+    // personal or any other reason — no medical cert required; generate acknowledgment form
+    formType = "Leave Request Acknowledgment Form (Company Personal Leave)";
+    formInstructions = `This is an acknowledgment form for a personal leave of absence request under the Company's personal leave policy (unpaid, up to 30 days). No medical certification is required.
+
+Required sections:
+1. EMPLOYEE INFORMATION
+   - Employee Name: ___________________________________________
+   - Employee Number: _________________________________________
+   - Department: ______________________________________________
+   - Supervisor: _______________________________________________
+
+2. LEAVE REQUEST DETAILS
+   - Requested Start Date: _____________________________________
+   - Requested End Date: ______________________________________
+   - [ ] Continuous leave   [ ] Intermittent leave
+   - Reason for Leave (general description): _____________________
+     ________________________________________________________
+
+3. COMPANY PERSONAL LEAVE POLICY ACKNOWLEDGMENT
+   By signing below, I acknowledge that I have read and understand the following:
+   [ ] Personal leave under this policy is unpaid and limited to a maximum of 30 calendar days.
+   [ ] My position may be held for the duration of an approved leave, but the Company reserves the right to fill the role if business needs require it.
+   [ ] I am responsible for any portion of health insurance premiums normally deducted from my paycheck during the leave period.
+   [ ] This leave is not protected under the federal FMLA or any state paid leave program and does not count against FMLA entitlement.
+   [ ] I agree to provide at least 30 days' advance notice where foreseeable, or notice as soon as practicable.
+
+4. RETURN-TO-WORK
+   Anticipated return date: ____________________________________
+   [ ] I agree to notify HR at least 2 business days before my return.
+
+5. EMPLOYEE SIGNATURE
+   Employee Signature: ______________________  Date: ___________
+
+6. HR APPROVAL (to be completed by HR)
+   Approved: [ ] Yes  [ ] No
+   If denied, reason: _________________________________________
+   HR Representative: _______________________  Date: ___________`;
+  }
+
+  const stateSections: string[] = [];
+  if (hasCA) {
+    stateSections.push(`CALIFORNIA SDI / PFL CLAIM NOTICE SECTION:
+   - During pregnancy disability or own health leave, you may be eligible for California State Disability Insurance (SDI) wage replacement benefits through EDD.
+   - During bonding or family care leave, you may be eligible for California Paid Family Leave (PFL) benefits (up to 8 weeks, ~60–70% of wages).
+   - To file a claim, visit edd.ca.gov or call 1-800-480-3287.
+   - EDD Claim Number (if filed): _______________________________
+   - Include a note in the form directing the employee to notify HR of their EDD claim status.`);
+  }
+  if (hasWA) {
+    stateSections.push(`WASHINGTON PFML NOTICE:
+   - You may be eligible for Washington Paid Family and Medical Leave benefits through WA ESD (up to 12 weeks, or 18 weeks for pregnancy + bonding).
+   - Apply at paidleave.wa.gov. You must apply before or during your leave.`);
+  }
+  if (hasOR) {
+    stateSections.push(`OREGON PAID LEAVE NOTICE:
+   - You may be eligible for Oregon Paid Leave benefits (up to 12 weeks, or 14 weeks for pregnancy + bonding) through Frances Online.
+   - Apply at oregon.gov/employ/PFMLI or through Frances Online.`);
+  }
+  if (hasNY) {
+    stateSections.push(`NEW YORK PFL NOTICE:
+   - You may be eligible for New York Paid Family Leave (up to 12 weeks of partially paid, job-protected leave) for bonding, family care, or qualifying military exigency.
+   - Submit your PFL claim to the employer's disability/PFL insurance carrier.`);
+  }
+  if (hasCO) {
+    stateSections.push(`COLORADO FAMLI NOTICE:
+   - You may be eligible for Colorado FAMLI (Family and Medical Leave Insurance) benefits (up to 12 weeks, or 16 weeks for pregnancy complications + bonding).
+   - Apply at famli.colorado.gov.`);
+  }
+
+  const stateBlock = stateSections.length > 0
+    ? `\nSTATE-SPECIFIC SECTIONS TO INCLUDE IN THE FORM:\n${stateSections.join("\n\n")}`
+    : "";
+
+  return `MEDICAL CERTIFICATION FORM SPECIFICATIONS:
+
+Form Type: ${formType}
+
+${formInstructions}${stateBlock}`;
+}
+
 function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[], orgName: string): string {
   const { analysisResult } = ctx;
   const stateGuidance = buildStateGuidance(states);
@@ -285,6 +614,7 @@ function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[]
 
   const eligibilityReqs = buildEligibilityNoticeRequirements(ctx, states);
   const designationReqs = buildDesignationNoticeRequirements(ctx, states);
+  const medCertReqs = buildMedicalCertRequirements(ctx, states);
 
   // Build the auto-fill values block
   const employeeName = [ctx.employeeFirstName, ctx.employeeLastName].filter(Boolean).join(" ") || `Employee #${ctx.employeeNumber}`;
@@ -294,7 +624,7 @@ function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[]
   const employerName = orgName || "the Company";
   const todayDate = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
-  return `Analyze the following leave case and draft the two required notices.
+  return `Analyze the following leave case and draft the three required documents.
 ${ragSection}${stateSection}
 CASE INFORMATION:
 - Case Number: ${ctx.caseNumber}
@@ -329,11 +659,12 @@ ${eligiblePrograms}
 REQUIRED NOTICE CONTENT SPECIFICATIONS:
 ${eligibilityReqs}
 ${designationReqs}
+${medCertReqs}
 
 INSTRUCTIONS:
-Based on all the above, determine the recommended action and draft both required notices. The Designation Notice IS the approval/denial communication — no separate approval or denial letter is needed.
+Based on all the above, determine the recommended action and draft all three required documents. The Designation Notice IS the approval/denial communication — no separate approval or denial letter is needed. The Medical Certification Form is a standalone document the employee takes to their healthcare provider (or completes themselves for bonding/military/personal leave) — it is attached to the Eligibility Notice.
 
-Use the actual names and values from NOTICE AUTO-FILL VALUES throughout both notices — the employee's real name, the company's real name, the HR representative's real name, title, and email.
+Use the actual names and values from NOTICE AUTO-FILL VALUES throughout the notices — the employee's real name, the company's real name, the HR representative's real name, title, and email.
 
 Provide a JSON response with this exact structure:
 {
@@ -353,6 +684,11 @@ Provide a JSON response with this exact structure:
       "noticeType": "DESIGNATION_NOTICE",
       "title": "Leave Designation Notice",
       "content": "Full notice text covering ALL required elements listed above for the Designation Notice, reflecting the recommended action (APPROVE/DENY/REQUEST_MORE_INFO). 300-600 words. This notice conveys the leave decision — no separate approval or denial letter is issued. Address the employee by name, sign from the HR representative by name and title."
+    },
+    {
+      "noticeType": "MEDICAL_CERTIFICATION",
+      "title": "Medical Certification Form",
+      "content": "A complete, fillable medical certification form appropriate for the leave reason. This is a standalone document the employee takes to their healthcare provider. Include all required sections with clearly labeled blank fields using underscores (e.g., ___________) for write-in areas. Must be ready to print and complete — 400-800 words."
     }
   ]
 }

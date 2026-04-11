@@ -20,7 +20,7 @@ import {
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
 import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
-import { sendNoticeEmail, sendMagicLinkEmail } from "../lib/email";
+import { sendNoticeEmail, sendMagicLinkEmail, type EmailAttachment } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -692,26 +692,64 @@ router.post(
       createdAt: Date;
     }[] = [];
 
+    // Find the medical certification notice so it can be attached to the eligibility notice email
+    const medCertNotice = notices.find((n) => n.noticeType === "MEDICAL_CERTIFICATION");
+    const medCertAttachment: EmailAttachment | undefined = medCertNotice
+      ? {
+          filename: `Medical_Certification_Form_${leaveCase.caseNumber}.txt`,
+          content: Buffer.from(medCertNotice.content, "utf-8").toString("base64"),
+        }
+      : undefined;
+
     for (const notice of notices) {
-      await sendNoticeEmail({
-        to: recipientEmail,
-        noticeType: notice.noticeType,
-        content: notice.content,
-        caseNumber: leaveCase.caseNumber,
-        employeeNumber: leaveCase.employeeNumber,
-      });
+      // Medical cert is attached to the eligibility notice — don't send as a standalone email
+      if (notice.noticeType !== "MEDICAL_CERTIFICATION") {
+        const emailAttachments: EmailAttachment[] = [];
+        if (notice.noticeType === "ELIGIBILITY_NOTICE" && medCertAttachment) {
+          emailAttachments.push(medCertAttachment);
+        }
 
-      const [entry] = await db
-        .insert(auditLogTable)
-        .values({
-          entity: "leave_case",
-          entityId: leaveCase.id,
-          action: `NOTICE_SENT_${notice.noticeType}`,
-          actor,
-        })
-        .returning();
+        await sendNoticeEmail({
+          to: recipientEmail,
+          noticeType: notice.noticeType,
+          content: notice.content,
+          caseNumber: leaveCase.caseNumber,
+          employeeNumber: leaveCase.employeeNumber,
+          attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
+        });
 
-      auditEntries.push(entry);
+        const [entry] = await db
+          .insert(auditLogTable)
+          .values({
+            entity: "leave_case",
+            entityId: leaveCase.id,
+            action: `NOTICE_SENT_${notice.noticeType}`,
+            actor,
+          })
+          .returning();
+
+        auditEntries.push(entry);
+      }
+
+      // Archive ALL notices (including med cert) as case documents
+      try {
+        const { uploadFile } = await import("../lib/storage.js");
+        const noticeDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const noticeFileName = `${notice.noticeType.replace(/_/g, "_")}_${leaveCase.caseNumber}_${noticeDate}.txt`;
+        const storageKey = `cases/${leaveCase.id}/notices/${randomBytes(8).toString("hex")}_${notice.noticeType}.txt`;
+        const contentBuffer = Buffer.from(notice.content, "utf-8");
+        await uploadFile(storageKey, contentBuffer, "text/plain");
+        await db.insert(caseDocumentsTable).values({
+          caseId: leaveCase.id,
+          uploadedBy: "notice",
+          fileName: noticeFileName,
+          storageKey,
+          mimeType: "text/plain",
+          sizeBytes: contentBuffer.length,
+        });
+      } catch (docErr) {
+        logger.warn({ docErr, noticeType: notice.noticeType, caseId: leaveCase.id }, "Failed to archive notice as case document");
+      }
     }
 
     res.json({ sent: notices.length, auditEntries });
