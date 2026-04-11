@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import cron from "node-cron";
+import path from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { refreshRegulatoryDocs } from "./lib/regulatoryFetcher";
@@ -96,5 +97,17 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   }
   res.status(500).json({ error: "Internal server error" });
 });
+
+// Serve frontend in production
+if (!isDev) {
+  const frontendDist = path.resolve(
+    process.cwd(),
+    process.env["FRONTEND_DIST_PATH"] ?? "artifacts/leaveiq/dist/public",
+  );
+  app.use(express.static(frontendDist));
+  app.get("*", (_req: Request, res: Response) => {
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+}
 
 export default app;
