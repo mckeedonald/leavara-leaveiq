@@ -105,7 +105,7 @@ if (!isDev) {
     process.env["FRONTEND_DIST_PATH"] ?? "artifacts/leaveiq/dist/public",
   );
   app.use(express.static(frontendDist));
-  app.get("*", (_req: Request, res: Response) => {
+  app.get("/*", (_req: Request, res: Response) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
