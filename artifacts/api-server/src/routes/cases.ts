@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql, and, ne, gte, lte, isNull, or } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
-import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable } from "@workspace/db";
+import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable } from "@workspace/db";
 import {
   ListCasesQueryParams,
   CreateCaseBody,
@@ -598,9 +598,23 @@ router.post(
 
     const analysisResult = leaveCase.analysisResult as import("../lib/eligibility").AnalysisResult;
 
+    // Fetch sender (logged-in HR user) full details for notice auto-fill
+    const [senderUser] = await db
+      .select({
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        position: usersTable.position,
+        email: usersTable.email,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, authed.user.sub))
+      .limit(1);
+
     const result = await generateAiRecommendation({
       caseNumber: leaveCase.caseNumber,
       employeeNumber: leaveCase.employeeNumber,
+      employeeFirstName: leaveCase.employeeFirstName,
+      employeeLastName: leaveCase.employeeLastName,
       employeeEmail: leaveCase.employeeEmail,
       leaveReasonCategory: leaveCase.leaveReasonCategory,
       requestedStart: leaveCase.requestedStart,
@@ -608,6 +622,9 @@ router.post(
       intermittent: leaveCase.intermittent,
       analysisResult,
       organizationId: leaveCase.organizationId,
+      senderName: senderUser ? `${senderUser.firstName} ${senderUser.lastName}`.trim() : null,
+      senderTitle: senderUser?.position ?? null,
+      senderEmail: senderUser?.email ?? authed.user.email,
     });
 
     await logAudit(

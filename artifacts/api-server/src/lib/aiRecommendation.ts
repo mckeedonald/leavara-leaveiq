@@ -2,7 +2,7 @@ import { anthropic } from "./anthropic";
 import { logger } from "./logger";
 import type { AnalysisResult } from "./eligibility";
 import { retrieveRelevantChunks } from "./rag";
-import { db, orgLocationsTable } from "@workspace/db";
+import { db, orgLocationsTable, organizationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 export type AiAction = "APPROVE" | "DENY" | "REQUEST_MORE_INFO";
@@ -28,6 +28,8 @@ export interface AiRecommendationResult {
 interface CaseContext {
   caseNumber: string;
   employeeNumber: string;
+  employeeFirstName?: string | null;
+  employeeLastName?: string | null;
   employeeEmail?: string | null;
   leaveReasonCategory: string;
   requestedStart: string;
@@ -35,6 +37,10 @@ interface CaseContext {
   intermittent: boolean;
   analysisResult: AnalysisResult;
   organizationId?: string | null;
+  // Auto-fill fields — populated from DB before calling generateAiRecommendation
+  senderName?: string | null;
+  senderTitle?: string | null;
+  senderEmail?: string | null;
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -128,18 +134,32 @@ COLORADO REQUIREMENTS (in addition to federal FMLA):
 `,
 };
 
-async function getOrgStates(organizationId: string | null): Promise<string[]> {
-  if (!organizationId) return [];
+interface OrgInfo {
+  name: string;
+  states: string[];
+}
+
+async function getOrgInfo(organizationId: string | null): Promise<OrgInfo> {
+  if (!organizationId) return { name: "", states: [] };
   try {
+    const [org] = await db
+      .select({ name: organizationsTable.name })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, organizationId))
+      .limit(1);
+
     const locations = await db
       .select({ state: orgLocationsTable.state })
       .from(orgLocationsTable)
       .where(eq(orgLocationsTable.organizationId, organizationId));
-    // Return unique uppercase state codes
-    return [...new Set(locations.map((l) => l.state.toUpperCase()))];
+
+    return {
+      name: org?.name ?? "",
+      states: [...new Set(locations.map((l) => l.state.toUpperCase()))],
+    };
   } catch (err) {
-    logger.warn({ err, organizationId }, "Could not fetch org locations for AI notice — proceeding with federal only");
-    return [];
+    logger.warn({ err, organizationId }, "Could not fetch org info for AI notice — proceeding with federal only");
+    return { name: "", states: [] };
   }
 }
 
@@ -166,7 +186,7 @@ When drafting notices:
 3. Be specific about entitlement amounts, timelines, certification deadlines, and benefit rights
 4. Use professional, clear language suitable for direct delivery to the employee
 5. Include all legally required elements — a missing element can create employer liability
-6. Use [EMPLOYER NAME], [DATE], [HR REPRESENTATIVE NAME], [HR PHONE/EMAIL] as placeholders where employer-specific info is needed
+6. Use the actual employer name, employee name, HR representative name/title/email, and date provided in the CASE INFORMATION section — do NOT use generic placeholders like [EMPLOYER NAME] or [HR REPRESENTATIVE NAME]
 
 Respond ONLY with a valid JSON object. Do not include markdown, code blocks, or any text outside the JSON.`;
 }
@@ -243,7 +263,7 @@ California Designation Notice additions:
 ` : ""}`;
 }
 
-function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[]): string {
+function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[], orgName: string): string {
   const { analysisResult } = ctx;
   const stateGuidance = buildStateGuidance(states);
   const hasStateRequirements = stateGuidance.length > 0;
@@ -266,16 +286,34 @@ function buildUserPrompt(ctx: CaseContext, ragChunks: string[], states: string[]
   const eligibilityReqs = buildEligibilityNoticeRequirements(ctx, states);
   const designationReqs = buildDesignationNoticeRequirements(ctx, states);
 
+  // Build the auto-fill values block
+  const employeeName = [ctx.employeeFirstName, ctx.employeeLastName].filter(Boolean).join(" ") || `Employee #${ctx.employeeNumber}`;
+  const senderName = ctx.senderName || "HR Representative";
+  const senderTitle = ctx.senderTitle || "Human Resources";
+  const senderEmail = ctx.senderEmail || "";
+  const employerName = orgName || "the Company";
+  const todayDate = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
   return `Analyze the following leave case and draft the two required notices.
 ${ragSection}${stateSection}
 CASE INFORMATION:
 - Case Number: ${ctx.caseNumber}
 - Employee Number: ${ctx.employeeNumber}
+- Employee Name: ${employeeName}
 - Leave Reason: ${REASON_LABELS[ctx.leaveReasonCategory] ?? ctx.leaveReasonCategory}
 - Requested Start: ${ctx.requestedStart}
 - Requested End: ${ctx.requestedEnd ?? "Not specified (open-ended)"}
 - Intermittent: ${ctx.intermittent ? "Yes" : "No"}
+- Organization: ${employerName}
 - Organization States: ${states.length > 0 ? states.join(", ") : "Unknown (apply federal FMLA only)"}
+
+NOTICE AUTO-FILL VALUES — use these exact values in the notice text (do NOT use generic placeholders):
+- Employer / Company Name: ${employerName}
+- Employee Name: ${employeeName}
+- HR Representative Name: ${senderName}
+- HR Representative Title: ${senderTitle}
+- HR Representative Email: ${senderEmail}
+- Notice Date: ${todayDate}
 
 ELIGIBILITY ANALYSIS RESULTS:
 - Overall Summary: ${analysisResult.summary}
@@ -295,6 +333,8 @@ ${designationReqs}
 INSTRUCTIONS:
 Based on all the above, determine the recommended action and draft both required notices. The Designation Notice IS the approval/denial communication — no separate approval or denial letter is needed.
 
+Use the actual names and values from NOTICE AUTO-FILL VALUES throughout both notices — the employee's real name, the company's real name, the HR representative's real name, title, and email.
+
 Provide a JSON response with this exact structure:
 {
   "recommendation": {
@@ -307,38 +347,40 @@ Provide a JSON response with this exact structure:
     {
       "noticeType": "ELIGIBILITY_NOTICE",
       "title": "Notice of Eligibility & Rights",
-      "content": "Full notice text covering ALL required elements listed above for the Eligibility Notice. 300-600 words. Include all applicable federal and state required elements. Use [EMPLOYER NAME], [DATE], [HR REPRESENTATIVE NAME], [HR PHONE/EMAIL] placeholders."
+      "content": "Full notice text covering ALL required elements listed above for the Eligibility Notice. 300-600 words. Include all applicable federal and state required elements. Address the employee by name, sign from the HR representative by name and title."
     },
     {
       "noticeType": "DESIGNATION_NOTICE",
       "title": "Leave Designation Notice",
-      "content": "Full notice text covering ALL required elements listed above for the Designation Notice, reflecting the recommended action (APPROVE/DENY/REQUEST_MORE_INFO). 300-600 words. This notice conveys the leave decision — no separate approval or denial letter is issued. Use [EMPLOYER NAME], [DATE], [HR REPRESENTATIVE NAME], [HR PHONE/EMAIL] placeholders."
+      "content": "Full notice text covering ALL required elements listed above for the Designation Notice, reflecting the recommended action (APPROVE/DENY/REQUEST_MORE_INFO). 300-600 words. This notice conveys the leave decision — no separate approval or denial letter is issued. Address the employee by name, sign from the HR representative by name and title."
     }
   ]
 }
 
-Current date: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+Current date: ${todayDate}`;
 }
 
 export async function generateAiRecommendation(
   ctx: CaseContext,
 ): Promise<AiRecommendationResult> {
-  // Fetch the org's states so we can tailor notices to applicable state laws
-  const orgStates = await getOrgStates(ctx.organizationId ?? null);
+  // Fetch org name + operating states so we can tailor notices to applicable state laws
+  const orgInfo = await getOrgInfo(ctx.organizationId ?? null);
+  const orgStates = orgInfo.states;
+  const orgName = orgInfo.name;
 
   const ragQuery = `${REASON_LABELS[ctx.leaveReasonCategory] ?? ctx.leaveReasonCategory} leave eligibility ${ctx.analysisResult.summary} ${orgStates.join(" ")}`;
   let ragChunks: string[] = [];
   try {
     ragChunks = await retrieveRelevantChunks(ragQuery, ctx.organizationId ?? null);
-    logger.info({ caseNumber: ctx.caseNumber, chunkCount: ragChunks.length, orgStates }, "RAG chunks retrieved");
+    logger.info({ caseNumber: ctx.caseNumber, chunkCount: ragChunks.length, orgStates, orgName }, "RAG chunks retrieved");
   } catch (err) {
     logger.warn({ err, caseNumber: ctx.caseNumber }, "RAG retrieval failed — proceeding without context");
   }
 
   const systemPrompt = buildSystemPrompt(ragChunks.length > 0, buildStateGuidance(orgStates).length > 0);
-  const userPrompt = buildUserPrompt(ctx, ragChunks, orgStates);
+  const userPrompt = buildUserPrompt(ctx, ragChunks, orgStates, orgName);
 
-  logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0, orgStates }, "Generating AI recommendation");
+  logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0, orgStates, orgName }, "Generating AI recommendation");
 
   const stream = anthropic.messages.stream({
     model: "claude-opus-4-6",
