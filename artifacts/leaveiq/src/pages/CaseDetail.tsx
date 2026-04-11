@@ -18,6 +18,38 @@ import { useAuth, apiFetch } from "@/lib/auth";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
+// Human-readable labels for audit log actions
+const AUDIT_LABELS: Record<string, string> = {
+  CASE_CREATED: "Case submitted",
+  ANALYZE_ELIGIBILITY_ANALYSIS: "Eligibility analysis run",
+  ANALYZE_HR_REVIEW_QUEUE: "Eligibility analysis run — routed to HR review",
+  AI_RECOMMENDATION_GENERATED: "AI recommendation generated",
+  TRANSITION_ELIGIBILITY_ANALYSIS_TO_NOTICE_DRAFTED: "Notice drafted",
+  TRANSITION_ELIGIBILITY_ANALYSIS_TO_HR_REVIEW_QUEUE: "Routed to HR review",
+  TRANSITION_HR_REVIEW_QUEUE_TO_NOTICE_DRAFTED: "Notice drafted after HR review",
+  TRANSITION_HR_REVIEW_QUEUE_TO_INTAKE: "Returned to intake",
+  TRANSITION_NOTICE_DRAFTED_TO_CLOSED: "Case closed",
+  TRANSITION_NOTICE_DRAFTED_TO_CANCELLED: "Case cancelled",
+  HR_DECISION_APPROVE: "HR decision: Approved",
+  HR_DECISION_DENY: "HR decision: Denied",
+  HR_DECISION_REQUEST_MORE_INFO: "HR decision: More information requested",
+};
+
+function formatAuditAction(action: string): string {
+  // Direct match
+  if (AUDIT_LABELS[action]) return AUDIT_LABELS[action];
+  // Notice sent
+  if (action.startsWith("NOTICE_SENT_")) {
+    const type = action.replace("NOTICE_SENT_", "").replace(/_/g, " ").toLowerCase();
+    return `Notice sent — ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+  }
+  // Case deleted (has a reason appended)
+  if (action.startsWith("CASE_DELETED")) return "Case deleted";
+  // Fallback: convert SNAKE_CASE to Sentence case
+  const words = action.replace(/_/g, " ").toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 // ── Main CaseDetail ──────────────────────────────────────────────────────────
 export default function CaseDetail() {
   const [, params] = useRoute("/cases/:caseId");
@@ -328,7 +360,12 @@ export default function CaseDetail() {
                       <div className="absolute w-3 h-3 rounded-full -left-[7px] top-1 ring-4 ring-white" style={{ background: "#C97E59" }} />
                       <div className="bg-slate-50 border rounded-lg p-3">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="font-bold text-sm">{d.decisionType.replace(/_/g, " ")}</span>
+                          <span className="font-bold text-sm">{
+                            d.decisionType === "APPROVE" ? "Approved" :
+                            d.decisionType === "DENY" ? "Denied" :
+                            d.decisionType === "REQUEST_MORE_INFO" ? "Requested more information" :
+                            d.decisionType.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase())
+                          }</span>
                           <span className="text-[10px] text-muted-foreground">{formatDate(d.decidedAt)}</span>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">By: <span className="font-medium text-foreground">{d.decidedBy}</span></p>
@@ -354,7 +391,7 @@ export default function CaseDetail() {
                 ) : (
                   audit.map((a: any) => (
                     <div key={a.id} className="text-sm border-b pb-3 last:border-0 last:pb-0">
-                      <p className="font-medium">{a.action.replace(/_/g, " ")}</p>
+                      <p className="font-medium text-foreground">{formatAuditAction(a.action)}</p>
                       <div className="flex justify-between text-xs text-muted-foreground mt-1">
                         <span>{a.actor}</span>
                         <span>{formatDateTime(a.createdAt)}</span>

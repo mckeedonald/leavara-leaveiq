@@ -2,14 +2,13 @@ import { Router, type IRouter } from "express";
 import { eq, and, gt } from "drizzle-orm";
 import multer from "multer";
 import { randomBytes } from "node:crypto";
-import { db } from "@workspace/db";
 import {
+  db,
   caseAccessTokensTable,
   caseDocumentsTable,
   leaveCasesTable,
   usersTable,
-} from "@workspace/db/schema";
-import { uploadFile, getPresignedUrl } from "../lib/storage";
+} from "@workspace/db";
 import { sendDocumentUploadNotification } from "../lib/email";
 import { logger } from "../lib/logger";
 
@@ -54,52 +53,57 @@ async function resolveToken(token: string) {
 
 // GET /portal/case?token=xxx
 router.get("/portal/case", async (req, res): Promise<void> => {
-  const token = typeof req.query["token"] === "string" ? req.query["token"] : null;
-  if (!token) {
-    res.status(400).json({ error: "token is required." });
-    return;
+  try {
+    const token = typeof req.query["token"] === "string" ? req.query["token"] : null;
+    if (!token) {
+      res.status(400).json({ error: "token is required." });
+      return;
+    }
+
+    const accessToken = await resolveToken(token);
+    if (!accessToken) {
+      res.status(401).json({ error: "Invalid or expired access link. Please contact HR for a new link." });
+      return;
+    }
+
+    const [leaveCase] = await db
+      .select({
+        id: leaveCasesTable.id,
+        caseNumber: leaveCasesTable.caseNumber,
+        state: leaveCasesTable.state,
+        leaveReasonCategory: leaveCasesTable.leaveReasonCategory,
+        requestedStart: leaveCasesTable.requestedStart,
+        requestedEnd: leaveCasesTable.requestedEnd,
+        employeeFirstName: leaveCasesTable.employeeFirstName,
+        employeeLastName: leaveCasesTable.employeeLastName,
+        intermittent: leaveCasesTable.intermittent,
+      })
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, accessToken.caseId))
+      .limit(1);
+
+    if (!leaveCase) {
+      res.status(404).json({ error: "Case not found." });
+      return;
+    }
+
+    const documents = await db
+      .select({
+        id: caseDocumentsTable.id,
+        fileName: caseDocumentsTable.fileName,
+        mimeType: caseDocumentsTable.mimeType,
+        sizeBytes: caseDocumentsTable.sizeBytes,
+        uploadedBy: caseDocumentsTable.uploadedBy,
+        createdAt: caseDocumentsTable.createdAt,
+      })
+      .from(caseDocumentsTable)
+      .where(eq(caseDocumentsTable.caseId, accessToken.caseId));
+
+    res.json({ case: leaveCase, documents, token });
+  } catch (err) {
+    logger.error({ err }, "GET /portal/case — unexpected error");
+    res.status(500).json({ error: "Unable to load your case. Please try again or contact HR." });
   }
-
-  const accessToken = await resolveToken(token);
-  if (!accessToken) {
-    res.status(401).json({ error: "Invalid or expired token." });
-    return;
-  }
-
-  const [leaveCase] = await db
-    .select({
-      id: leaveCasesTable.id,
-      caseNumber: leaveCasesTable.caseNumber,
-      state: leaveCasesTable.state,
-      leaveReasonCategory: leaveCasesTable.leaveReasonCategory,
-      requestedStart: leaveCasesTable.requestedStart,
-      requestedEnd: leaveCasesTable.requestedEnd,
-      employeeFirstName: leaveCasesTable.employeeFirstName,
-      employeeLastName: leaveCasesTable.employeeLastName,
-      intermittent: leaveCasesTable.intermittent,
-    })
-    .from(leaveCasesTable)
-    .where(eq(leaveCasesTable.id, accessToken.caseId))
-    .limit(1);
-
-  if (!leaveCase) {
-    res.status(404).json({ error: "Case not found." });
-    return;
-  }
-
-  const documents = await db
-    .select({
-      id: caseDocumentsTable.id,
-      fileName: caseDocumentsTable.fileName,
-      mimeType: caseDocumentsTable.mimeType,
-      sizeBytes: caseDocumentsTable.sizeBytes,
-      uploadedBy: caseDocumentsTable.uploadedBy,
-      createdAt: caseDocumentsTable.createdAt,
-    })
-    .from(caseDocumentsTable)
-    .where(eq(caseDocumentsTable.caseId, accessToken.caseId));
-
-  res.json({ case: leaveCase, documents, token });
 });
 
 // POST /portal/case/:caseId/documents — employee file upload
@@ -133,6 +137,7 @@ router.post(
     const storageKey = `cases/${caseId}/documents/${uniqueId}.${ext}`;
 
     try {
+      const { uploadFile } = await import("../lib/storage.js");
       await uploadFile(storageKey, file.buffer, file.mimetype);
     } catch (err) {
       logger.error({ err, caseId }, "R2 upload failed");
@@ -257,6 +262,7 @@ router.get("/portal/case/:caseId/documents/:docId/download", async (req, res): P
     return;
   }
 
+  const { getPresignedUrl } = await import("../lib/storage.js");
   const url = await getPresignedUrl(doc.storageKey, 3600);
   res.json({ url, fileName: doc.fileName });
 });
