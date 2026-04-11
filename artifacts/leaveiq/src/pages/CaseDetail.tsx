@@ -287,7 +287,16 @@ export default function CaseDetail() {
                   <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">Program Eligibility</h4>
                   <div className="grid gap-3">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {analysis.eligiblePrograms.map((p: any) => (
+                    {(analysis.eligiblePrograms as any[]).filter((p: any) => {
+                      // Hide programs that are simply not applicable to this leave reason
+                      // (keep programs with real eligibility outcomes — employer size, tenure, hours)
+                      if (p.eligible) return true;
+                      const r: string = p.reason ?? "";
+                      if (r.includes("is not covered by")) return false;
+                      if (r.includes("applies only to pregnancy disability")) return false;
+                      if (r.includes("was not requested")) return false;
+                      return true;
+                    }).map((p: any) => (
                       <div
                         key={p.program}
                         className={cn(

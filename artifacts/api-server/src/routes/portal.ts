@@ -38,6 +38,25 @@ const upload = multer({
 
 async function resolveToken(token: string) {
   const now = new Date();
+
+  // First: check if the token exists at all (ignore expiry) for diagnostic logging
+  const [anyRow] = await db
+    .select({ id: caseAccessTokensTable.id, expiresAt: caseAccessTokensTable.expiresAt })
+    .from(caseAccessTokensTable)
+    .where(eq(caseAccessTokensTable.token, token))
+    .limit(1);
+
+  if (!anyRow) {
+    logger.warn({ tokenPrefix: token.slice(0, 16) }, "Portal token not found in DB");
+    return null;
+  }
+
+  if (anyRow.expiresAt <= now) {
+    logger.warn({ tokenPrefix: token.slice(0, 16), expiresAt: anyRow.expiresAt, now }, "Portal token is expired");
+    return null;
+  }
+
+  // Valid and non-expired — fetch full row
   const [row] = await db
     .select()
     .from(caseAccessTokensTable)
@@ -59,6 +78,8 @@ router.get("/portal/case", async (req, res): Promise<void> => {
       res.status(400).json({ error: "token is required." });
       return;
     }
+
+    logger.info({ tokenPrefix: token.slice(0, 16), tokenLength: token.length }, "Portal case lookup");
 
     const accessToken = await resolveToken(token);
     if (!accessToken) {

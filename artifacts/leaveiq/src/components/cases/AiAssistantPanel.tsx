@@ -251,7 +251,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-white" />
-            <h3 className="font-display font-bold text-white text-lg">AI Assistant</h3>
+            <h3 className="font-display font-bold text-white text-lg">Ava</h3>
           </div>
           {!result && !loading && (
             <button

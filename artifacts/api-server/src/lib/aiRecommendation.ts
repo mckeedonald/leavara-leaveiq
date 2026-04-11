@@ -718,15 +718,12 @@ export async function generateAiRecommendation(
 
   logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0, orgStates, orgName }, "Generating AI recommendation");
 
-  const stream = anthropic.messages.stream({
-    model: "claude-opus-4-6",
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
+  const message = await anthropic.messages.create({
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 8192,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
-
-  const message = await stream.finalMessage();
 
   const textBlock = message.content.find((b) => b.type === "text");
   const content = textBlock?.type === "text" ? textBlock.text : null;

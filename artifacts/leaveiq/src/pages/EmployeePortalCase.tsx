@@ -168,7 +168,8 @@ export default function EmployeePortalCase() {
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
           <h2 className="text-xl font-display font-bold mb-2" style={{ color: "#3D2010" }}>Unable to Load Case</h2>
-          <p className="text-muted-foreground text-sm">{error || "Something went wrong. Please try again using the link in your email."}</p>
+          <p className="text-muted-foreground text-sm mb-4">{error || "Something went wrong. Please try again using the link in your email."}</p>
+          <p className="text-xs text-muted-foreground">If this problem persists, please contact your HR department and provide the error message above.</p>
         </div>
       </EmployeeLayout>
     );
