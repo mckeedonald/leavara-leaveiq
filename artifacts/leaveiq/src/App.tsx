@@ -59,11 +59,17 @@ function GuestRoute({ component: Component }: { component: React.ComponentType }
   return <Component />;
 }
 
+// Reserved subdomains that should never be treated as org slugs
+const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "mail", "smtp", "admin", "staging", "dev"]);
+
 const isOrgSubdomain = (() => {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
   const parts = h.split(".");
-  return parts.length >= 3 && parts.slice(-2).join(".") === "leavara.net";
+  if (parts.length < 3) return false;
+  if (parts.slice(-2).join(".") !== "leavara.net") return false;
+  const sub = parts.slice(0, -2).join(".");
+  return !RESERVED_SUBDOMAINS.has(sub);
 })();
 
 function Router() {

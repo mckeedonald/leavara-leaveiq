@@ -7,13 +7,16 @@ export interface OrgBranding {
   isLoading: boolean;
 }
 
+const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "mail", "smtp", "admin", "staging", "dev"]);
+
 function getOrgSlug(): string | null {
   if (typeof window === "undefined") return null;
   const hostname = window.location.hostname;
   const parts = hostname.split(".");
-  // *.leavara.net (3+ parts, last two are leavara.net)
+  // *.leavara.net (3+ parts, last two are leavara.net) — skip reserved subdomains
   if (parts.length >= 3 && parts.slice(-2).join(".") === "leavara.net") {
-    return parts[0];
+    const sub = parts.slice(0, -2).join(".");
+    if (!RESERVED_SUBDOMAINS.has(sub)) return sub;
   }
   return new URLSearchParams(window.location.search).get("org");
 }
