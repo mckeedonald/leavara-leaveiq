@@ -7,7 +7,7 @@ import { StatusBadge, ReasonBadge, LEAVE_REASON_LABELS } from "@/components/ui/S
 import { formatDate, formatDateTime, cn } from "@/lib/utils";
 import {
   ArrowLeft, Calendar, User, Clock, ShieldAlert,
-  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw, Sparkles
+  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw, Sparkles, LogIn
 } from "lucide-react";
 import { AnalyzeCaseModal } from "@/components/cases/AnalyzeCaseModal";
 import { TransitionCaseModal } from "@/components/cases/TransitionCaseModal";
@@ -33,6 +33,8 @@ const AUDIT_LABELS: Record<string, string> = {
   HR_DECISION_APPROVE: "HR decision: Approved",
   HR_DECISION_DENY: "HR decision: Denied",
   HR_DECISION_REQUEST_MORE_INFO: "HR decision: More information requested",
+  CASE_CLOSED_RTW_CONFIRMED: "Case closed — return to work confirmed",
+  EMPLOYEE_REPORTED_RTW: "Employee reported return to work date",
 };
 
 function formatAuditAction(action: string): string {
@@ -62,6 +64,7 @@ export default function CaseDetail() {
   const [activeModal, setActiveModal] = useState<"ANALYZE" | "TRANSITION" | "DECISION" | null>(null);
   const [transitionEvent, setTransitionEvent] = useState<"ROUTE_HR_REVIEW" | "DRAFT_NOTICE" | "CANCEL" | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const [autoGenerateAi, setAutoGenerateAi] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
 
@@ -243,11 +246,36 @@ export default function CaseDetail() {
               </button>
             )}
             {caseData.state === LeaveState.NOTICE_DRAFTED && (
+              <>
+                <button
+                  onClick={() => setShowCloseModal(true)}
+                  className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
+                  style={{ background: "#5C8A5C" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#4A7A4A")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#5C8A5C")}
+                >
+                  <LogIn className="w-4 h-4" /> Close Case / Confirm RTW
+                </button>
+                <button
+                  onClick={() => { setTransitionEvent("CANCEL"); setActiveModal("TRANSITION"); }}
+                  className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-5 py-2.5 rounded-xl font-medium transition-all"
+                >
+                  Cancel Case
+                </button>
+              </>
+            )}
+            {/* Allow closing from any active state (edge case: employee returned before full processing) */}
+            {caseData.state !== LeaveState.NOTICE_DRAFTED &&
+              caseData.state !== LeaveState.CLOSED &&
+              caseData.state !== LeaveState.CANCELLED && (
               <button
-                onClick={() => { setTransitionEvent("CANCEL"); setActiveModal("TRANSITION"); }}
-                className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-5 py-2.5 rounded-xl font-medium transition-all"
+                onClick={() => setShowCloseModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all text-sm border"
+                style={{ borderColor: "#5C8A5C", color: "#5C8A5C", background: "#F0F7F0" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#E0F0E0"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#F0F7F0"; }}
               >
-                Cancel Case
+                <LogIn className="w-4 h-4" /> Close Case / Confirm RTW
               </button>
             )}
             {user?.role === "admin" && (
@@ -466,6 +494,13 @@ export default function CaseDetail() {
         />
       )}
       <RecordDecisionModal isOpen={activeModal === "DECISION"} onClose={() => setActiveModal(null)} caseId={caseId} />
+      <CloseCaseModal
+        isOpen={showCloseModal}
+        onClose={() => setShowCloseModal(false)}
+        caseId={caseId}
+        employeeReportedRtw={(caseData as any).returnedToWorkAt ?? null}
+        onClosed={() => queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) })}
+      />
       <DeleteCaseModal
         isOpen={showDeleteModal}
         caseNumber={caseData.caseNumber}
@@ -568,6 +603,136 @@ function DeleteCaseModal({ isOpen, caseNumber, caseId, onClose, onDeleted }: Del
             )}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CloseCaseModal ────────────────────────────────────────────────────────────
+interface CloseCaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  caseId: string;
+  employeeReportedRtw: string | null;
+  onClosed: () => void;
+}
+
+function CloseCaseModal({ isOpen, onClose, caseId, employeeReportedRtw, onClosed }: CloseCaseModalProps) {
+  const today = new Date().toISOString().split("T")[0];
+  const [returnedToWorkAt, setReturnedToWorkAt] = React.useState(employeeReportedRtw ?? today);
+  const [notes, setNotes] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  // Keep date field in sync if prop changes (e.g. modal opens fresh each time)
+  React.useEffect(() => {
+    setReturnedToWorkAt(employeeReportedRtw ?? today);
+    setNotes("");
+    setError("");
+  }, [isOpen, employeeReportedRtw]);
+
+  if (!isOpen) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await apiFetch(`/api/cases/${caseId}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnedToWorkAt, notes: notes || undefined }),
+      });
+      onClosed();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to close case. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-card w-full max-w-lg rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+          <div>
+            <h2 className="text-xl font-display font-bold flex items-center gap-2">
+              <LogIn className="w-5 h-5" style={{ color: "#5C8A5C" }} />
+              Close Case / Confirm Return to Work
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Confirm the employee's return to work date and close this case.
+            </p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:bg-slate-200 p-2 rounded-full transition-colors">
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
+          {error && (
+            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {employeeReportedRtw && (
+            <div className="p-3 rounded-lg border text-sm flex items-start gap-2" style={{ background: "#F0F7F0", borderColor: "#5C8A5C44", color: "#3A5A3A" }}>
+              <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#5C8A5C" }} />
+              <span>Employee reported a return to work date of <strong>{formatDate(employeeReportedRtw)}</strong>. You can confirm or adjust it below.</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">
+              Return to Work Date <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              required
+              value={returnedToWorkAt}
+              onChange={(e) => setReturnedToWorkAt(e.target.value)}
+              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold">Notes <span className="text-muted-foreground font-normal">(Optional)</span></label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+              placeholder="Any closing notes for the record…"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t mt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2.5 font-medium text-white rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-2"
+              style={{ background: "#5C8A5C" }}
+              onMouseEnter={(e) => { if (!isSubmitting) (e.currentTarget as HTMLButtonElement).style.background = "#4A7A4A"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#5C8A5C"; }}
+            >
+              {isSubmitting ? (
+                <><Clock className="w-4 h-4 animate-spin" /> Closing…</>
+              ) : (
+                <><LogIn className="w-4 h-4" /> Confirm & Close Case</>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

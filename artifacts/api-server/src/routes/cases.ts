@@ -999,4 +999,54 @@ router.patch(
   },
 );
 
+// POST /cases/:caseId/close — HR confirms RTW date and closes the case
+router.post(
+  "/cases/:caseId/close",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params as { caseId: string };
+    const { returnedToWorkAt, notes } = req.body as { returnedToWorkAt?: string; notes?: string };
+
+    const [leaveCase] = await db
+      .select()
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId));
+
+    if (!leaveCase) {
+      res.status(404).json({ error: "Case not found." });
+      return;
+    }
+
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." });
+      return;
+    }
+
+    if (leaveCase.state === "CLOSED" || leaveCase.state === "CANCELLED") {
+      res.status(400).json({ error: `Case is already ${leaveCase.state.toLowerCase()}.` });
+      return;
+    }
+
+    // RTW date priority: HR-provided → employee-reported → today
+    const rtwDate =
+      returnedToWorkAt ??
+      leaveCase.returnedToWorkAt ??
+      new Date().toISOString().split("T")[0];
+
+    await db
+      .update(leaveCasesTable)
+      .set({ state: "CLOSED", returnedToWorkAt: rtwDate, updatedAt: new Date() })
+      .where(eq(leaveCasesTable.id, caseId));
+
+    await logAudit(caseId, "CASE_CLOSED_RTW_CONFIRMED", authed.user.email);
+    if (notes?.trim()) {
+      await logAudit(caseId, `CLOSE_NOTES: ${notes.trim()}`, authed.user.email);
+    }
+
+    const detail = await fetchCaseDetail(caseId);
+    res.json(detail);
+  },
+);
+
 export default router;
