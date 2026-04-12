@@ -96,6 +96,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1028.0
         version: 3.1028.0
+      '@swc/helpers':
+        specifier: ^0.5.21
+        version: 0.5.21
       '@types/pdfkit':
         specifier: ^0.17.5
         version: 0.17.5
