@@ -73,7 +73,14 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased cursor-default select-none;
+  }
+  /* Re-enable text selection and appropriate cursors for interactive/content elements */
+  input, textarea, [contenteditable] {
+    @apply select-text cursor-text;
+  }
+  a, button, label[for], [role="button"] {
+    @apply cursor-pointer;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
