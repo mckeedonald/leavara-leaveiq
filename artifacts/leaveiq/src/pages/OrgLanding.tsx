@@ -3,10 +3,15 @@ import { Link } from "wouter";
 import { FileText, LogIn, Building2 } from "lucide-react";
 import { useOrgBranding } from "@/lib/useOrgBranding";
 
+const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "mail", "smtp", "admin", "staging", "dev"]);
+
 function getIsSubdomain(): boolean {
   if (typeof window === "undefined") return false;
   const parts = window.location.hostname.split(".");
-  return parts.length >= 3 && parts.slice(-2).join(".") === "leavara.net";
+  if (parts.length < 3) return false;
+  if (parts.slice(-2).join(".") !== "leavara.net") return false;
+  const sub = parts.slice(0, -2).join(".");
+  return !RESERVED_SUBDOMAINS.has(sub);
 }
 
 export default function OrgLanding() {
