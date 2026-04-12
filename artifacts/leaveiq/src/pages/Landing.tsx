@@ -238,129 +238,122 @@ function HeroIllustration({ anim }: { anim: AnimState }) {
   );
 }
 
-/* ─── Leave Journey illustration — three cascading story cards ── */
+/* ─── Leave Journey illustration — clean vertical timeline ── */
 function WorksIllustration() {
   return (
-    <svg viewBox="0 0 480 340" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-lg">
+    <svg viewBox="0 0 480 370" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-lg">
       <defs>
-        <filter id="c1" x="-8%" y="-8%" width="116%" height="130%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor={C.mocha} floodOpacity="0.18" />
+        <filter id="ws1" x="-6%" y="-10%" width="112%" height="130%">
+          <feDropShadow dx="0" dy="4" stdDeviation="7" floodColor={C.mocha} floodOpacity="0.13" />
         </filter>
-        <filter id="c2" x="-8%" y="-8%" width="116%" height="130%">
-          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor={C.mocha} floodOpacity="0.14" />
+        <filter id="ws2" x="-6%" y="-10%" width="112%" height="130%">
+          <feDropShadow dx="0" dy="4" stdDeviation="7" floodColor={C.mocha} floodOpacity="0.13" />
         </filter>
-        <filter id="c3" x="-8%" y="-8%" width="116%" height="130%">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor={C.mocha} floodOpacity="0.10" />
+        <filter id="ws3" x="-6%" y="-10%" width="112%" height="130%">
+          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor={C.terracottaDk} floodOpacity="0.22" />
         </filter>
       </defs>
 
-      {/* Ambient glows */}
-      <ellipse cx="420" cy="80"  rx="120" ry="120" fill={C.terracotta} opacity="0.07" />
-      <ellipse cx="60"  cy="300" rx="90"  ry="90"  fill={C.rose}       opacity="0.10" />
+      {/* ── Timeline spine ── */}
+      <line x1="36" y1="28" x2="36" y2="342"
+        stroke={C.khaki} strokeWidth="2" strokeDasharray="4 5" opacity="0.45" />
 
-      {/* ══ Card 1 — bottom (Employee Request) ══ */}
-      <rect x="56" y="210" width="370" height="108" rx="18" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#c3)" />
+      {/* ══ STEP 1 — Employee submits ══ */}
+      {/* Step bubble */}
+      <circle cx="36" cy="62" r="15" fill={C.bgCard} stroke={C.khaki} strokeWidth="2" />
+      <text x="36" y="67" textAnchor="middle" fontSize="10" fontWeight="700" fill={C.mocha} fontFamily="Roboto">1</text>
+
+      {/* Card */}
+      <rect x="66" y="30" width="400" height="66" rx="14" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#ws1)" />
 
       {/* Avatar */}
-      <circle cx="92" cy="256" r="22" fill={C.khaki} opacity="0.35" />
-      <circle cx="92" cy="248" r="9"  fill={C.mocha}    opacity="0.7"  />
-      <ellipse cx="92" cy="270" rx="13" ry="8" fill={C.mocha} opacity="0.5" />
+      <circle cx="98"  cy="63" r="16" fill={C.khaki} opacity="0.28" />
+      <circle cx="98"  cy="57" r="6.5" fill={C.mocha} opacity="0.65" />
+      <ellipse cx="98" cy="75" rx="9"  ry="5.5" fill={C.mocha} opacity="0.45" />
 
-      {/* Employee info */}
-      <text x="124" y="244" fontSize="11" fontWeight="700" fill={C.textDark}  fontFamily="Roboto">Jane Smith</text>
-      <text x="124" y="258" fontSize="9"  fontWeight="400" fill={C.textMuted} fontFamily="Roboto">Employee · Store #14</text>
+      {/* Info */}
+      <text x="124" y="54" fontSize="10.5" fontWeight="700" fill={C.textDark}  fontFamily="Roboto">Jane Smith</text>
+      <text x="124" y="67" fontSize="8.5"  fontWeight="400" fill={C.textMuted} fontFamily="Roboto">Employee · Store #14</text>
+      <rect x="124" y="74" width="74" height="15" rx="7.5" fill={C.mocha + "28"} />
+      <text x="161" y="85" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={C.mochaDeep} fontFamily="Roboto">Medical Leave</text>
 
-      {/* Leave type chip */}
-      <rect x="124" y="266" width="80" height="18" rx="9" fill={C.mocha + "30"} />
-      <text x="164" y="278" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.mochaDeep} fontFamily="Roboto">Medical Leave</text>
-
-      {/* Date range */}
-      <rect x="290" y="236" width="118" height="40" rx="10" fill={C.bg} stroke={C.khaki} strokeWidth="1" />
-      <text x="349" y="251" textAnchor="middle" fontSize="8"  fontWeight="600" fill={C.textMuted} fontFamily="Roboto">REQUESTED</text>
-      <text x="349" y="266" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={C.textDark}  fontFamily="Roboto">Jun 8 – Jul 2</text>
+      {/* Date pill */}
+      <rect x="374" y="43" width="80" height="30" rx="8" fill={C.bg} stroke={C.khaki} strokeWidth="1.2" />
+      <text x="414" y="55" textAnchor="middle" fontSize="7"   fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.4">REQUESTED</text>
+      <text x="414" y="68" textAnchor="middle" fontSize="9"   fontWeight="700" fill={C.textDark}  fontFamily="Roboto">Jun 8 – Jul 2</text>
 
       {/* Step label */}
-      <rect x="68" y="300" width="90" height="14" rx="7" fill={C.khaki + "44"} />
-      <text x="113" y="310" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.5">STEP 1 · SUBMITTED</text>
+      <text x="78" y="26" fontSize="7.5" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.6">STEP 1 · SUBMITTED</text>
 
-      {/* ══ Card 2 — middle (LeaveIQ Analysis) ══ */}
-      <rect x="36" y="120" width="370" height="110" rx="18" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#c2)" />
+      {/* ══ STEP 2 — LeaveIQ analyzes ══ */}
+      <circle cx="36" cy="185" r="15" fill={C.terracotta + "22"} stroke={C.terracotta} strokeWidth="2" />
+      <text x="36" y="190" textAnchor="middle" fontSize="10" fontWeight="700" fill={C.terracottaDk} fontFamily="Roboto">2</text>
 
-      {/* Header strip */}
-      <rect x="36" y="120" width="370" height="36" rx="18" fill={C.terracotta + "18"} />
-      <rect x="36" y="140"  width="370" height="16"  fill={C.terracotta + "18"} />
-      <circle cx="60" cy="138" r="10" fill={C.terracotta + "40"} />
-      <text x="60" y="143" textAnchor="middle" fontSize="11" fill={C.terracottaDk}>✦</text>
-      <text x="78" y="135" fontSize="10" fontWeight="700" fill={C.terracottaDk} fontFamily="Roboto">LeaveIQ Analysis</text>
-      <text x="78" y="148" fontSize="8"  fontWeight="400" fill={C.textMuted}    fontFamily="Roboto">Regulatory check complete</text>
+      <rect x="66" y="148" width="400" height="78" rx="14" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#ws2)" />
 
-      {/* 3 eligibility items in a row */}
-      {[
-        { label: "FMLA",  sub: "12 wks", x: 56,  pass: true  },
-        { label: "CFRA",  sub: "Eligible", x: 174, pass: true  },
-        { label: "PDL",   sub: "N/A",     x: 292, pass: false },
-      ].map(({ label, sub, x, pass }) => (
-        <g key={label}>
-          <rect x={x} y="168" width="90" height="44" rx="10"
-            fill={pass ? C.terracotta + "12" : C.rose + "14"}
-            stroke={pass ? C.terracotta + "40" : C.rose + "35"}
-            strokeWidth="1"
-          />
-          <circle cx={x + 16} cy="183" r="7"
-            fill={pass ? C.terracotta + "30" : C.rose + "30"} />
-          {pass ? (
-            <polyline points={`${x+11},183 ${x+15},187 ${x+22},178`}
-              stroke={C.terracottaDk} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          ) : (
-            <>
-              <line x1={x+11} y1={179} x2={x+21} y2={187} stroke={C.roseDark} strokeWidth="1.5" strokeLinecap="round" />
-              <line x1={x+21} y1={179} x2={x+11} y2={187} stroke={C.roseDark} strokeWidth="1.5" strokeLinecap="round" />
-            </>
-          )}
-          <text x={x + 30} y="184" fontSize="9"  fontWeight="700" fill={C.textDark}  fontFamily="Roboto">{label}</text>
-          <text x={x + 30} y="196" fontSize="8"   fontWeight="400" fill={C.textMuted} fontFamily="Roboto">{sub}</text>
-        </g>
-      ))}
+      {/* Analysis header */}
+      <text x="78" y="143" fontSize="7.5" fontWeight="600" fill={C.terracottaDk} fontFamily="Roboto" letterSpacing="0.6">STEP 2 · ANALYZED</text>
+      <text x="84" y="167" fontSize="9.5" fontWeight="700" fill={C.terracottaDk} fontFamily="Roboto">LeaveIQ Analysis</text>
+      <text x="84" y="180" fontSize="8"   fontWeight="400" fill={C.textMuted}    fontFamily="Roboto">Regulatory check complete</text>
 
-      {/* Step label */}
-      <rect x="48" y="218" width="100" height="14" rx="7" fill={C.terracotta + "20"} />
-      <text x="98" y="228" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={C.terracottaDk} fontFamily="Roboto" letterSpacing="0.5">STEP 2 · ANALYZED</text>
+      {/* Eligibility chips */}
+      {([
+        { label: "FMLA", sub: "12 wks",  pass: true  },
+        { label: "CFRA", sub: "Eligible", pass: true  },
+        { label: "PDL",  sub: "N/A",      pass: false },
+      ] as const).map(({ label, sub, pass }, i) => {
+        const cx = 84 + i * 132;
+        return (
+          <g key={label}>
+            <rect x={cx} y="191" width="116" height="26" rx="8"
+              fill={pass ? C.terracotta + "14" : C.rose + "14"}
+              stroke={pass ? C.terracotta + "45" : C.rose + "40"}
+              strokeWidth="1"
+            />
+            <circle cx={cx + 14} cy="204" r="6" fill={pass ? C.terracotta + "38" : C.rose + "38"} />
+            {pass ? (
+              <polyline points={`${cx+9},204 ${cx+13},208 ${cx+20},199`}
+                stroke={C.terracottaDk} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            ) : (
+              <>
+                <line x1={cx+9} y1={199} x2={cx+19} y2={209} stroke={C.roseDark} strokeWidth="1.5" strokeLinecap="round" />
+                <line x1={cx+19} y1={199} x2={cx+9} y2={209} stroke={C.roseDark} strokeWidth="1.5" strokeLinecap="round" />
+              </>
+            )}
+            <text x={cx + 28} y="202" fontSize="9"   fontWeight="700" fill={C.textDark}  fontFamily="Roboto">{label}</text>
+            <text x={cx + 28} y="213" fontSize="7.5" fontWeight="400" fill={C.textMuted} fontFamily="Roboto">{sub}</text>
+          </g>
+        );
+      })}
 
-      {/* ══ Card 3 — top front (HR Approved + Notice Sent) ══ */}
-      <rect x="16" y="22" width="370" height="118" rx="18" fill={C.terracottaDk} filter="url(#c1)" />
+      {/* ══ STEP 3 — HR Approved ══ */}
+      <circle cx="36" cy="315" r="15" fill={C.terracottaDk} />
+      <polyline points="28,315 34,321 45,306"
+        stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
 
-      {/* Big approve badge */}
-      <circle cx="66" cy="81" r="32" fill="white" opacity="0.10" />
-      <circle cx="66" cy="81" r="22" fill="white" opacity="0.14" />
-      <polyline points="54,81 63,90 80,70"
-        stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="66" y="278" width="400" height="84" rx="14" fill={C.terracottaDk} filter="url(#ws3)" />
 
-      {/* Approve text */}
-      <text x="108" y="65" fontSize="18" fontWeight="800" fill="white" fontFamily="Roboto">Approved</text>
-      <text x="108" y="83" fontSize="9"  fontWeight="400" fill={C.bg + "cc"} fontFamily="Roboto">HR Decision · FMLA Leave Granted</text>
+      <text x="78" y="273" fontSize="7.5" fontWeight="600" fill={C.terracottaDk} fontFamily="Roboto" letterSpacing="0.6">STEP 3 · RESOLVED</text>
 
-      {/* Notice sent chip */}
-      <rect x="108" y="92" width="116" height="22" rx="11" fill="white" opacity="0.15" />
-      <text x="165" y="107" textAnchor="middle" fontSize="8.5" fontWeight="600" fill="white" fontFamily="Roboto">✉ Notice sent to employee</text>
+      {/* Checkmark circle */}
+      <circle cx="108" cy="320" r="22" fill="white" opacity="0.10" />
+      <circle cx="108" cy="320" r="14" fill="white" opacity="0.15" />
+      <polyline points="100,320 106,326 117,311"
+        stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
-      {/* Date chip */}
-      <rect x="282" y="58" width="90" height="46" rx="12" fill="white" opacity="0.12" />
-      <text x="327" y="76"  textAnchor="middle" fontSize="8"   fontWeight="600" fill={C.bg + "bb"} fontFamily="Roboto">APPROVED</text>
-      <text x="327" y="91"  textAnchor="middle" fontSize="9.5" fontWeight="700" fill="white"       fontFamily="Roboto">12 weeks</text>
-      <text x="327" y="103" textAnchor="middle" fontSize="7.5" fontWeight="400" fill={C.bg + "99"} fontFamily="Roboto">Jun 8 – Sep 2</text>
+      {/* Approved text */}
+      <text x="140" y="307" fontSize="17" fontWeight="800" fill="white"         fontFamily="Roboto">Approved</text>
+      <text x="140" y="322" fontSize="8.5" fontWeight="400" fill={C.bg + "cc"} fontFamily="Roboto">HR Decision · FMLA Leave Granted</text>
 
-      {/* Step label */}
-      <rect x="28" y="122" width="104" height="14" rx="7" fill="white" opacity="0.12" />
-      <text x="80" y="132" textAnchor="middle" fontSize="7.5" fontWeight="600" fill={C.bg + "cc"} fontFamily="Roboto" letterSpacing="0.5">STEP 3 · RESOLVED</text>
+      {/* Notice chip */}
+      <rect x="140" y="329" width="118" height="20" rx="10" fill="white" opacity="0.14" />
+      <text x="199" y="343" textAnchor="middle" fontSize="8" fontWeight="600" fill="white" fontFamily="Roboto">✉ Notice sent to employee</text>
 
-      {/* Connecting dashed arrows between cards */}
-      <line x1="180" y1="140" x2="180" y2="120"
-        stroke={C.khaki} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.5" />
-      <polygon points="175,122 185,122 180,114" fill={C.khaki} opacity="0.45" />
-
-      <line x1="200" y1="230" x2="200" y2="210"
-        stroke={C.khaki} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.4" />
-      <polygon points="195,212 205,212 200,204" fill={C.khaki} opacity="0.35" />
+      {/* Approved date chip */}
+      <rect x="370" y="293" width="84" height="52" rx="10" fill="white" opacity="0.11" />
+      <text x="412" y="308" textAnchor="middle" fontSize="7"    fontWeight="600" fill={C.bg + "bb"} fontFamily="Roboto" letterSpacing="0.4">APPROVED</text>
+      <text x="412" y="324" textAnchor="middle" fontSize="13"   fontWeight="800" fill="white"       fontFamily="Roboto">12 wks</text>
+      <text x="412" y="337" textAnchor="middle" fontSize="7.5"  fontWeight="400" fill={C.bg + "99"} fontFamily="Roboto">Jun 8 – Sep 2</text>
     </svg>
   );
 }
