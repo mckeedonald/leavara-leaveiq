@@ -3,7 +3,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetCase, useTransitionCase, getGetCaseQueryKey, LeaveState, TransitionRequestEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { StatusBadge, ReasonBadge, LEAVE_REASON_LABELS } from "@/components/ui/StatusBadge";
+import { StatusBadge, ReasonBadge, LEAVE_REASON_LABELS, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, formatDateTime, cn } from "@/lib/utils";
 import {
   ArrowLeft, Calendar, User, Clock, ShieldAlert,
@@ -162,6 +162,7 @@ export default function CaseDetail() {
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-3xl font-display font-bold text-foreground">{caseData.caseNumber}</h2>
               <StatusBadge state={caseData.state} className="text-sm px-3 py-1" />
+              <DisplayStatusBadge displayStatus={(caseData as any).displayStatus} />
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5"><User className="w-4 h-4" /> EMP-{caseData.employeeNumber}</div>

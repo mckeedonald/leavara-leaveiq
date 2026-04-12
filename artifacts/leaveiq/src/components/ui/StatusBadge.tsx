@@ -33,6 +33,33 @@ export function StatusBadge({ state, className }: StatusBadgeProps) {
   );
 }
 
+const DISPLAY_STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  "Case Received":                        { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
+  "In Review":                            { bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE" },
+  "Reviewed - Eligible":                  { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
+  "Reviewed - Ineligible":                { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+  "Pending Additional Review":            { bg: "#FFFBEB", text: "#B45309", border: "#FDE68A" },
+  "Notices Drafted - Documentation Pending": { bg: "#F5F3FF", text: "#7C3AED", border: "#DDD6FE" },
+  "Approved":                             { bg: "#F0FDF4", text: "#166534", border: "#86EFAC" },
+  "Denied":                               { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
+  "Documentation Received":               { bg: "#ECFDF5", text: "#065F46", border: "#6EE7B7" },
+  "Closed":                               { bg: "#F9FAFB", text: "#4B5563", border: "#E5E7EB" },
+  "Cancelled":                            { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
+};
+
+export function DisplayStatusBadge({ displayStatus }: { displayStatus?: string | null }) {
+  if (!displayStatus) return null;
+  const style = DISPLAY_STATUS_STYLES[displayStatus] ?? { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" };
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+      style={{ background: style.bg, color: style.text, borderColor: style.border }}
+    >
+      {displayStatus}
+    </span>
+  );
+}
+
 export const LEAVE_REASON_LABELS: Record<string, string> = {
   own_health: "Employee's Own Care",
   care_family: "Care for a Family Member",

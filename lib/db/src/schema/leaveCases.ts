@@ -13,6 +13,7 @@ export const leaveCasesTable = pgTable("leave_case", {
   employeeLastName: text("employee_last_name"),
   employeeEmail: text("employee_email"),
   state: text("state").notNull().default("INTAKE"),
+  displayStatus: text("display_status"),
   requestedStart: date("requested_start").notNull(),
   requestedEnd: date("requested_end"),
   leaveReasonCategory: text("leave_reason_category").notNull(),

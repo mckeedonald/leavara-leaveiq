@@ -178,6 +178,7 @@ router.post("/cases", async (req, res): Promise<void> => {
         employeeLastName: data.employeeLastName ?? null,
         employeeEmail: data.employeeEmail ?? null,
         state: "INTAKE",
+        displayStatus: "Case Received",
         requestedStart: data.requestedStart,
         requestedEnd: data.requestedEnd ?? null,
         leaveReasonCategory: data.leaveReasonCategory,
@@ -420,10 +421,21 @@ router.post("/cases/:caseId/analyze", requireAuth, async (req, res): Promise<voi
     ? "HR_REVIEW_QUEUE"
     : "ELIGIBILITY_ANALYSIS";
 
+  let analyzeDisplayStatus: string;
+  if (leaveCase.state === "ELIGIBILITY_ANALYSIS" || leaveCase.state === "HR_REVIEW_QUEUE") {
+    // Override / re-run
+    analyzeDisplayStatus = "Pending Additional Review";
+  } else {
+    // First analysis from INTAKE
+    const hasEligible = analysisResult.eligiblePrograms?.some((p: { eligible?: boolean }) => p.eligible === true) ?? false;
+    analyzeDisplayStatus = hasEligible ? "Reviewed - Eligible" : "Reviewed - Ineligible";
+  }
+
   const [updated] = await db
     .update(leaveCasesTable)
     .set({
       state: nextState,
+      displayStatus: analyzeDisplayStatus,
       analysisResult: analysisResult as unknown as Record<string, unknown>,
       updatedAt: new Date(),
     })
@@ -488,9 +500,21 @@ router.post("/cases/:caseId/transition", requireAuth, async (req, res): Promise<
     return;
   }
 
+  let transitionDisplayStatus: string | undefined;
+  if (body.data.event === "ROUTE_HR_REVIEW") {
+    transitionDisplayStatus = "Pending Additional Review";
+  } else if (body.data.event === "CANCEL") {
+    transitionDisplayStatus = "Cancelled";
+  }
+  // DRAFT_NOTICE: displayStatus handled by send-notices
+
   const [updated] = await db
     .update(leaveCasesTable)
-    .set({ state: targetState, updatedAt: new Date() })
+    .set({
+      state: targetState,
+      ...(transitionDisplayStatus !== undefined ? { displayStatus: transitionDisplayStatus } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(leaveCasesTable.id, params.data.caseId))
     .returning();
 
@@ -554,13 +578,19 @@ router.post(
     });
 
     let nextState = "NOTICE_DRAFTED";
+    let hrDecisionDisplayStatus: string | undefined;
     if (body.data.decisionType === "REQUEST_MORE_INFO") {
       nextState = "INTAKE";
+      hrDecisionDisplayStatus = leaveCase.assignedToUserId ? "In Review" : "Case Received";
     }
 
     const [updated] = await db
       .update(leaveCasesTable)
-      .set({ state: nextState, updatedAt: new Date() })
+      .set({
+        state: nextState,
+        ...(hrDecisionDisplayStatus !== undefined ? { displayStatus: hrDecisionDisplayStatus } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(leaveCasesTable.id, leaveCase.id))
       .returning();
 
@@ -810,6 +840,24 @@ router.post(
       }
     }
 
+    // Update displayStatus based on which notices were sent
+    let newDisplayStatus: string;
+    if (notices.some((n) => n.noticeType === "DESIGNATION_NOTICE")) {
+      const [latestDecision] = await db
+        .select()
+        .from(hrDecisionsTable)
+        .where(eq(hrDecisionsTable.leaveCaseId, leaveCase.id))
+        .orderBy(desc(hrDecisionsTable.decidedAt))
+        .limit(1);
+      newDisplayStatus = latestDecision?.decisionType === "DENY" ? "Denied" : "Approved";
+    } else {
+      newDisplayStatus = "Notices Drafted - Documentation Pending";
+    }
+    await db
+      .update(leaveCasesTable)
+      .set({ displayStatus: newDisplayStatus, updatedAt: new Date() })
+      .where(eq(leaveCasesTable.id, leaveCase.id));
+
     res.json({ sent: notices.length, auditEntries });
   },
 );
@@ -987,9 +1035,21 @@ router.patch(
       }
     }
 
+    let assignDisplayStatus: string | undefined;
+    if (assignedToUserId) {
+      assignDisplayStatus = "In Review";
+    } else if (leaveCase.state === "INTAKE") {
+      assignDisplayStatus = "Case Received";
+    }
+    // For unassign in non-INTAKE states, leave displayStatus unchanged
+
     await db
       .update(leaveCasesTable)
-      .set({ assignedToUserId: assignedToUserId ?? null, updatedAt: new Date() })
+      .set({
+        assignedToUserId: assignedToUserId ?? null,
+        ...(assignDisplayStatus !== undefined ? { displayStatus: assignDisplayStatus } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(leaveCasesTable.id, caseId));
 
     const auditAction = assignedToUserId ? "CASE_ASSIGNED" : "CASE_UNASSIGNED";
@@ -1037,7 +1097,7 @@ router.post(
 
     await db
       .update(leaveCasesTable)
-      .set({ state: "CLOSED", returnedToWorkAt: rtwDate, updatedAt: new Date() })
+      .set({ state: "CLOSED", displayStatus: "Closed", returnedToWorkAt: rtwDate, updatedAt: new Date() })
       .where(eq(leaveCasesTable.id, caseId));
 
     await logAudit(caseId, "CASE_CLOSED_RTW_CONFIRMED", authed.user.email);

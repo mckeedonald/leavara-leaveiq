@@ -154,6 +154,13 @@ router.post(
       return;
     }
 
+    // Fetch the case to check displayStatus before upload
+    const [caseForUpload] = await db
+      .select({ displayStatus: leaveCasesTable.displayStatus })
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
     // Build a unique storage key
     const ext = file.originalname.split(".").pop() ?? "bin";
     const uniqueId = randomBytes(8).toString("hex");
@@ -179,6 +186,14 @@ router.post(
         sizeBytes: file.size,
       })
       .returning();
+
+    // Only advance to "Documentation Received" if still waiting for docs
+    if (caseForUpload?.displayStatus === "Notices Drafted - Documentation Pending") {
+      await db
+        .update(leaveCasesTable)
+        .set({ displayStatus: "Documentation Received", updatedAt: new Date() })
+        .where(eq(leaveCasesTable.id, caseId));
+    }
 
     // Notify the HR reviewer
     try {

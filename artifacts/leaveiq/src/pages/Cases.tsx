@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListCases, LeaveState } from "@workspace/api-client-react";
-import { StatusBadge, ReasonBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge, ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate } from "@/lib/utils";
 import { Search, Loader2, Filter, Plus } from "lucide-react";
 import { CreateCaseModal } from "@/components/cases/CreateCaseModal";
@@ -89,7 +89,12 @@ export default function Cases() {
                       </td>
                       <td className="px-6 py-4 text-muted-foreground font-medium">{c.employeeNumber}</td>
                       <td className="px-6 py-4"><ReasonBadge reason={c.leaveReasonCategory} /></td>
-                      <td className="px-6 py-4"><StatusBadge state={c.state} /></td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <StatusBadge state={c.state} />
+                          <DisplayStatusBadge displayStatus={(c as any).displayStatus} />
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-muted-foreground">
                         {formatDate(c.requestedStart)}
                         {c.requestedEnd ? ` - ${formatDate(c.requestedEnd)}` : ' (Ongoing)'}
