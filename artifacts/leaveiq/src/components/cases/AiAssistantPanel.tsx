@@ -129,10 +129,12 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
     setPendingRegenerateType(null);
   }
 
-  // Show AI panel for both ELIGIBILITY_ANALYSIS and HR_REVIEW_QUEUE states
+  // Show AI panel for ELIGIBILITY_ANALYSIS, HR_REVIEW_QUEUE, and NOTICE_DRAFTED
+  // (NOTICE_DRAFTED: designation notice can be sent after documentation is returned)
   const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
   const isHrReview = caseState === "HR_REVIEW_QUEUE";
-  const showAiPanel = isEligibility || isHrReview;
+  const isNoticeDrafted = caseState === "NOTICE_DRAFTED";
+  const showAiPanel = isEligibility || isHrReview || isNoticeDrafted;
 
   const fetchRecommendation = useCallback(async () => {
     setLoading(true);
