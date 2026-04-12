@@ -8,10 +8,15 @@ export interface EmailAttachment {
   content: string; // base64-encoded file content
 }
 
-function getAppUrl(): string {
-  const domain = process.env["REPLIT_DOMAINS"]?.split(",")[0];
-  if (domain) return `https://${domain}`;
-  return process.env["APP_URL"] ?? "http://localhost:3000";
+export function getAppUrl(): string {
+  // Explicit override takes highest priority
+  if (process.env["APP_URL"]) return process.env["APP_URL"];
+  // Railway auto-injects RAILWAY_PUBLIC_DOMAIN for the service's public URL
+  if (process.env["RAILWAY_PUBLIC_DOMAIN"]) return `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`;
+  // Replit fallback
+  const replitDomain = process.env["REPLIT_DOMAINS"]?.split(",")[0];
+  if (replitDomain) return `https://${replitDomain}`;
+  return "http://localhost:3000";
 }
 
 async function sendEmail(

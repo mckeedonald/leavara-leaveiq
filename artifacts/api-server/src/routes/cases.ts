@@ -20,7 +20,7 @@ import {
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
 import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
-import { sendNoticeEmail, sendMagicLinkEmail, type EmailAttachment } from "../lib/email";
+import { sendNoticeEmail, sendMagicLinkEmail, getAppUrl, type EmailAttachment } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -199,8 +199,7 @@ router.post("/cases", async (req, res): Promise<void> => {
           expiresAt,
         });
 
-        const appUrl = process.env["APP_URL"] ?? "https://leavara.net";
-        const magicLinkUrl = `${appUrl}/portal?token=${token}`;
+        const magicLinkUrl = `${getAppUrl()}/portal?token=${token}`;
         await sendMagicLinkEmail(data.employeeEmail, newCase.caseNumber, magicLinkUrl);
         logger.info({ caseId: newCase.id, to: data.employeeEmail }, "Confirmation/magic-link email sent");
       } catch (err) {
