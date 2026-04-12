@@ -12,6 +12,7 @@
     "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts"
   },
   "dependencies": {
+    "@swc/helpers": "^0.5.21",
     "@anthropic-ai/sdk": "^0.88.0",
     "@aws-sdk/client-s3": "^3.1028.0",
     "@aws-sdk/s3-request-presigner": "^3.1028.0",
