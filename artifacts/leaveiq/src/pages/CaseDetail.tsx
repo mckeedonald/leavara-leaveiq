@@ -67,6 +67,7 @@ export default function CaseDetail() {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [autoGenerateAi, setAutoGenerateAi] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [docsRefreshKey, setDocsRefreshKey] = useState(0);
 
   const aiPanelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -82,6 +83,8 @@ export default function CaseDetail() {
   }, [scrollToAiPanel]);
 
   const handleNoticesSent = useCallback(() => {
+    // Refresh the documents panel so newly archived notices appear immediately
+    setDocsRefreshKey((k) => k + 1);
     // After HR sends notices from ELIGIBILITY_ANALYSIS, transition case to NOTICE_DRAFTED
     if (caseData?.state === LeaveState.ELIGIBILITY_ANALYSIS) {
       transitionCase.mutate(
@@ -237,7 +240,9 @@ export default function CaseDetail() {
                 </button>
               </>
             )}
-            {(caseData.state === LeaveState.HR_REVIEW_QUEUE || caseData.state === LeaveState.ELIGIBILITY_ANALYSIS) && (
+            {(caseData.state === LeaveState.HR_REVIEW_QUEUE ||
+              caseData.state === LeaveState.ELIGIBILITY_ANALYSIS ||
+              caseData.state === LeaveState.NOTICE_DRAFTED) && (
               <button
                 onClick={() => setActiveModal("DECISION")}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl font-medium shadow-md transition-all flex items-center gap-2"
@@ -417,7 +422,7 @@ export default function CaseDetail() {
             </div>
 
             {/* Case Documents */}
-            <CaseDocumentsPanel caseId={caseId} />
+            <CaseDocumentsPanel caseId={caseId} refreshKey={docsRefreshKey} />
           </div>
 
           {/* Right column */}

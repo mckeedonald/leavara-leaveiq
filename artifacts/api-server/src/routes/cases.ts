@@ -538,9 +538,10 @@ router.post(
       return;
     }
 
-    if (leaveCase.state !== "HR_REVIEW_QUEUE" && leaveCase.state !== "ELIGIBILITY_ANALYSIS") {
+    const allowedDecisionStates = ["HR_REVIEW_QUEUE", "ELIGIBILITY_ANALYSIS", "NOTICE_DRAFTED"];
+    if (!allowedDecisionStates.includes(leaveCase.state)) {
       res.status(400).json({
-        error: `HR decisions can only be recorded when a case is in HR_REVIEW_QUEUE or ELIGIBILITY_ANALYSIS state. Current state: ${leaveCase.state}`,
+        error: `HR decisions can only be recorded on active cases. Current state: ${leaveCase.state}`,
       });
       return;
     }

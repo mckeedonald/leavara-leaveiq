@@ -14,6 +14,8 @@ interface CaseDocument {
 
 interface Props {
   caseId: string;
+  /** Increment to trigger an automatic reload (e.g. after notices are sent) */
+  refreshKey?: number;
 }
 
 function formatBytes(bytes: number | null): string {
@@ -23,7 +25,7 @@ function formatBytes(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function CaseDocumentsPanel({ caseId }: Props) {
+export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -47,7 +49,7 @@ export function CaseDocumentsPanel({ caseId }: Props) {
   React.useEffect(() => {
     loadDocuments();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [caseId]);
+  }, [caseId, refreshKey]);
 
   async function handleDownload(docId: string, fileName: string) {
     try {
