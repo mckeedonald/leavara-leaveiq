@@ -719,7 +719,7 @@ export async function generateAiRecommendation(
   logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0, orgStates, orgName }, "Generating AI recommendation");
 
   const message = await anthropic.messages.create({
-    model: "claude-3-haiku-20240307",
+    model: "claude-haiku-4-5",
     max_tokens: 8192,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
