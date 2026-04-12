@@ -187,6 +187,13 @@ router.post(
       })
       .returning();
 
+    await db.insert(auditLogTable).values({
+      entity: "leave_case",
+      entityId: caseId,
+      action: "EMPLOYEE_DOCUMENT_UPLOADED",
+      actor: "employee",
+    });
+
     // Only advance to "Documentation Received" if still waiting for docs
     if (caseForUpload?.displayStatus === "Notices Drafted - Documentation Pending") {
       await db

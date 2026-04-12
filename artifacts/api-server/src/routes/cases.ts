@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and, ne, gte, lte, isNull, or } from "drizzle-orm";
+import { eq, desc, sql, and, ne, gte, lte, isNull, or, inArray } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable } from "@workspace/db";
 import {
@@ -18,7 +18,7 @@ import {
   SendNoticesBody,
 } from "@workspace/api-zod";
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
-import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
+import { requireAuth, verifyToken, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
 import { sendNoticeEmail, sendMagicLinkEmail, sendNewCaseNotificationEmail, getAppUrl, type EmailAttachment } from "../lib/email";
 import { logger } from "../lib/logger";
@@ -1173,5 +1173,46 @@ router.post(
     res.json(detail);
   },
 );
+
+// GET /notifications
+router.get("/notifications", requireAuth, async (req: Request, res: Response) => {
+  const user = (req as any).user as JwtPayload;
+  if (!user?.organizationId) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  // Notification-worthy audit actions
+  const NOTIFY_ACTIONS = [
+    "CASE_CREATED",
+    "EMPLOYEE_REPORTED_RTW",
+    "EMPLOYEE_DOCUMENT_UPLOADED",
+  ];
+
+  const rows = await db
+    .select({
+      id: auditLogTable.id,
+      action: auditLogTable.action,
+      actor: auditLogTable.actor,
+      createdAt: auditLogTable.createdAt,
+      caseId: leaveCasesTable.id,
+      caseNumber: leaveCasesTable.caseNumber,
+      employeeFirstName: leaveCasesTable.employeeFirstName,
+      employeeLastName: leaveCasesTable.employeeLastName,
+    })
+    .from(auditLogTable)
+    .innerJoin(leaveCasesTable, eq(auditLogTable.entityId, leaveCasesTable.id))
+    .where(
+      and(
+        eq(leaveCasesTable.organizationId, user.organizationId),
+        inArray(auditLogTable.action, NOTIFY_ACTIONS),
+        isNull(leaveCasesTable.deletedAt),
+      )
+    )
+    .orderBy(desc(auditLogTable.createdAt))
+    .limit(30);
+
+  res.json({ notifications: rows });
+});
 
 export default router;
