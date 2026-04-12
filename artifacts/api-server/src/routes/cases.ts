@@ -20,7 +20,7 @@ import {
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
 import { requireAuth, verifyToken, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
-import { sendNoticeEmail, sendMagicLinkEmail, getAppUrl, type EmailAttachment } from "../lib/email";
+import { sendNoticeEmail, sendMagicLinkEmail, sendNewCaseNotificationEmail, getAppUrl, type EmailAttachment } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -191,7 +191,15 @@ router.post("/cases", async (req, res): Promise<void> => {
     if (data.employeeEmail) {
       try {
         const token = randomBytes(64).toString("hex");
-        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        // Token expiry: requestedEnd + 90 days if set, else today + 365 days; minimum 90 days from now
+        const ninetyDaysFromNow = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+        let expiresAt: Date;
+        if (data.requestedEnd) {
+          expiresAt = new Date(new Date(data.requestedEnd).getTime() + 90 * 24 * 60 * 60 * 1000);
+        } else {
+          expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        }
+        if (expiresAt < ninetyDaysFromNow) expiresAt = ninetyDaysFromNow;
         await db.insert(caseAccessTokensTable).values({
           caseId: newCase.id,
           token,
@@ -204,6 +212,50 @@ router.post("/cases", async (req, res): Promise<void> => {
         logger.info({ caseId: newCase.id, to: data.employeeEmail }, "Confirmation/magic-link email sent");
       } catch (err) {
         logger.warn({ err, caseId: newCase.id }, "Magic link email failed — case still created");
+      }
+    }
+
+    // Notify all active HR users in the org about the new case
+    if (organizationId) {
+      try {
+        const hrUsers = await db
+          .select({ email: usersTable.email, firstName: usersTable.firstName })
+          .from(usersTable)
+          .where(
+            and(
+              eq(usersTable.organizationId, organizationId),
+              eq(usersTable.isActive, true),
+            ),
+          );
+
+        const employeeName = [data.employeeFirstName, data.employeeLastName].filter(Boolean).join(" ") || data.employeeNumber;
+        const caseUrl = `${getAppUrl()}/cases/${newCase.id}`;
+
+        const REASON_LABELS: Record<string, string> = {
+          own_health: "Employee's own serious health condition",
+          care_family: "Care for a seriously ill family member",
+          pregnancy_disability: "Pregnancy disability",
+          bonding: "Bonding with a new child",
+          personal: "Personal",
+        };
+        const leaveReason = REASON_LABELS[data.leaveReasonCategory] ?? data.leaveReasonCategory;
+
+        for (const hrUser of hrUsers) {
+          await sendNewCaseNotificationEmail({
+            to: hrUser.email,
+            hrFirstName: hrUser.firstName,
+            caseNumber: newCase.caseNumber,
+            employeeName,
+            leaveReason,
+            requestedStart: data.requestedStart,
+            requestedEnd: data.requestedEnd ?? null,
+            caseUrl,
+          }).catch((err) => logger.warn({ err, to: hrUser.email }, "New case HR notification email failed"));
+        }
+
+        logger.info({ caseId: newCase.id, hrUserCount: hrUsers.length }, "New case notification sent to HR users");
+      } catch (err) {
+        logger.warn({ err, caseId: newCase.id }, "New case HR notification failed — case still created");
       }
     }
 
@@ -887,6 +939,63 @@ router.delete(
     await logAudit(caseId, `CASE_DELETED: ${reason.trim()}`, authed.user.email);
 
     res.json({ success: true });
+  },
+);
+
+// PATCH /cases/:caseId/assign  (requireAuth — assign or unassign a case)
+router.patch(
+  "/cases/:caseId/assign",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+    const { assignedToUserId } = req.body as { assignedToUserId?: string | null };
+
+    const [leaveCase] = await db
+      .select()
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) {
+      res.status(404).json({ error: "Case not found." });
+      return;
+    }
+
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." });
+      return;
+    }
+
+    // If assigning to a specific user, verify that user belongs to the same org
+    if (assignedToUserId) {
+      const [targetUser] = await db
+        .select({ organizationId: usersTable.organizationId })
+        .from(usersTable)
+        .where(eq(usersTable.id, assignedToUserId))
+        .limit(1);
+
+      if (!targetUser) {
+        res.status(404).json({ error: "User not found." });
+        return;
+      }
+
+      if (authed.user.organizationId && targetUser.organizationId !== authed.user.organizationId) {
+        res.status(403).json({ error: "Cannot assign case to a user outside your organization." });
+        return;
+      }
+    }
+
+    await db
+      .update(leaveCasesTable)
+      .set({ assignedToUserId: assignedToUserId ?? null, updatedAt: new Date() })
+      .where(eq(leaveCasesTable.id, caseId));
+
+    const auditAction = assignedToUserId ? "CASE_ASSIGNED" : "CASE_UNASSIGNED";
+    await logAudit(caseId, auditAction, authed.user.email);
+
+    const detail = await fetchCaseDetail(caseId);
+    res.json(detail);
   },
 );
 

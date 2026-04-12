@@ -8,8 +8,9 @@ import {
   caseDocumentsTable,
   leaveCasesTable,
   usersTable,
+  auditLogTable,
 } from "@workspace/db";
-import { sendDocumentUploadNotification } from "../lib/email";
+import { sendDocumentUploadNotification, sendReturnToWorkNotification, getAppUrl } from "../lib/email";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -98,6 +99,7 @@ router.get("/portal/case", async (req, res): Promise<void> => {
         employeeFirstName: leaveCasesTable.employeeFirstName,
         employeeLastName: leaveCasesTable.employeeLastName,
         intermittent: leaveCasesTable.intermittent,
+        returnedToWorkAt: leaveCasesTable.returnedToWorkAt,
       })
       .from(leaveCasesTable)
       .where(eq(leaveCasesTable.id, accessToken.caseId))
@@ -286,6 +288,104 @@ router.get("/portal/case/:caseId/documents/:docId/download", async (req, res): P
   const { getPresignedUrl } = await import("../lib/storage.js");
   const url = await getPresignedUrl(doc.storageKey, 3600);
   res.json({ url, fileName: doc.fileName });
+});
+
+// POST /portal/case/:caseId/return-to-work — employee reports return to work
+router.post("/portal/case/:caseId/return-to-work", async (req, res): Promise<void> => {
+  const token = typeof req.query["token"] === "string" ? req.query["token"] : null;
+  const { caseId } = req.params;
+  const { returnDate } = req.body as { returnDate?: string };
+
+  if (!token) {
+    res.status(401).json({ error: "token is required." });
+    return;
+  }
+
+  if (!returnDate || !/^\d{4}-\d{2}-\d{2}$/.test(returnDate)) {
+    res.status(400).json({ error: "returnDate is required in YYYY-MM-DD format." });
+    return;
+  }
+
+  const accessToken = await resolveToken(token);
+  if (!accessToken || accessToken.caseId !== caseId) {
+    res.status(401).json({ error: "Invalid or expired token." });
+    return;
+  }
+
+  const [leaveCase] = await db
+    .select()
+    .from(leaveCasesTable)
+    .where(eq(leaveCasesTable.id, caseId))
+    .limit(1);
+
+  if (!leaveCase) {
+    res.status(404).json({ error: "Case not found." });
+    return;
+  }
+
+  await db
+    .update(leaveCasesTable)
+    .set({ returnedToWorkAt: returnDate, updatedAt: new Date() })
+    .where(eq(leaveCasesTable.id, caseId));
+
+  await db.insert(auditLogTable).values({
+    entity: "leave_case",
+    entityId: caseId,
+    action: "EMPLOYEE_REPORTED_RTW",
+    actor: accessToken.employeeEmail ?? "employee",
+  });
+
+  // Notify HR: assigned user if set, otherwise all org HR users
+  try {
+    const employeeName = [leaveCase.employeeFirstName, leaveCase.employeeLastName].filter(Boolean).join(" ") || accessToken.employeeEmail;
+    const caseUrl = `${getAppUrl()}/cases/${caseId}`;
+
+    const assignedUserId = (leaveCase as { assignedToUserId?: string | null }).assignedToUserId;
+
+    if (assignedUserId) {
+      const [assignedUser] = await db
+        .select({ email: usersTable.email, firstName: usersTable.firstName })
+        .from(usersTable)
+        .where(eq(usersTable.id, assignedUserId))
+        .limit(1);
+
+      if (assignedUser) {
+        await sendReturnToWorkNotification({
+          to: assignedUser.email,
+          hrFirstName: assignedUser.firstName,
+          employeeName,
+          caseNumber: leaveCase.caseNumber,
+          returnDate,
+          caseUrl,
+        });
+      }
+    } else if (leaveCase.organizationId) {
+      const hrUsers = await db
+        .select({ email: usersTable.email, firstName: usersTable.firstName })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.organizationId, leaveCase.organizationId),
+            eq(usersTable.isActive, true),
+          ),
+        );
+
+      for (const hrUser of hrUsers) {
+        await sendReturnToWorkNotification({
+          to: hrUser.email,
+          hrFirstName: hrUser.firstName,
+          employeeName,
+          caseNumber: leaveCase.caseNumber,
+          returnDate,
+          caseUrl,
+        }).catch((err) => logger.warn({ err, to: hrUser.email }, "RTW HR notification email failed"));
+      }
+    }
+  } catch (err) {
+    logger.warn({ err, caseId }, "RTW notification failed — return date still recorded");
+  }
+
+  res.json({ success: true });
 });
 
 export default router;

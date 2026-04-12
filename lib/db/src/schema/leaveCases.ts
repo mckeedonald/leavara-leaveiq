@@ -2,6 +2,7 @@ import { pgTable, text, uuid, boolean, date, jsonb, timestamp } from "drizzle-or
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { organizationsTable } from "./organizations";
+import { usersTable } from "./users";
 
 export const leaveCasesTable = pgTable("leave_case", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -18,6 +19,8 @@ export const leaveCasesTable = pgTable("leave_case", {
   intermittent: boolean("intermittent").notNull().default(false),
   analysisResult: jsonb("analysis_result"),
   aiRecommendation: jsonb("ai_recommendation"),
+  assignedToUserId: uuid("assigned_to_user_id").references(() => usersTable.id),
+  returnedToWorkAt: date("returned_to_work_at"),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
   deletedReason: text("deleted_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

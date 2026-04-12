@@ -23,6 +23,7 @@ interface CaseSummary {
   employeeFirstName: string | null;
   employeeLastName: string | null;
   intermittent: boolean;
+  returnedToWorkAt: string | null;
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -62,6 +63,12 @@ export default function EmployeePortalCase() {
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const todayStr = new Date().toISOString().split("T")[0] ?? "";
+  const [rtwDate, setRtwDate] = useState(todayStr);
+  const [rtwSubmitting, setRtwSubmitting] = useState(false);
+  const [rtwSuccess, setRtwSuccess] = useState("");
+  const [rtwError, setRtwError] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -150,6 +157,32 @@ export default function EmployeePortalCase() {
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) uploadFile(file);
+  }
+
+  async function handleRtwSubmit() {
+    if (!caseData || !rtwDate) return;
+    setRtwSubmitting(true);
+    setRtwError("");
+    setRtwSuccess("");
+    try {
+      const res = await fetch(
+        `/api/portal/case/${caseData.id}/return-to-work?token=${encodeURIComponent(token)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ returnDate: rtwDate }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "Failed to submit.");
+      setRtwSuccess("Your return to work date has been reported to HR.");
+      // Refresh case data to reflect returnedToWorkAt
+      await loadCase();
+    } catch (err) {
+      setRtwError(err instanceof Error ? err.message : "Failed to submit return to work date.");
+    } finally {
+      setRtwSubmitting(false);
+    }
   }
 
   if (isLoading) {
@@ -310,6 +343,64 @@ export default function EmployeePortalCase() {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Return to Work Section */}
+        {caseData.state !== "CLOSED" && caseData.state !== "CANCELLED" && !caseData.returnedToWorkAt && (
+          <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b bg-slate-50/50">
+              <h3 className="font-display font-bold text-base flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                Report Return to Work
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Let your HR team know when you returned or plan to return to work.
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              {rtwError && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {rtwError}
+                  <button onClick={() => setRtwError("")} className="ml-auto"><X className="w-4 h-4" /></button>
+                </div>
+              )}
+              {rtwSuccess && (
+                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  {rtwSuccess}
+                </div>
+              )}
+              {!rtwSuccess && (
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                  <div className="flex-1">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                      Return Date
+                    </label>
+                    <input
+                      type="date"
+                      value={rtwDate}
+                      onChange={(e) => setRtwDate(e.target.value)}
+                      disabled={rtwSubmitting}
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2"
+                      style={{ borderColor: "#D4C9BB", color: "#3D2010" }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleRtwSubmit}
+                    disabled={rtwSubmitting || !rtwDate}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white transition-all disabled:opacity-50 shrink-0"
+                    style={{ background: "#C97E59" }}
+                    onMouseEnter={(e) => { if (!rtwSubmitting) e.currentTarget.style.background = "#9E5D38"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#C97E59"; }}
+                  >
+                    {rtwSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {rtwSubmitting ? "Submitting…" : "Report Return to Work"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -268,6 +268,107 @@ export async function sendDocumentUploadNotification(
   );
 }
 
+export async function sendNewCaseNotificationEmail(params: {
+  to: string;
+  hrFirstName: string;
+  caseNumber: string;
+  employeeName: string;
+  leaveReason: string;
+  requestedStart: string;
+  requestedEnd: string | null;
+  caseUrl: string;
+}): Promise<void> {
+  await sendEmail(
+    params.to,
+    `New Leave Request — Case ${params.caseNumber}`,
+    `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
+        <h2 style="color:#fff;margin:0">New Leave Request</h2>
+        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: <strong>${params.caseNumber}</strong></p>
+      </div>
+      <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
+        <p>Hi ${params.hrFirstName},</p>
+        <p>A new leave of absence request has been submitted and is awaiting your review.</p>
+        <div style="background:#F7F4F0;border:1px solid #D4C9BB;border-radius:8px;padding:16px;margin:16px 0">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap;width:35%">Case Number</td>
+              <td style="padding:6px 0;color:#3D2010;font-family:monospace">${params.caseNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Employee</td>
+              <td style="padding:6px 0;color:#3D2010">${params.employeeName}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Leave Reason</td>
+              <td style="padding:6px 0;color:#3D2010">${params.leaveReason}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Start Date</td>
+              <td style="padding:6px 0;color:#3D2010">${params.requestedStart}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">End Date</td>
+              <td style="padding:6px 0;color:#3D2010">${params.requestedEnd ?? "Not specified"}</td>
+            </tr>
+          </table>
+        </div>
+        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in LeaveIQ</a>
+      </div>
+      <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
+      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+    </div>
+    `,
+  );
+}
+
+export async function sendReturnToWorkNotification(params: {
+  to: string;
+  hrFirstName: string;
+  employeeName: string;
+  caseNumber: string;
+  returnDate: string;
+  caseUrl: string;
+}): Promise<void> {
+  await sendEmail(
+    params.to,
+    `Employee Return to Work — Case ${params.caseNumber}`,
+    `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+      <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
+        <h2 style="color:#fff;margin:0">Return to Work Reported</h2>
+        <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">Case Number: <strong>${params.caseNumber}</strong></p>
+      </div>
+      <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
+        <p>Hi ${params.hrFirstName},</p>
+        <p><strong>${params.employeeName}</strong> has reported their return to work date via the employee portal.</p>
+        <div style="background:#F7F4F0;border:1px solid #D4C9BB;border-radius:8px;padding:16px;margin:16px 0">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap;width:35%">Case Number</td>
+              <td style="padding:6px 0;color:#3D2010;font-family:monospace">${params.caseNumber}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Employee</td>
+              <td style="padding:6px 0;color:#3D2010">${params.employeeName}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 12px 6px 0;font-weight:600;color:#5C3D28;white-space:nowrap">Return Date</td>
+              <td style="padding:6px 0;color:#3D2010;font-weight:600">${params.returnDate}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="color:#8C7058;font-size:13px">Please review the case and close it if appropriate.</p>
+        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in LeaveIQ</a>
+      </div>
+      <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
+      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+    </div>
+    `,
+  );
+}
+
 export async function sendInterestEmail(data: {
   companyName: string;
   contactName: string;

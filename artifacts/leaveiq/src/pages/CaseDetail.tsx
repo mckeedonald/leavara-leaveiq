@@ -63,6 +63,7 @@ export default function CaseDetail() {
   const [transitionEvent, setTransitionEvent] = useState<"ROUTE_HR_REVIEW" | "DRAFT_NOTICE" | "CANCEL" | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [autoGenerateAi, setAutoGenerateAi] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const aiPanelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -90,6 +91,23 @@ export default function CaseDetail() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseData?.state, caseId, user?.email]);
+
+  async function handleClaimCase() {
+    if (!user?.id) return;
+    setIsClaiming(true);
+    try {
+      await apiFetch(`/api/cases/${caseId}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedToUserId: user.id }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+    } catch (e) {
+      console.error("Failed to claim case:", e);
+    } finally {
+      setIsClaiming(false);
+    }
+  }
 
   if (isLoading) return (
     <AppLayout>
@@ -150,6 +168,29 @@ export default function CaseDetail() {
               <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Opened {formatDate(caseData.createdAt)}</div>
               <ReasonBadge reason={caseData.leaveReasonCategory} />
               {caseData.intermittent && <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs font-semibold">Intermittent</span>}
+              {/* Assignment indicator */}
+              {(caseData as { assignedToUserId?: string | null }).assignedToUserId ? (
+                <span className="flex items-center gap-1.5 bg-[#F5E8DF] text-[#9E5D38] px-2 py-0.5 rounded text-xs font-semibold">
+                  <User className="w-3 h-3" /> Assigned to: {(caseData as { assignedToUserId?: string | null }).assignedToUserId}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs font-semibold">
+                  Unassigned
+                </span>
+              )}
+              {/* Claim Case button for HR/admin */}
+              {!(caseData as { assignedToUserId?: string | null }).assignedToUserId && (
+                <button
+                  onClick={handleClaimCase}
+                  disabled={isClaiming}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50"
+                  style={{ borderColor: "#C97E59", color: "#9E5D38", background: "#FDF6F0" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#F5E8DF"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#FDF6F0"; }}
+                >
+                  {isClaiming ? "Claiming…" : "Claim Case"}
+                </button>
+              )}
             </div>
           </div>
 
