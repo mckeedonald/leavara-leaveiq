@@ -59,6 +59,16 @@ app.use(
   }),
 );
 
+// --- www → apex redirect (server-side, before any JS runs) ---
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const host = req.headers.host ?? "";
+  if (host.startsWith("www.")) {
+    const canonical = host.slice(4); // strip "www."
+    return res.redirect(301, `https://${canonical}${req.originalUrl}`);
+  }
+  next();
+});
+
 // --- Regulatory docs seed + cron ---
 // On startup: ingest all static (CA, OR, WA, NY, CO) and live federal (eCFR) documents
 refreshRegulatoryDocs().catch((err) => logger.error({ err }, "Initial regulatory seed failed"));
