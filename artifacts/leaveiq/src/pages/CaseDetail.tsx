@@ -3,7 +3,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetCase, useTransitionCase, getGetCaseQueryKey, LeaveState, TransitionRequestEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { StatusBadge, ReasonBadge, LEAVE_REASON_LABELS, DisplayStatusBadge } from "@/components/ui/StatusBadge";
+import { ReasonBadge, LEAVE_REASON_LABELS, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, formatDateTime, cn } from "@/lib/utils";
 import {
   ArrowLeft, Calendar, User, Clock, ShieldAlert,
@@ -161,8 +161,7 @@ export default function CaseDetail() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-3xl font-display font-bold text-foreground">{caseData.caseNumber}</h2>
-              <StatusBadge state={caseData.state} className="text-sm px-3 py-1" />
-              <DisplayStatusBadge displayStatus={(caseData as any).displayStatus} />
+              <DisplayStatusBadge displayStatus={(caseData as any).displayStatus} state={caseData.state} />
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5"><User className="w-4 h-4" /> EMP-{caseData.employeeNumber}</div>
@@ -178,7 +177,7 @@ export default function CaseDetail() {
               {/* Assignment indicator */}
               {(caseData as { assignedToUserId?: string | null }).assignedToUserId ? (
                 <span className="flex items-center gap-1.5 bg-[#F5E8DF] text-[#9E5D38] px-2 py-0.5 rounded text-xs font-semibold">
-                  <User className="w-3 h-3" /> Assigned to: {(caseData as { assignedToUserId?: string | null }).assignedToUserId}
+                  <User className="w-3 h-3" /> Assigned to: {(caseData as any).assignedToName ?? "Unknown"}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs font-semibold">

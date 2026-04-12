@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListCases, LeaveState } from "@workspace/api-client-react";
-import { StatusBadge, ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
+import { ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, cn } from "@/lib/utils";
 import { Plus, Users, Clock, AlertCircle, CheckCircle2, ChevronRight, Loader2, Files } from "lucide-react";
 import { CreateCaseModal } from "@/components/cases/CreateCaseModal";
@@ -141,10 +141,7 @@ export default function Dashboard() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{c.employeeNumber}</td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <StatusBadge state={c.state} />
-                        <DisplayStatusBadge displayStatus={(c as any).displayStatus} />
-                      </div>
+                      <DisplayStatusBadge displayStatus={(c as any).displayStatus} state={c.state} />
                     </td>
                     <td className="px-6 py-4"><ReasonBadge reason={c.leaveReasonCategory} /></td>
                     <td className="px-6 py-4 text-muted-foreground">{formatDate(c.requestedStart)}</td>

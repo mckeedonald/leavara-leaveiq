@@ -53,16 +53,35 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
 
   async function handleDownload(docId: string, fileName: string) {
     try {
-      const data = await apiFetch<{ url: string; fileName: string }>(
-        `/api/cases/${caseId}/documents/${docId}/download`,
-      );
-      const a = document.createElement("a");
-      a.href = data.url;
-      a.download = fileName;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const token = localStorage.getItem("leaveiq_token");
+      const res = await fetch(`/api/cases/${caseId}/documents/${docId}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Download failed");
+
+      const contentType = res.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        // Presigned URL path
+        const data = await res.json() as { url: string; fileName: string };
+        const a = document.createElement("a");
+        a.href = data.url;
+        a.download = data.fileName;
+        a.target = "_blank";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // Inline content path — blob download
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Download failed");
     }

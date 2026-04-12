@@ -47,15 +47,33 @@ const DISPLAY_STATUS_STYLES: Record<string, { bg: string; text: string; border: 
   "Cancelled":                            { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
 };
 
-export function DisplayStatusBadge({ displayStatus }: { displayStatus?: string | null }) {
-  if (!displayStatus) return null;
-  const style = DISPLAY_STATUS_STYLES[displayStatus] ?? { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" };
+const STATE_FALLBACK_LABELS: Partial<Record<LeaveState, string>> = {
+  [LeaveState.INTAKE]: "Case Received",
+  [LeaveState.ELIGIBILITY_ANALYSIS]: "In Review",
+  [LeaveState.HR_REVIEW_QUEUE]: "Pending Additional Review",
+  [LeaveState.NOTICE_DRAFTED]: "Notices Drafted - Documentation Pending",
+  [LeaveState.CLOSED]: "Closed",
+  [LeaveState.CANCELLED]: "Cancelled",
+};
+
+export function DisplayStatusBadge({
+  displayStatus,
+  state,
+  className,
+}: {
+  displayStatus?: string | null;
+  state?: LeaveState;
+  className?: string;
+}) {
+  const label = displayStatus || (state ? STATE_FALLBACK_LABELS[state] : null);
+  if (!label) return null;
+  const style = DISPLAY_STATUS_STYLES[label] ?? { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" };
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+      className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap", className)}
       style={{ background: style.bg, color: style.text, borderColor: style.border }}
     >
-      {displayStatus}
+      {label}
     </span>
   );
 }

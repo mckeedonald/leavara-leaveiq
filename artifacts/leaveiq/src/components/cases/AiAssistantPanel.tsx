@@ -92,6 +92,10 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [disclaimerAction, setDisclaimerAction] = useState<DisclaimerAction | null>(null);
   const [pendingRegenerateType, setPendingRegenerateType] = useState<string | null>(null);
 
+  const [chatInput, setChatInput] = useState("");
+  const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ava"; text: string }>>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+
   // Auto-generate on mount when parent requests it
   React.useEffect(() => {
     if (autoGenerate && !result && !loading) {
@@ -192,6 +196,36 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
     },
     [caseId, result, user?.email],
   );
+
+  const sendFeedback = useCallback(async () => {
+    const msg = chatInput.trim();
+    if (!msg || chatLoading) return;
+    setChatInput("");
+    setChatHistory(prev => [...prev, { role: "user", text: msg }]);
+    setChatLoading(true);
+    try {
+      const data = await apiFetch<AiResult>(`/api/cases/${caseId}/ai-recommendation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestedBy: user?.email ?? "HR", feedback: msg }),
+      });
+      setResult(data);
+      setEditedNotices(
+        data.notices.map((n) => ({
+          noticeType: n.noticeType,
+          title: n.title,
+          content: n.content,
+          reviewed: false,
+        })),
+      );
+      setExpandedNotices(new Set(data.notices.map((n) => n.noticeType)));
+      setChatHistory(prev => [...prev, { role: "ava", text: "I've updated the notices based on your feedback. Please review the changes above." }]);
+    } catch (err) {
+      setChatHistory(prev => [...prev, { role: "ava", text: `Sorry, I couldn't process that: ${err instanceof Error ? err.message : "Unknown error"}` }]);
+    } finally {
+      setChatLoading(false);
+    }
+  }, [chatInput, chatLoading, caseId, user?.email]);
 
   const handleNoticeEdit = (noticeType: string, content: string) => {
     setEditedNotices((prev) =>
@@ -436,6 +470,56 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                 </>
               )}
             </div>
+
+            {result && (
+              <div className="mt-6 border-t pt-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4" style={{ color: "#fff" }} />
+                  <span className="text-sm font-semibold text-white">Give Ava feedback</span>
+                </div>
+                {chatHistory.length > 0 && (
+                  <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+                    {chatHistory.map((msg, i) => (
+                      <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className="rounded-xl px-3 py-2 text-sm max-w-[85%]"
+                          style={msg.role === "user"
+                            ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
+                            : { background: "rgba(0,0,0,0.2)", color: "#f0eee9" }
+                          }
+                        >
+                          {msg.role === "ava" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ava</span>}
+                          {msg.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendFeedback(); } }}
+                    placeholder='e.g. "Make the eligibility notice more formal" or "Add the specific leave dates to the designation notice"'
+                    disabled={chatLoading}
+                    className="flex-1 rounded-xl px-3 py-2 text-sm outline-none disabled:opacity-50"
+                    style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}
+                  />
+                  <button
+                    onClick={sendFeedback}
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-40 transition-all flex items-center gap-1.5"
+                    style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}
+                  >
+                    {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-3.5 h-3.5" /> Send</>}
+                  </button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  Ava will regenerate all notices based on your feedback.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

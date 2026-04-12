@@ -41,6 +41,7 @@ interface CaseContext {
   senderName?: string | null;
   senderTitle?: string | null;
   senderEmail?: string | null;
+  feedback?: string | null;
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -714,7 +715,11 @@ export async function generateAiRecommendation(
   }
 
   const systemPrompt = buildSystemPrompt(ragChunks.length > 0, buildStateGuidance(orgStates).length > 0);
-  const userPrompt = buildUserPrompt(ctx, ragChunks, orgStates, orgName);
+  let userPrompt = buildUserPrompt(ctx, ragChunks, orgStates, orgName);
+
+  if (ctx.feedback) {
+    userPrompt += `\n\n## HR FEEDBACK — APPLY TO ALL NOTICES\n${ctx.feedback}\n\nRevise all notices to incorporate this feedback while maintaining legal compliance.`;
+  }
 
   logger.info({ caseNumber: ctx.caseNumber, ragEnabled: ragChunks.length > 0, orgStates, orgName }, "Generating AI recommendation");
 
