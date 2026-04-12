@@ -568,72 +568,78 @@ router.post(
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
 
-    const params = GetAiRecommendationParams.safeParse(req.params);
-    if (!params.success) {
-      res.status(400).json({ error: params.error.message });
-      return;
-    }
+    try {
+      const params = GetAiRecommendationParams.safeParse(req.params);
+      if (!params.success) {
+        res.status(400).json({ error: params.error.message });
+        return;
+      }
 
-    const [leaveCase] = await db
-      .select()
-      .from(leaveCasesTable)
-      .where(eq(leaveCasesTable.id, params.data.caseId));
+      const [leaveCase] = await db
+        .select()
+        .from(leaveCasesTable)
+        .where(eq(leaveCasesTable.id, params.data.caseId));
 
-    if (!leaveCase) {
-      res.status(404).json({ error: "Case not found" });
-      return;
-    }
+      if (!leaveCase) {
+        res.status(404).json({ error: "Case not found" });
+        return;
+      }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
-      res.status(403).json({ error: "Access denied" });
-      return;
-    }
+      if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+        res.status(403).json({ error: "Access denied" });
+        return;
+      }
 
-    if (!leaveCase.analysisResult) {
-      res.status(400).json({
-        error: "Case has not been analyzed yet. Run eligibility analysis first.",
+      if (!leaveCase.analysisResult) {
+        res.status(400).json({
+          error: "Case has not been analyzed yet. Run eligibility analysis first.",
+        });
+        return;
+      }
+
+      const analysisResult = leaveCase.analysisResult as import("../lib/eligibility").AnalysisResult;
+
+      // Fetch sender (logged-in HR user) full details for notice auto-fill
+      const [senderUser] = await db
+        .select({
+          firstName: usersTable.firstName,
+          lastName: usersTable.lastName,
+          position: usersTable.position,
+          email: usersTable.email,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, authed.user.sub))
+        .limit(1);
+
+      const result = await generateAiRecommendation({
+        caseNumber: leaveCase.caseNumber,
+        employeeNumber: leaveCase.employeeNumber,
+        employeeFirstName: leaveCase.employeeFirstName,
+        employeeLastName: leaveCase.employeeLastName,
+        employeeEmail: leaveCase.employeeEmail,
+        leaveReasonCategory: leaveCase.leaveReasonCategory,
+        requestedStart: leaveCase.requestedStart,
+        requestedEnd: leaveCase.requestedEnd,
+        intermittent: leaveCase.intermittent,
+        analysisResult,
+        organizationId: leaveCase.organizationId,
+        senderName: senderUser ? `${senderUser.firstName} ${senderUser.lastName}`.trim() : null,
+        senderTitle: senderUser?.position ?? null,
+        senderEmail: senderUser?.email ?? authed.user.email,
       });
-      return;
+
+      await logAudit(
+        leaveCase.id,
+        "AI_RECOMMENDATION_GENERATED",
+        authed.user.email,
+      );
+
+      res.json(result);
+    } catch (err) {
+      logger.error({ err, caseId: req.params.caseId, user: authed.user.email }, "AI recommendation failed");
+      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+      res.status(500).json({ error: message });
     }
-
-    const analysisResult = leaveCase.analysisResult as import("../lib/eligibility").AnalysisResult;
-
-    // Fetch sender (logged-in HR user) full details for notice auto-fill
-    const [senderUser] = await db
-      .select({
-        firstName: usersTable.firstName,
-        lastName: usersTable.lastName,
-        position: usersTable.position,
-        email: usersTable.email,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.id, authed.user.sub))
-      .limit(1);
-
-    const result = await generateAiRecommendation({
-      caseNumber: leaveCase.caseNumber,
-      employeeNumber: leaveCase.employeeNumber,
-      employeeFirstName: leaveCase.employeeFirstName,
-      employeeLastName: leaveCase.employeeLastName,
-      employeeEmail: leaveCase.employeeEmail,
-      leaveReasonCategory: leaveCase.leaveReasonCategory,
-      requestedStart: leaveCase.requestedStart,
-      requestedEnd: leaveCase.requestedEnd,
-      intermittent: leaveCase.intermittent,
-      analysisResult,
-      organizationId: leaveCase.organizationId,
-      senderName: senderUser ? `${senderUser.firstName} ${senderUser.lastName}`.trim() : null,
-      senderTitle: senderUser?.position ?? null,
-      senderEmail: senderUser?.email ?? authed.user.email,
-    });
-
-    await logAudit(
-      leaveCase.id,
-      "AI_RECOMMENDATION_GENERATED",
-      authed.user.email,
-    );
-
-    res.json(result);
   },
 );
 

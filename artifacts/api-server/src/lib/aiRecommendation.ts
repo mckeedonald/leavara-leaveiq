@@ -726,12 +726,24 @@ export async function generateAiRecommendation(
   });
 
   const textBlock = message.content.find((b) => b.type === "text");
-  const content = textBlock?.type === "text" ? textBlock.text : null;
-  if (!content) {
+  const rawContent = textBlock?.type === "text" ? textBlock.text : null;
+  if (!rawContent) {
     throw new Error("No content returned from AI");
   }
 
-  const parsed = JSON.parse(content) as AiRecommendationResult;
+  // Strip markdown code fences if the model wrapped the JSON (e.g. ```json ... ```)
+  const content = rawContent
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/, "")
+    .trim();
+
+  let parsed: AiRecommendationResult;
+  try {
+    parsed = JSON.parse(content) as AiRecommendationResult;
+  } catch (parseErr) {
+    logger.error({ parseErr, rawContent: rawContent.slice(0, 500) }, "Failed to parse AI JSON response");
+    throw new Error("AI returned malformed JSON — please try again");
+  }
 
   if (!parsed.recommendation || !Array.isArray(parsed.notices)) {
     throw new Error("Invalid AI response structure");
