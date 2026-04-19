@@ -106,6 +106,7 @@ function Router() {
       <Route path="/register" component={() => <NavRedirect to={`/leaveiq/register${window.location.search}`} />} />
       <Route path="/dashboard" component={() => <NavRedirect to="/leaveiq/dashboard" />} />
       <Route path="/cases" component={() => <NavRedirect to="/leaveiq/cases" />} />
+      <Route path="/cases/:caseId">{(params: { caseId: string }) => <NavRedirect to={`/leaveiq/cases/${params.caseId}`} />}</Route>
       <Route path="/users" component={() => <NavRedirect to="/leaveiq/users" />} />
       <Route path="/account" component={() => <NavRedirect to="/leaveiq/account" />} />
       <Route path="/calendar" component={() => <NavRedirect to="/leaveiq/calendar" />} />
