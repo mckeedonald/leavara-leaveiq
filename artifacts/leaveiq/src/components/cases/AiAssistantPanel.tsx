@@ -522,7 +522,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                     Ava will regenerate all notices based on your feedback.
                   </p>
                 </div>{/* end gradient container */}
-              </div>{/* end mt-6 wrapper */}
+              </div>
             )}
           </div>
         )}
