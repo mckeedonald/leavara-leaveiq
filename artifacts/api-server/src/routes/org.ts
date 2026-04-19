@@ -26,6 +26,8 @@ router.get("/portal/org/:slug", async (req: Request, res: Response) => {
         slug: organizationsTable.slug,
         isActive: organizationsTable.isActive,
         logoStorageKey: organizationsTable.logoStorageKey,
+        hasLeaveIq: organizationsTable.hasLeaveIq,
+        hasPerformIq: organizationsTable.hasPerformIq,
       })
       .from(organizationsTable)
       .where(eq(organizationsTable.slug, slug))
@@ -42,7 +44,11 @@ router.get("/portal/org/:slug", async (req: Request, res: Response) => {
       logoUrl = await getPresignedUrl(org.logoStorageKey, 7200);
     }
 
-    res.json({ name: org.name, slug: org.slug, logoUrl });
+    const products: string[] = [];
+    if (org.hasLeaveIq) products.push("leaveiq");
+    if (org.hasPerformIq) products.push("performiq");
+
+    res.json({ name: org.name, slug: org.slug, logoUrl, products });
   } catch (err) {
     logger.error({ err }, "GET /portal/org/:slug error");
     res.status(500).json({ error: "Internal server error" });

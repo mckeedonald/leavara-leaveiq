@@ -50,7 +50,7 @@ export async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> 
     if (res.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
-      window.location.href = "/login?reason=session_expired";
+      window.location.href = "/leaveiq/login?reason=session_expired";
       throw new Error("Your session has expired. Please log in again.");
     }
     throw new Error((data as { error?: string }).error ?? "Request failed");

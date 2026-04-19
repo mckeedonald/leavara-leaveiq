@@ -39,7 +39,7 @@ export default function Login() {
     setError(null);
     try {
       const loggedInUser = await login(email, password);
-      navigate(loggedInUser.isSuperAdmin ? "/superadmin" : "/dashboard");
+      navigate(loggedInUser.isSuperAdmin ? "/leaveiq/superadmin" : "/leaveiq/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
@@ -114,7 +114,7 @@ export default function Login() {
                 </button>
               </div>
               <div className="mt-2 text-right">
-                <Link href="/forgot-password" className="text-xs font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+                <Link href="/leaveiq/forgot-password" className="text-xs font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                   Forgot Password?
                 </Link>
               </div>
@@ -133,7 +133,7 @@ export default function Login() {
           <div className="mt-6 pt-5 text-center" style={{ borderTop: `1px solid ${C.border}` }}>
             <p className="text-sm" style={{ color: C.textMuted }}>
               New user?{" "}
-              <Link href="/register" className="font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+              <Link href="/leaveiq/register" className="font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                 Enroll here
               </Link>
             </p>

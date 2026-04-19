@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { isOrgSubdomain } from "@/lib/subdomain";
 
 import Landing from "@/pages/Landing";
 import OrgLanding from "@/pages/OrgLanding";
@@ -38,7 +39,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   const [location] = useLocation();
 
   if (isLoading) return null;
-  if (!user) return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
+  if (!user) return <Redirect to={`/leaveiq/login?redirect=${encodeURIComponent(location)}`} />;
   return <Component />;
 }
 
@@ -47,62 +48,69 @@ function SuperAdminRoute({ component: Component }: { component: React.ComponentT
   const [location] = useLocation();
 
   if (isLoading) return null;
-  if (!user) return <Redirect to={`/login?redirect=${encodeURIComponent(location)}`} />;
-  if (!user.isSuperAdmin) return <Redirect to="/dashboard" />;
+  if (!user) return <Redirect to={`/leaveiq/login?redirect=${encodeURIComponent(location)}`} />;
+  if (!user.isSuperAdmin) return <Redirect to="/leaveiq/dashboard" />;
   return <Component />;
 }
 
 function GuestRoute({ component: Component }: { component: React.ComponentType }) {
   const { user } = useAuth();
-  if (user?.isSuperAdmin) return <Redirect to="/superadmin" />;
-  if (user) return <Redirect to="/dashboard" />;
+  if (user?.isSuperAdmin) return <Redirect to="/leaveiq/superadmin" />;
+  if (user) return <Redirect to="/leaveiq/dashboard" />;
   return <Component />;
 }
 
-// Reserved subdomains that should never be treated as org slugs
-const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "mail", "smtp", "admin", "staging", "dev"]);
-
-const isOrgSubdomain = (() => {
-  if (typeof window === "undefined") return false;
-  const h = window.location.hostname;
-  const parts = h.split(".");
-  if (parts.length < 3) return false;
-  if (parts.slice(-2).join(".") !== "leavara.net") return false;
-  const sub = parts.slice(0, -2).join(".");
-  return !RESERVED_SUBDOMAINS.has(sub);
-})();
+// NavRedirect — used for backward-compat route redirects; reads window.location.search at render time
+function NavRedirect({ to }: { to: string }) {
+  const [, navigate] = useLocation();
+  React.useEffect(() => { navigate(to, { replace: true }); }, [to, navigate]);
+  return null;
+}
 
 function Router() {
   return (
     <Switch>
-      {/* Public landing page — swapped for org landing on org subdomains */}
+      {/* Root */}
       <Route path="/" component={isOrgSubdomain ? OrgLanding : Landing} />
 
       {/* Public interest / get-started form */}
       <Route path="/interest" component={Interest} />
 
-      {/* Public auth routes */}
-      <Route path="/login" component={() => <GuestRoute component={Login} />} />
-      <Route path="/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
-      <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/register" component={Register} />
+      {/* LeaveIQ employee routes */}
+      <Route path="/leaveiq/request" component={EmployeePortal} />
+      <Route path="/leaveiq/portal" component={EmployeePortalCase} />
 
-      {/* Employee portal — public (no HR account required) */}
-      <Route path="/request" component={EmployeePortal} />
-      {/* Employee case portal — magic link (public) */}
-      <Route path="/portal" component={EmployeePortalCase} />
+      {/* LeaveIQ HR routes */}
+      <Route path="/leaveiq/login" component={() => <GuestRoute component={Login} />} />
+      <Route path="/leaveiq/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
+      <Route path="/leaveiq/reset-password" component={ResetPassword} />
+      <Route path="/leaveiq/register" component={Register} />
+      <Route path="/leaveiq/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/leaveiq/cases" component={() => <ProtectedRoute component={Cases} />} />
+      <Route path="/leaveiq/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
+      <Route path="/leaveiq/users" component={() => <ProtectedRoute component={Users} />} />
+      <Route path="/leaveiq/account" component={() => <ProtectedRoute component={AccountSettings} />} />
+      <Route path="/leaveiq/calendar" component={() => <ProtectedRoute component={Calendar} />} />
+      <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
+      <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
-      {/* Protected HR routes */}
-      <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/cases" component={() => <ProtectedRoute component={Cases} />} />
-      <Route path="/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
-      <Route path="/users" component={() => <ProtectedRoute component={Users} />} />
-      <Route path="/account" component={() => <ProtectedRoute component={AccountSettings} />} />
-      <Route path="/calendar" component={() => <ProtectedRoute component={Calendar} />} />
-      <Route path="/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
+      {/* PerformIQ placeholder routes */}
+      <Route path="/performiq/login" component={() => <GuestRoute component={Login} />} />
 
-      {/* Super admin route */}
-      <Route path="/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
+      {/* Backward-compat redirects — keep old paths alive */}
+      <Route path="/request" component={() => <NavRedirect to="/leaveiq/request" />} />
+      <Route path="/portal" component={() => <NavRedirect to={`/leaveiq/portal${window.location.search}`} />} />
+      <Route path="/login" component={() => <NavRedirect to="/leaveiq/login" />} />
+      <Route path="/forgot-password" component={() => <NavRedirect to="/leaveiq/forgot-password" />} />
+      <Route path="/reset-password" component={() => <NavRedirect to={`/leaveiq/reset-password${window.location.search}`} />} />
+      <Route path="/register" component={() => <NavRedirect to={`/leaveiq/register${window.location.search}`} />} />
+      <Route path="/dashboard" component={() => <NavRedirect to="/leaveiq/dashboard" />} />
+      <Route path="/cases" component={() => <NavRedirect to="/leaveiq/cases" />} />
+      <Route path="/users" component={() => <NavRedirect to="/leaveiq/users" />} />
+      <Route path="/account" component={() => <NavRedirect to="/leaveiq/account" />} />
+      <Route path="/calendar" component={() => <NavRedirect to="/leaveiq/calendar" />} />
+      <Route path="/hris-settings" component={() => <NavRedirect to="/leaveiq/hris-settings" />} />
+      <Route path="/superadmin" component={() => <NavRedirect to="/leaveiq/superadmin" />} />
 
       <Route component={NotFound} />
     </Switch>

@@ -6,6 +6,8 @@ export const organizationsTable = pgTable("organization", {
   slug: text("slug").unique().notNull(),
   logoStorageKey: text("logo_storage_key"),
   isActive: boolean("is_active").notNull().default(true),
+  hasLeaveIq: boolean("has_leave_iq").notNull().default(true),
+  hasPerformIq: boolean("has_perform_iq").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

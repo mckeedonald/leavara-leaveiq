@@ -76,7 +76,7 @@ export default function Register() {
       const data = (await res.json()) as { error?: string; token?: string };
       if (!res.ok) throw new Error(data.error ?? "Registration failed");
       localStorage.setItem("leaveiq_token", data.token!);
-      window.location.href = "/dashboard";
+      window.location.href = "/leaveiq/dashboard";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -101,7 +101,7 @@ export default function Register() {
           ) : inviteError ? (
             <div className="text-center">
               <p className="text-sm mb-4" style={{ color: C.errorText }}>{inviteError}</p>
-              <Link href="/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+              <Link href="/leaveiq/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                 Back to sign in
               </Link>
             </div>
@@ -112,7 +112,7 @@ export default function Register() {
               <p className="text-sm mb-6" style={{ color: C.textBody }}>
                 To create a Leavara LeaveIQ account, you need an invitation link from your administrator. Please contact your HR administrator to request access.
               </p>
-              <Link href="/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+              <Link href="/leaveiq/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                 Back to sign in
               </Link>
             </div>
