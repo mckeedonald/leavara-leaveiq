@@ -299,11 +299,10 @@ Required sections:
    - Phone: __________________________________________________
    - Fax: ____________________________________________________
 
-3. DESCRIPTION OF MEDICAL CONDITION
+3. MEDICAL CONDITION INFORMATION
    a. Approximate date condition commenced: ____________________
    b. Probable duration of condition: ___________________________
-   c. Briefly describe the medical facts, including symptoms, diagnosis, and any regimen of continuing treatment (do not provide information that is not directly relevant to the employee's need for leave):
-      ________________________________________________________
+   c. Describe the continuing treatment regimen required (e.g., frequency of visits, prescribed rest, physical therapy):
       ________________________________________________________
       ________________________________________________________
 
@@ -354,10 +353,10 @@ Required sections:
    - Phone: __________________________________________________
    - Fax: ____________________________________________________
 
-3. DESCRIPTION OF FAMILY MEMBER'S MEDICAL CONDITION
+3. FAMILY MEMBER'S CONDITION INFORMATION
    a. Approximate date condition commenced: ____________________
    b. Probable duration of condition: ___________________________
-   c. Briefly describe the medical facts, including symptoms, diagnosis, and any regimen of continuing treatment:
+   c. Describe the treatment regimen required and the employee's role in providing care:
       ________________________________________________________
       ________________________________________________________
 
@@ -402,14 +401,14 @@ Required sections:
    - City, State, ZIP: __________________________________________
    - Phone: __________________________________________________
 
-3. DESCRIPTION OF PREGNANCY-RELATED CONDITION
-   a. Diagnosis or condition (e.g., hyperemesis gravidarum, gestational hypertension, pregnancy-induced disability):
-      ________________________________________________________
-   b. Date condition commenced or is expected to commence: _______
-   c. Expected delivery date: ____________________________________
-   d. Expected duration of disability (before and after delivery):
+3. PREGNANCY-RELATED CONDITION INFORMATION
+   a. Date condition commenced or is expected to commence: _______
+   b. Expected delivery date: ____________________________________
+   c. Expected duration of disability (before and after delivery):
       Pre-delivery: ____________________________________________
       Post-delivery (recovery): __________________________________
+   d. Describe any treatment or care plan required during leave:
+      ________________________________________________________
 
 4. INCAPACITY
    a. Is the employee currently incapacitated?   [ ] Yes   [ ] No

@@ -839,11 +839,15 @@ router.post(
     const medCertNotice = notices.find((n) => n.noticeType === "MEDICAL_CERTIFICATION");
     let medCertAttachment: EmailAttachment | undefined;
     if (medCertNotice) {
-      const medCertPdfBuffer = await generateMedCertPdf(medCertNotice.content);
-      medCertAttachment = {
-        filename: `Medical_Certification_Form_${leaveCase.caseNumber}.pdf`,
-        content: medCertPdfBuffer.toString("base64"),
-      };
+      try {
+        const medCertPdfBuffer = await generateMedCertPdf(medCertNotice.content);
+        medCertAttachment = {
+          filename: `Medical_Certification_Form_${leaveCase.caseNumber}.pdf`,
+          content: medCertPdfBuffer.toString("base64"),
+        };
+      } catch (pdfErr) {
+        logger.warn({ pdfErr, caseId: leaveCase.id }, "PDF generation failed — continuing without attachment");
+      }
     }
 
     for (const notice of notices) {
@@ -854,14 +858,18 @@ router.post(
           emailAttachments.push(medCertAttachment);
         }
 
-        await sendNoticeEmail({
-          to: recipientEmail,
-          noticeType: notice.noticeType,
-          content: notice.content,
-          caseNumber: leaveCase.caseNumber,
-          employeeNumber: leaveCase.employeeNumber,
-          attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
-        });
+        try {
+          await sendNoticeEmail({
+            to: recipientEmail,
+            noticeType: notice.noticeType,
+            content: notice.content,
+            caseNumber: leaveCase.caseNumber,
+            employeeNumber: leaveCase.employeeNumber,
+            attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
+          });
+        } catch (emailErr) {
+          logger.error({ emailErr, noticeType: notice.noticeType, to: recipientEmail }, "Email delivery failed — notice still archived");
+        }
 
         const [entry] = await db
           .insert(auditLogTable)

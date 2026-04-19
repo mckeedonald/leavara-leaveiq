@@ -473,52 +473,56 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
 
             {result && (
               <div className="mt-6 border-t pt-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-4 h-4" style={{ color: "#fff" }} />
-                  <span className="text-sm font-semibold text-white">Give Ava feedback</span>
-                </div>
-                {chatHistory.length > 0 && (
-                  <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                    {chatHistory.map((msg, i) => (
-                      <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div
-                          className="rounded-xl px-3 py-2 text-sm max-w-[85%]"
-                          style={msg.role === "user"
-                            ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
-                            : { background: "rgba(0,0,0,0.2)", color: "#f0eee9" }
-                          }
-                        >
-                          {msg.role === "ava" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ava</span>}
-                          {msg.text}
-                        </div>
-                      </div>
-                    ))}
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: "linear-gradient(135deg, #E8872A 0%, #C95F20 100%)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
+                    <Sparkles className="w-4 h-4 text-white" />
+                    <span className="text-sm font-semibold text-white">Give Ava feedback</span>
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendFeedback(); } }}
-                    placeholder='e.g. "Make the eligibility notice more formal" or "Add the specific leave dates to the designation notice"'
-                    disabled={chatLoading}
-                    className="flex-1 rounded-xl px-3 py-2 text-sm outline-none disabled:opacity-50"
-                    style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}
-                  />
-                  <button
-                    onClick={sendFeedback}
-                    disabled={chatLoading || !chatInput.trim()}
-                    className="px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-40 transition-all flex items-center gap-1.5"
-                    style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}
-                  >
-                    {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-3.5 h-3.5" /> Send</>}
-                  </button>
-                </div>
-                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.6)" }}>
-                  Ava will regenerate all notices based on your feedback.
-                </p>
-              </div>
+                  {chatHistory.length > 0 && (
+                    <div className="px-4 py-3 space-y-2 max-h-48 overflow-y-auto">
+                      {chatHistory.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className="rounded-xl px-3 py-2 text-sm max-w-[85%]"
+                            style={msg.role === "user"
+                              ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
+                              : { background: "rgba(0,0,0,0.25)", color: "#FDDBB4" }
+                            }
+                          >
+                            {msg.role === "ava" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ava</span>}
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="px-4 pb-4 pt-3 flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendFeedback(); } }}
+                      placeholder="e.g. Make the eligibility notice more formal…"
+                      disabled={chatLoading}
+                      className="flex-1 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50 select-text"
+                      style={{ background: "rgba(0,0,0,0.2)", color: "#fff", border: "1px solid rgba(255,255,255,0.3)", caretColor: "#fff" }}
+                    />
+                    <button
+                      onClick={() => void sendFeedback()}
+                      disabled={chatLoading || !chatInput.trim()}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 text-white disabled:opacity-40 transition-all flex items-center gap-1.5"
+                    >
+                      {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Sparkles className="w-3.5 h-3.5" /> Send</>}
+                    </button>
+                  </div>
+                  <p className="text-xs px-4 pb-3" style={{ color: "rgba(255,255,255,0.65)" }}>
+                    Ava will regenerate all notices based on your feedback.
+                  </p>
+                </div>{/* end gradient container */}
+              </div>{/* end mt-6 wrapper */}
             )}
           </div>
         )}
