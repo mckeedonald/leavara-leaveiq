@@ -54,7 +54,7 @@ function formatAuditAction(action: string): string {
 
 // ── Main CaseDetail ──────────────────────────────────────────────────────────
 export default function CaseDetail() {
-  const [, params] = useRoute("/cases/:caseId");
+  const [, params] = useRoute("/leaveiq/cases/:caseId");
   const caseId = params?.caseId || "";
   const [, navigate] = useLocation();
   const { user } = useAuth();
