@@ -835,12 +835,30 @@ router.post(
       createdAt: Date;
     }[] = [];
 
-    // Find the medical certification notice so it can be attached to the eligibility notice email
+    // Find the medical certification notice — from the current send batch OR from DB (previously stored)
     const medCertNotice = notices.find((n) => n.noticeType === "MEDICAL_CERTIFICATION");
+    let medCertContent: string | null = medCertNotice?.content ?? null;
+
+    // If not in this batch, try to find a previously archived med cert document for this case
+    if (!medCertContent) {
+      const [storedMedCert] = await db
+        .select({ contentInline: caseDocumentsTable.contentInline })
+        .from(caseDocumentsTable)
+        .where(
+          and(
+            eq(caseDocumentsTable.caseId, leaveCase.id),
+            sql`${caseDocumentsTable.fileName} LIKE 'MEDICAL_CERTIFICATION%'`,
+          )
+        )
+        .orderBy(desc(caseDocumentsTable.createdAt))
+        .limit(1);
+      medCertContent = storedMedCert?.contentInline ?? null;
+    }
+
     let medCertAttachment: EmailAttachment | undefined;
-    if (medCertNotice) {
+    if (medCertContent) {
       try {
-        const medCertPdfBuffer = await generateMedCertPdf(medCertNotice.content);
+        const medCertPdfBuffer = await generateMedCertPdf(medCertContent);
         medCertAttachment = {
           filename: `Medical_Certification_Form_${leaveCase.caseNumber}.pdf`,
           content: medCertPdfBuffer.toString("base64"),
@@ -1179,6 +1197,154 @@ router.post(
 
     const detail = await fetchCaseDetail(caseId);
     res.json(detail);
+  },
+);
+
+// POST /cases/:caseId/review-documentation
+router.post(
+  "/cases/:caseId/review-documentation",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+    const { documentIds } = req.body as { documentIds: string[] };
+
+    if (!Array.isArray(documentIds) || documentIds.length === 0) {
+      res.status(400).json({ error: "documentIds must be a non-empty array" });
+      return;
+    }
+
+    const [leaveCase] = await db
+      .select()
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied" }); return;
+    }
+
+    // Fetch the selected documents
+    const docs = await db
+      .select()
+      .from(caseDocumentsTable)
+      .where(
+        and(
+          eq(caseDocumentsTable.caseId, caseId),
+          inArray(caseDocumentsTable.id, documentIds),
+        )
+      );
+
+    if (docs.length === 0) {
+      res.status(400).json({ error: "No matching documents found" });
+      return;
+    }
+
+    // Build content blocks for Claude
+    type ContentBlock =
+      | { type: "text"; text: string }
+      | { type: "document"; source: { type: "base64"; media_type: string; data: string }; title: string };
+
+    const contentBlocks: ContentBlock[] = [];
+
+    const employeeName = [leaveCase.employeeFirstName, leaveCase.employeeLastName].filter(Boolean).join(" ") || `Employee #${leaveCase.employeeNumber}`;
+    const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+    contentBlocks.push({
+      type: "text",
+      text: `You are reviewing medical certification documentation for an FMLA leave request.
+
+CASE INFORMATION:
+- Case Number: ${leaveCase.caseNumber}
+- Employee: ${employeeName}
+- Leave Reason: ${leaveCase.leaveReasonCategory}
+- Requested Start: ${leaveCase.requestedStart}
+- Requested End: ${leaveCase.requestedEnd ?? "Open-ended"}
+- Current Status: Conditionally Approved — Pending Documentation
+- Review Date: ${today}
+
+Please review the attached documentation and determine whether it sufficiently supports the FMLA leave request. Then draft a final Designation Notice communicating the decision (APPROVE, DENY, or REQUEST_MORE_INFO if documentation is incomplete).
+
+Respond ONLY with valid JSON in exactly this format:
+{
+  "recommendation": "APPROVE" | "DENY" | "REQUEST_MORE_INFO",
+  "analysis": "2-4 sentence summary of what the documentation shows and whether it meets FMLA requirements",
+  "keyFindings": ["finding 1", "finding 2", "finding 3"],
+  "designationNotice": {
+    "noticeType": "DESIGNATION_NOTICE",
+    "title": "Leave Designation Notice",
+    "content": "Full designation notice text (300-500 words) communicating the final decision. Address the employee by name. Reference the submitted documentation. For APPROVE: confirm leave is designated as FMLA-qualifying, state approved dates, confirm health benefit continuation, note any fitness-for-duty requirement. For DENY: state the specific legal reason. For REQUEST_MORE_INFO: specify exactly what is missing and provide a 15-day deadline. Sign from HR."
+  }
+}`,
+    });
+
+    // Add each document as a content block
+    for (const doc of docs) {
+      try {
+        if (doc.contentInline) {
+          // Inline text document
+          contentBlocks.push({
+            type: "text",
+            text: `\n--- DOCUMENT: ${doc.fileName} ---\n${doc.contentInline}\n--- END DOCUMENT ---`,
+          });
+        } else if (doc.storageKey) {
+          // R2-stored file (PDF)
+          const { downloadFile } = await import("../lib/storage.js");
+          const buffer = await downloadFile(doc.storageKey);
+          const mimeType = doc.mimeType ?? "application/pdf";
+          contentBlocks.push({
+            type: "document",
+            source: {
+              type: "base64",
+              media_type: mimeType,
+              data: buffer.toString("base64"),
+            },
+            title: doc.fileName,
+          });
+        }
+      } catch (docErr) {
+        logger.warn({ docErr, docId: doc.id }, "Could not load document for review — skipping");
+      }
+    }
+
+    const { anthropic } = await import("../lib/anthropic.js");
+
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 4096,
+      messages: [{ role: "user", content: contentBlocks as Parameters<typeof anthropic.messages.create>[0]["messages"][0]["content"] }],
+    });
+
+    const textBlock = message.content.find((b) => b.type === "text");
+    const rawContent = textBlock?.type === "text" ? textBlock.text : null;
+    if (!rawContent) {
+      res.status(500).json({ error: "No response from AI" });
+      return;
+    }
+
+    const cleaned = rawContent
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```\s*$/, "")
+      .trim();
+
+    let parsed: {
+      recommendation: string;
+      analysis: string;
+      keyFindings: string[];
+      designationNotice: { noticeType: string; title: string; content: string };
+    };
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      logger.error({ rawContent: rawContent.slice(0, 500) }, "Failed to parse doc review JSON");
+      res.status(500).json({ error: "AI returned malformed response — please try again" });
+      return;
+    }
+
+    await logAudit(caseId, "AI_DOCUMENTATION_REVIEW", authed.user.email);
+
+    res.json(parsed);
   },
 );
 

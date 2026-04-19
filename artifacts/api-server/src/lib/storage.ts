@@ -58,3 +58,20 @@ export async function getPresignedUrl(
   );
   return url;
 }
+
+/**
+ * Download an object from R2 and return it as a Buffer.
+ */
+export async function downloadFile(key: string): Promise<Buffer> {
+  const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
+  const response = await client.send(command);
+  const stream = response.Body;
+  if (!stream) throw new Error("Empty response body from R2");
+  // Convert stream to Buffer
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
