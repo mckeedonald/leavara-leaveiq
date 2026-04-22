@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and, ne, gte, lte, isNull, or, inArray } from "drizzle-orm";
+import { eq, desc, sql, and, ne, gte, lte, isNull, or, inArray, like } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable } from "@workspace/db";
 import {
@@ -785,7 +785,7 @@ router.post(
               and(
                 eq(caseDocumentsTable.caseId, leaveCase.id),
                 eq(caseDocumentsTable.uploadedBy, "notice"),
-                sql`${caseDocumentsTable.fileName} LIKE 'MEDICAL_CERTIFICATION%'`,
+                like(caseDocumentsTable.fileName, "MEDICAL_CERTIFICATION%"),
               ),
             );
           await db.insert(caseDocumentsTable).values({
@@ -878,7 +878,7 @@ router.post(
         .where(
           and(
             eq(caseDocumentsTable.caseId, leaveCase.id),
-            sql`${caseDocumentsTable.fileName} LIKE 'MEDICAL_CERTIFICATION%'`,
+            like(caseDocumentsTable.fileName, "MEDICAL_CERTIFICATION%"),
           )
         )
         .orderBy(desc(caseDocumentsTable.createdAt))
@@ -1045,26 +1045,37 @@ router.get(
       return;
     }
 
-    // If content is stored inline (notices), serve it directly
-    if (!doc.storageKey && (doc as any).contentInline) {
-      const content = (doc as any).contentInline as string;
-      const mimeType = doc.mimeType ?? "text/plain";
-      res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
+    try {
+      // Inline content (notices / cached forms) — serve directly without R2
+      const contentInline = (doc as any).contentInline as string | null | undefined;
+      if (!doc.storageKey && contentInline) {
+        const mimeType = doc.mimeType ?? "text/plain";
+        res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
 
-      if (mimeType === "application/pdf") {
-        // contentInline holds the raw form text — generate the real PDF binary on demand
-        const pdfBuffer = await generateMedCertPdf(content);
-        res.setHeader("Content-Type", "application/pdf");
-        res.send(pdfBuffer);
-      } else {
-        res.setHeader("Content-Type", mimeType);
-        res.send(Buffer.from(content, "utf-8"));
+        if (mimeType === "application/pdf") {
+          // contentInline is the raw form text — generate real PDF binary on demand
+          const pdfBuffer = await generateMedCertPdf(contentInline);
+          res.setHeader("Content-Type", "application/pdf");
+          res.send(pdfBuffer);
+        } else {
+          res.setHeader("Content-Type", mimeType);
+          res.send(Buffer.from(contentInline, "utf-8"));
+        }
+        return;
       }
-      return;
+
+      // R2-stored file — return a short-lived presigned download URL
+      if (!doc.storageKey) {
+        res.status(404).json({ error: "Document content not found." });
+        return;
+      }
+      const { getPresignedUrl } = await import("../lib/storage.js");
+      const url = await getPresignedUrl(doc.storageKey, 3600);
+      res.json({ url, fileName: doc.fileName });
+    } catch (downloadErr) {
+      logger.error({ downloadErr, docId, caseId }, "Document download failed");
+      res.status(500).json({ error: "Failed to prepare document for download. Please try again." });
     }
-    const { getPresignedUrl } = await import("../lib/storage.js");
-    const url = await getPresignedUrl(doc.storageKey!, 3600);
-    res.json({ url, fileName: doc.fileName });
   },
 );
 

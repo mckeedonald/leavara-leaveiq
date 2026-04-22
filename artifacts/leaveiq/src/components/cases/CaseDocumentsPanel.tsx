@@ -30,6 +30,7 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   async function loadDocuments() {
@@ -52,16 +53,21 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
   }, [caseId, refreshKey]);
 
   async function handleDownload(docId: string, fileName: string) {
+    setDownloadError(null);
     try {
       const token = localStorage.getItem("leaveiq_token");
       const res = await fetch(`/api/cases/${caseId}/documents/${docId}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Download failed");
+      if (!res.ok) {
+        let msg = "Download failed";
+        try { const body = await res.json() as { error?: string }; if (body.error) msg = body.error; } catch { /* ignore */ }
+        throw new Error(msg);
+      }
 
       const contentType = res.headers.get("content-type") ?? "";
       if (contentType.includes("application/json")) {
-        // Presigned URL path
+        // R2 presigned URL path
         const data = await res.json() as { url: string; fileName: string };
         const a = document.createElement("a");
         a.href = data.url;
@@ -71,7 +77,7 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
         a.click();
         document.body.removeChild(a);
       } else {
-        // Inline content path — blob download
+        // Inline content / PDF binary — blob download
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -83,7 +89,7 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
         URL.revokeObjectURL(url);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Download failed");
+      setDownloadError(err instanceof Error ? err.message : "Download failed");
     }
   }
 
@@ -157,6 +163,12 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
       </div>
 
       <div className="p-6">
+        {downloadError && (
+          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3 mb-4">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            {downloadError}
+          </div>
+        )}
         {error && (
           <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3 mb-4">
             <AlertTriangle className="w-4 h-4 shrink-0" />
