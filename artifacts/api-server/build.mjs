@@ -29,6 +29,7 @@ async function buildAll() {
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
+      "pdfkit",       // loads .afm font-metric files from its own node_modules dir at runtime
       "sharp",
       "better-sqlite3",
       "sqlite3",

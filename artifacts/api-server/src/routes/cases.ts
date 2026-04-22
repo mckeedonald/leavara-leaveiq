@@ -771,34 +771,40 @@ router.post(
         authed.user.email,
       );
 
-      // Cache the medical certification form in the DB so it's always available
-      // when HR later sends the eligibility notice (even without including med cert in that batch).
+      // Generate the medical certification PDF and cache it in the DB.
+      // Storing the pre-rendered base64 means download and email attachment
+      // never need to re-run PDF generation — they just decode what's here.
       const medCertNotice = result.notices.find((n: { noticeType: string }) => n.noticeType === "MEDICAL_CERTIFICATION");
       if (medCertNotice) {
         try {
+          const medCertText = (medCertNotice as { content: string }).content;
+          const medCertPdfBuffer = await generateMedCertPdf(medCertText);
+          const medCertBase64 = medCertPdfBuffer.toString("base64");
+
           const noticeDate = new Date().toISOString().split("T")[0];
           const medFileName = `MEDICAL_CERTIFICATION_${leaveCase.caseNumber}_${noticeDate}.pdf`;
-          // Remove any previously cached med cert for this case before inserting a fresh one
+
+          // Replace any previously cached med cert so only the latest version exists
           await db
             .delete(caseDocumentsTable)
             .where(
               and(
                 eq(caseDocumentsTable.caseId, leaveCase.id),
-                eq(caseDocumentsTable.uploadedBy, "notice"),
                 like(caseDocumentsTable.fileName, "MEDICAL_CERTIFICATION%"),
               ),
             );
           await db.insert(caseDocumentsTable).values({
             caseId: leaveCase.id,
-            uploadedBy: "notice",
+            uploadedBy: "hr", // system-generated; "hr" is the closest valid enum value
             fileName: medFileName,
             storageKey: null,
-            contentInline: (medCertNotice as { content: string }).content,
+            contentInline: medCertBase64, // base64-encoded PDF binary
             mimeType: "application/pdf",
-            sizeBytes: Buffer.from((medCertNotice as { content: string }).content, "utf-8").length,
+            sizeBytes: medCertPdfBuffer.length,
           });
+          logger.info({ caseId: leaveCase.id, fileName: medFileName }, "Medical certification PDF cached");
         } catch (cacheErr) {
-          logger.warn({ cacheErr, caseId: leaveCase.id }, "Failed to cache medical certification form — continuing");
+          logger.warn({ cacheErr, caseId: leaveCase.id }, "Failed to cache medical certification PDF — continuing");
         }
       }
 
@@ -886,17 +892,16 @@ router.post(
       medCertContent = storedMedCert?.contentInline ?? null;
     }
 
-    let medCertAttachment: EmailAttachment | undefined;
-    if (medCertContent) {
-      try {
-        const medCertPdfBuffer = await generateMedCertPdf(medCertContent);
-        medCertAttachment = {
+    // medCertContent is already a base64-encoded PDF (stored that way at generation time)
+    const medCertAttachment: EmailAttachment | undefined = medCertContent
+      ? {
           filename: `Medical_Certification_Form_${leaveCase.caseNumber}.pdf`,
-          content: medCertPdfBuffer.toString("base64"),
-        };
-      } catch (pdfErr) {
-        logger.warn({ pdfErr, caseId: leaveCase.id }, "PDF generation failed — continuing without attachment");
-      }
+          content: medCertContent, // already base64 — use directly
+        }
+      : undefined;
+
+    if (!medCertAttachment) {
+      logger.warn({ caseId: leaveCase.id }, "No medical certification found — eligibility notice will send without attachment");
     }
 
     for (const notice of notices) {
@@ -1053,8 +1058,8 @@ router.get(
         res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
 
         if (mimeType === "application/pdf") {
-          // contentInline is the raw form text — generate real PDF binary on demand
-          const pdfBuffer = await generateMedCertPdf(contentInline);
+          // contentInline is a base64-encoded PDF binary — decode directly, no re-generation needed
+          const pdfBuffer = Buffer.from(contentInline, "base64");
           res.setHeader("Content-Type", "application/pdf");
           res.send(pdfBuffer);
         } else {
