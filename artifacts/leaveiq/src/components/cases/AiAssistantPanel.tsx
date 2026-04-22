@@ -122,6 +122,12 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [docReviewSendSuccess, setDocReviewSendSuccess] = useState(false);
   const [docReviewSendError, setDocReviewSendError] = useState<string | null>(null);
 
+  // Derive case-state booleans BEFORE any useEffect that depends on them
+  const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
+  const isHrReview = caseState === "HR_REVIEW_QUEUE";
+  const isNoticeDrafted = caseState === "NOTICE_DRAFTED";
+  const showAiPanel = isEligibility || isHrReview || isNoticeDrafted;
+
   // Auto-generate on mount when parent requests it
   React.useEffect(() => {
     if (autoGenerate && !result && !loading) {
@@ -171,12 +177,6 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   }
 
   // Show AI panel for ELIGIBILITY_ANALYSIS, HR_REVIEW_QUEUE, and NOTICE_DRAFTED
-  // (NOTICE_DRAFTED: designation notice can be sent after documentation is returned)
-  const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
-  const isHrReview = caseState === "HR_REVIEW_QUEUE";
-  const isNoticeDrafted = caseState === "NOTICE_DRAFTED";
-  const showAiPanel = isEligibility || isHrReview || isNoticeDrafted;
-
   const fetchRecommendation = useCallback(async () => {
     setLoading(true);
     setError(null);

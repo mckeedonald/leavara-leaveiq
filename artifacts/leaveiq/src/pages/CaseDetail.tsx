@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { useRoute, Link, useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetCase, useTransitionCase, getGetCaseQueryKey, LeaveState, TransitionRequestEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,9 +54,9 @@ function formatAuditAction(action: string): string {
 
 // ── Main CaseDetail ──────────────────────────────────────────────────────────
 export default function CaseDetail() {
-  const [, params] = useRoute("/leaveiq/cases/:caseId");
-  const caseId = params?.caseId || "";
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  // Parse caseId directly from the URL — more reliable than useRoute pattern-matching
+  const caseId = location.match(/\/cases\/([^/]+)/)?.[1] ?? "";
   const { user } = useAuth();
 
   const { data: caseData, isLoading, error, refetch } = useGetCase(caseId);
