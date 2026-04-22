@@ -92,13 +92,43 @@ interface Props {
 
 type DisclaimerAction = "generate" | "regenerate";
 
+// Per-case localStorage key for persisting Ava's generated notices
+function avaStorageKey(caseId: string) { return `leaveiq_ava_${caseId}`; }
+
+type AvaSavedState = { result: AiResult; editedNotices: EditedNotice[] };
+type AvaPendingState = { pending: true };
+type AvaStorage = AvaSavedState | AvaPendingState | null;
+
+function readAvaStorage(caseId: string): AvaStorage {
+  if (!caseId) return null;
+  try {
+    const raw = localStorage.getItem(avaStorageKey(caseId));
+    if (raw) return JSON.parse(raw) as AvaStorage;
+  } catch { /* ignore */ }
+  return null;
+}
+
 export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSent, autoGenerate }: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AiResult | null>(null);
-  const [editedNotices, setEditedNotices] = useState<EditedNotice[]>([]);
-  const [expandedNotices, setExpandedNotices] = useState<Set<string>>(new Set());
+
+  // Lazy-initialize from localStorage so notices survive navigation away and back
+  const [result, setResult] = useState<AiResult | null>(() => {
+    const saved = readAvaStorage(caseId);
+    return saved && "result" in saved ? saved.result : null;
+  });
+  const [editedNotices, setEditedNotices] = useState<EditedNotice[]>(() => {
+    const saved = readAvaStorage(caseId);
+    return saved && "editedNotices" in saved ? saved.editedNotices : [];
+  });
+  const [expandedNotices, setExpandedNotices] = useState<Set<string>>(() => {
+    const saved = readAvaStorage(caseId);
+    if (saved && "editedNotices" in saved)
+      return new Set(saved.editedNotices.map((n) => n.noticeType));
+    return new Set();
+  });
+
   const [sending, setSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -112,6 +142,9 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ava"; text: string }>>([]);
   const [chatLoading, setChatLoading] = useState(false);
+
+  // Auto-restart flag: set on mount if generation was in progress when user left
+  const [autoRestart, setAutoRestart] = useState(false);
 
   const [availableDocs, setAvailableDocs] = useState<CaseDocumentMeta[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
@@ -128,11 +161,31 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const isNoticeDrafted = caseState === "NOTICE_DRAFTED";
   const showAiPanel = isEligibility || isHrReview || isNoticeDrafted;
 
-  // Auto-generate on mount when parent requests it
+  // Sync result + editedNotices to localStorage whenever they change
+  React.useEffect(() => {
+    if (!caseId || !result) return;
+    try {
+      localStorage.setItem(avaStorageKey(caseId), JSON.stringify({ result, editedNotices } satisfies AvaSavedState));
+    } catch { /* ignore quota errors */ }
+  }, [caseId, result, editedNotices]);
+
+  // On mount: if generation was in-progress when the user last left, schedule auto-restart
+  React.useEffect(() => {
+    if (!caseId || result) return; // Already have a result — nothing to restart
+    const saved = readAvaStorage(caseId);
+    if (saved && "pending" in saved) setAutoRestart(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseId]);
+
+  // Auto-generate on mount when parent requests it (only if no saved result/pending)
   React.useEffect(() => {
     if (autoGenerate && !result && !loading) {
-      setDisclaimerAction("generate");
-      setDisclaimerOpen(true);
+      const saved = readAvaStorage(caseId);
+      const hasExisting = !!(saved && ("result" in saved || "pending" in saved));
+      if (!hasExisting) {
+        setDisclaimerAction("generate");
+        setDisclaimerOpen(true);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoGenerate]);
@@ -182,6 +235,10 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
     setError(null);
     setSendSuccess(false);
     setSendError(null);
+    // Mark as pending so navigating away and back will auto-restart generation
+    if (caseId) {
+      try { localStorage.setItem(avaStorageKey(caseId), JSON.stringify({ pending: true } satisfies AvaPendingState)); } catch { /* ignore */ }
+    }
     try {
       const data = await apiFetch<AiResult>(`/api/cases/${caseId}/ai-recommendation`, {
         method: "POST",
@@ -198,12 +255,25 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         })),
       );
       setExpandedNotices(new Set(data.notices.map((n) => n.noticeType)));
+      // localStorage is synced by the sync useEffect above
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      // Clear the pending flag so we don't auto-restart on error
+      if (caseId) {
+        try { localStorage.removeItem(avaStorageKey(caseId)); } catch { /* ignore */ }
+      }
     } finally {
       setLoading(false);
     }
   }, [caseId, user?.email]);
+
+  // Trigger re-generation when auto-restart is set (generation was in-flight when user left)
+  React.useEffect(() => {
+    if (autoRestart && !loading && !result) {
+      setAutoRestart(false);
+      void fetchRecommendation();
+    }
+  }, [autoRestart, loading, result, fetchRecommendation]);
 
   const regenerateNotice = useCallback(
     async (noticeType: string) => {
@@ -353,6 +423,8 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         }),
       });
       setSendSuccess(true);
+      // Clear persisted notices — they've been sent, no need to restore them on next visit
+      if (caseId) { try { localStorage.removeItem(avaStorageKey(caseId)); } catch { /* ignore */ } }
       // Notify parent so it can transition case state (e.g. ELIGIBILITY_ANALYSIS → NOTICE_DRAFTED)
       onNoticesSent?.();
     } catch (err) {
