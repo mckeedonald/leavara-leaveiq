@@ -771,6 +771,37 @@ router.post(
         authed.user.email,
       );
 
+      // Cache the medical certification form in the DB so it's always available
+      // when HR later sends the eligibility notice (even without including med cert in that batch).
+      const medCertNotice = result.notices.find((n: { noticeType: string }) => n.noticeType === "MEDICAL_CERTIFICATION");
+      if (medCertNotice) {
+        try {
+          const noticeDate = new Date().toISOString().split("T")[0];
+          const medFileName = `MEDICAL_CERTIFICATION_${leaveCase.caseNumber}_${noticeDate}.pdf`;
+          // Remove any previously cached med cert for this case before inserting a fresh one
+          await db
+            .delete(caseDocumentsTable)
+            .where(
+              and(
+                eq(caseDocumentsTable.caseId, leaveCase.id),
+                eq(caseDocumentsTable.uploadedBy, "notice"),
+                sql`${caseDocumentsTable.fileName} LIKE 'MEDICAL_CERTIFICATION%'`,
+              ),
+            );
+          await db.insert(caseDocumentsTable).values({
+            caseId: leaveCase.id,
+            uploadedBy: "notice",
+            fileName: medFileName,
+            storageKey: null,
+            contentInline: (medCertNotice as { content: string }).content,
+            mimeType: "application/pdf",
+            sizeBytes: Buffer.from((medCertNotice as { content: string }).content, "utf-8").length,
+          });
+        } catch (cacheErr) {
+          logger.warn({ cacheErr, caseId: leaveCase.id }, "Failed to cache medical certification form — continuing");
+        }
+      }
+
       res.json(result);
     } catch (err) {
       logger.error({ err, caseId: req.params.caseId, user: authed.user.email }, "AI recommendation failed");
@@ -1014,14 +1045,21 @@ router.get(
       return;
     }
 
-    // If content is stored inline (notices), return a data URL
+    // If content is stored inline (notices), serve it directly
     if (!doc.storageKey && (doc as any).contentInline) {
       const content = (doc as any).contentInline as string;
       const mimeType = doc.mimeType ?? "text/plain";
-      // Return a direct download response instead of a presigned URL
-      res.setHeader("Content-Type", mimeType);
       res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
-      res.send(Buffer.from(content, "utf-8"));
+
+      if (mimeType === "application/pdf") {
+        // contentInline holds the raw form text — generate the real PDF binary on demand
+        const pdfBuffer = await generateMedCertPdf(content);
+        res.setHeader("Content-Type", "application/pdf");
+        res.send(pdfBuffer);
+      } else {
+        res.setHeader("Content-Type", mimeType);
+        res.send(Buffer.from(content, "utf-8"));
+      }
       return;
     }
     const { getPresignedUrl } = await import("../lib/storage.js");
