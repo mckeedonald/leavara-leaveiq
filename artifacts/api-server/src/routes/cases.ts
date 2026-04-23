@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql, and, ne, gte, lte, isNull, or, inArray, like } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
+import multer from "multer";
 import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable } from "@workspace/db";
 import {
   ListCasesQueryParams,
@@ -1107,6 +1108,78 @@ router.post(
   },
 );
 
+const hrDocUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter(_req, file, cb) {
+    const allowed = [
+      "application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
+
+// POST /cases/:caseId/documents (HR — requires auth)
+router.post(
+  "/cases/:caseId/documents",
+  requireAuth,
+  hrDocUpload.single("file"),
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+
+    const [leaveCase] = await db
+      .select({ organizationId: leaveCasesTable.organizationId })
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) { res.status(404).json({ error: "Case not found." }); return; }
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." }); return;
+    }
+
+    const file = req.file;
+    if (!file) { res.status(400).json({ error: "No file provided." }); return; }
+
+    let storageKey: string | null = null;
+    let contentInline: string | null = null;
+
+    const { isR2Configured, uploadFile } = await import("../lib/storage.js");
+    if (isR2Configured()) {
+      const ext = file.originalname.split(".").pop() ?? "bin";
+      const key = `cases/${caseId}/documents/${randomBytes(8).toString("hex")}.${ext}`;
+      try {
+        await uploadFile(key, file.buffer, file.mimetype);
+        storageKey = key;
+      } catch (err) {
+        logger.warn({ err, caseId }, "R2 upload failed — falling back to inline DB storage");
+        contentInline = file.buffer.toString("base64");
+      }
+    } else {
+      contentInline = file.buffer.toString("base64");
+    }
+
+    const [doc] = await db
+      .insert(caseDocumentsTable)
+      .values({
+        caseId,
+        uploadedBy: "hr",
+        fileName: file.originalname,
+        storageKey,
+        contentInline,
+        mimeType: file.mimetype,
+        sizeBytes: file.size,
+      })
+      .returning();
+
+    await logAudit(caseId, "HR_DOCUMENT_UPLOADED", authed.user.email ?? authed.user.id);
+    res.status(201).json({ documents: [{ ...doc }] });
+  },
+);
+
 // GET /cases/:caseId/documents (HR — requires auth)
 router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<void> => {
   const authed = req as AuthenticatedRequest;
@@ -1192,9 +1265,14 @@ router.get(
           const pdfBuffer = toPdfBuffer(contentInline);
           res.setHeader("Content-Type", "application/pdf");
           res.send(pdfBuffer);
-        } else {
+        } else if (mimeType === "text/plain") {
+          // Notices stored as raw text
           res.setHeader("Content-Type", mimeType);
           res.send(Buffer.from(contentInline, "utf-8"));
+        } else {
+          // All other inline content (images, docs) is base64-encoded binary
+          res.setHeader("Content-Type", mimeType);
+          res.send(Buffer.from(contentInline, "base64"));
         }
         return;
       }

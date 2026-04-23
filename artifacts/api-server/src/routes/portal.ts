@@ -166,13 +166,22 @@ router.post(
     const uniqueId = randomBytes(8).toString("hex");
     const storageKey = `cases/${caseId}/documents/${uniqueId}.${ext}`;
 
-    try {
-      const { uploadFile } = await import("../lib/storage.js");
-      await uploadFile(storageKey, file.buffer, file.mimetype);
-    } catch (err) {
-      logger.error({ err, caseId }, "R2 upload failed");
-      res.status(500).json({ error: "File upload failed. Please try again." });
-      return;
+    let finalStorageKey: string | null = storageKey;
+    let contentInline: string | null = null;
+
+    const { isR2Configured, uploadFile } = await import("../lib/storage.js");
+    if (isR2Configured()) {
+      try {
+        await uploadFile(storageKey, file.buffer, file.mimetype);
+      } catch (err) {
+        logger.warn({ err, caseId }, "R2 upload failed — falling back to inline DB storage");
+        finalStorageKey = null;
+        contentInline = file.buffer.toString("base64");
+      }
+    } else {
+      // R2 not configured — store file content directly in the DB
+      finalStorageKey = null;
+      contentInline = file.buffer.toString("base64");
     }
 
     const [doc] = await db
@@ -181,7 +190,8 @@ router.post(
         caseId,
         uploadedBy: "employee",
         fileName: file.originalname,
-        storageKey,
+        storageKey: finalStorageKey,
+        contentInline,
         mimeType: file.mimetype,
         sizeBytes: file.size,
       })
@@ -304,6 +314,26 @@ router.get("/portal/case/:caseId/documents/:docId/download", async (req, res): P
 
   if (!doc) {
     res.status(404).json({ error: "Document not found." });
+    return;
+  }
+
+  const contentInline = (doc as any).contentInline as string | null | undefined;
+
+  // Inline-stored doc (no R2 key) — serve the binary directly
+  if (!doc.storageKey && contentInline) {
+    const mimeType = doc.mimeType ?? "application/octet-stream";
+    res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
+    res.setHeader("Content-Type", mimeType);
+    if (mimeType === "text/plain") {
+      res.send(Buffer.from(contentInline, "utf-8"));
+    } else {
+      res.send(Buffer.from(contentInline, "base64"));
+    }
+    return;
+  }
+
+  if (!doc.storageKey) {
+    res.status(404).json({ error: "Document content not found." });
     return;
   }
 

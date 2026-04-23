@@ -138,15 +138,33 @@ export default function EmployeePortalCase() {
       const res = await fetch(
         `/api/portal/case/${caseData.id}/documents/${docId}/download?token=${encodeURIComponent(token)}`,
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "Download failed.");
-      const a = document.createElement("a");
-      a.href = (data as { url: string }).url;
-      a.download = fileName;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(data.error ?? "Download failed.");
+      }
+      const contentType = res.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        // R2 presigned URL path
+        const data = await res.json() as { url: string };
+        const a = document.createElement("a");
+        a.href = data.url;
+        a.download = fileName;
+        a.target = "_blank";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // Inline binary path
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Download failed.");
     }

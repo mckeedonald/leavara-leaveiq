@@ -2,13 +2,21 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { logger } from "./logger";
 
+export function isR2Configured(): boolean {
+  return !!(
+    process.env["R2_ACCOUNT_ID"] &&
+    process.env["R2_ACCESS_KEY_ID"] &&
+    process.env["R2_SECRET_ACCESS_KEY"]
+  );
+}
+
 function getS3Client(): S3Client {
   const accountId = process.env["R2_ACCOUNT_ID"];
   const accessKeyId = process.env["R2_ACCESS_KEY_ID"];
   const secretAccessKey = process.env["R2_SECRET_ACCESS_KEY"];
 
   if (!accountId || !accessKeyId || !secretAccessKey) {
-    logger.warn("R2 credentials not configured — file uploads will fail");
+    logger.warn("R2 credentials not configured — uploads will fall back to inline DB storage");
   }
 
   return new S3Client({
