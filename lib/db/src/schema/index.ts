@@ -12,3 +12,19 @@ export * from "./hrisConnections";
 export * from "./hrisEmployeeCache";
 export * from "./caseDocuments";
 export * from "./caseAccessTokens";
+
+// PerformIQ tables
+export * from "./piqUsers";
+export * from "./piqEmployees";
+export * from "./piqDocumentTypes";
+export * from "./piqAgentSessions";
+export * from "./piqCases";
+export * from "./piqDocuments";
+export * from "./piqDocumentHistory";
+export * from "./piqWorkflowSteps";
+export * from "./piqSignatures";
+export * from "./piqPolicies";
+export * from "./piqInvites";
+export * from "./piqPasswordResets";
+export * from "./piqIntegrationLogs";
+export * from "./piqAuditLog";

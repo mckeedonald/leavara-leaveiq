@@ -9,6 +9,7 @@ import knowledgeRouter from "./knowledge";
 import hrisRouter from "./hris";
 import portalRouter from "./portal";
 import orgRouter from "./org";
+import piqRouter from "./piq/index.js";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(knowledgeRouter);
 router.use(hrisRouter);
 router.use(portalRouter);
 router.use(orgRouter);
+router.use(piqRouter);
 
 export default router;

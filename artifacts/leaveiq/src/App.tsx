@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { PiqAuthProvider, usePiqAuth } from "@/lib/piqAuth";
 import { isOrgSubdomain } from "@/lib/subdomain";
 
 import Landing from "@/pages/Landing";
@@ -25,6 +26,15 @@ import HrisSettings from "@/pages/HrisSettings";
 import Calendar from "@/pages/Calendar";
 import PerformIQDashboard from "@/pages/PerformIQDashboard";
 import NotFound from "@/pages/not-found";
+
+// PerformIQ pages
+import PiqLogin from "@/pages/performiq/Login";
+import PiqDashboard from "@/pages/performiq/Dashboard";
+import PiqCaseList from "@/pages/performiq/CaseList";
+import PiqCaseDetail from "@/pages/performiq/CaseDetail";
+import NewCase from "@/pages/performiq/NewCase";
+import PiqEmployees from "@/pages/performiq/Employees";
+import PiqAdminSettings from "@/pages/performiq/AdminSettings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +68,20 @@ function GuestRoute({ component: Component }: { component: React.ComponentType }
   const { user } = useAuth();
   if (user?.isSuperAdmin) return <Redirect to="/leaveiq/superadmin" />;
   if (user) return <Redirect to="/leaveiq/dashboard" />;
+  return <Component />;
+}
+
+function PiqProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, isLoading } = usePiqAuth();
+  const [location] = useLocation();
+  if (isLoading) return null;
+  if (!user) return <Redirect to={`/performiq/login?redirect=${encodeURIComponent(location)}`} />;
+  return <Component />;
+}
+
+function PiqGuestRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user } = usePiqAuth();
+  if (user) return <Redirect to="/performiq/dashboard" />;
   return <Component />;
 }
 
@@ -96,8 +120,15 @@ function Router() {
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
       {/* PerformIQ routes */}
-      <Route path="/performiq/login" component={() => <GuestRoute component={Login} />} />
-      <Route path="/performiq/dashboard" component={() => <ProtectedRoute component={PerformIQDashboard} />} />
+      <Route path="/performiq/login" component={() => <PiqGuestRoute component={PiqLogin} />} />
+      <Route path="/performiq/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
+      <Route path="/performiq/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
+      <Route path="/performiq/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />
+      <Route path="/performiq/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
+      <Route path="/performiq/employees" component={() => <PiqProtectedRoute component={PiqEmployees} />} />
+      <Route path="/performiq/admin/policies" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
+      <Route path="/performiq/admin/document-types" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
+      <Route path="/performiq/admin/users" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
 
       {/* Backward-compat redirects — keep old paths alive */}
       <Route path="/request" component={() => <NavRedirect to="/leaveiq/request" />} />
@@ -125,9 +156,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
+          <PiqAuthProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+          </PiqAuthProvider>
         </AuthProvider>
         <Toaster />
       </TooltipProvider>
