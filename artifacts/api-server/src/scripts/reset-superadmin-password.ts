@@ -11,20 +11,11 @@
  *   ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=NewPass123! railway run pnpm ...
  */
 import bcrypt from "bcryptjs";
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import { usersTable } from "@workspace/db/schema";
+import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-
-const { Pool } = pg;
 
 const email = process.env["ADMIN_EMAIL"] ?? "admin@leavara.net";
 const newPassword = process.env["ADMIN_PASSWORD"] ?? "LeaveIQ2026!";
-
-if (!process.env["DATABASE_URL"]) {
-  console.error("[reset-superadmin-password] ERROR: DATABASE_URL environment variable is not set.");
-  process.exit(1);
-}
 
 if (newPassword.length < 8) {
   console.error("[reset-superadmin-password] ERROR: Password must be at least 8 characters.");
@@ -32,9 +23,6 @@ if (newPassword.length < 8) {
 }
 
 console.log("[reset-superadmin-password] Starting password reset for:", email);
-
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
-const db = drizzle(pool);
 
 try {
   console.log("[reset-superadmin-password] Hashing password...");
@@ -50,7 +38,6 @@ try {
   if (result.length === 0) {
     console.error(`[reset-superadmin-password] ERROR: No user found with email: ${email}`);
     console.error("[reset-superadmin-password] Hint: Run the seed-admin script first to create the initial admin user.");
-    await pool.end();
     process.exit(1);
   }
 
@@ -60,9 +47,7 @@ try {
 } catch (err) {
   console.error("[reset-superadmin-password] ERROR: Failed to reset password.");
   console.error(err instanceof Error ? err.message : String(err));
-  await pool.end().catch(() => {});
   process.exit(1);
 }
 
-await pool.end();
 process.exit(0);
