@@ -68,13 +68,14 @@ router.get("/orgs/me", requireAuth, async (req: Request, res: Response) => {
         name: organizationsTable.name,
         slug: organizationsTable.slug,
         logoStorageKey: organizationsTable.logoStorageKey,
+        hasPerformIq: organizationsTable.hasPerformIq,
       })
       .from(organizationsTable)
       .where(eq(organizationsTable.id, authed.user.organizationId))
       .limit(1);
 
     if (!org) {
-      res.json({ name: null, logoUrl: null });
+      res.json({ name: null, logoUrl: null, hasPerformIq: false });
       return;
     }
 
@@ -84,7 +85,7 @@ router.get("/orgs/me", requireAuth, async (req: Request, res: Response) => {
       logoUrl = await getPresignedUrl(org.logoStorageKey, 7200);
     }
 
-    res.json({ name: org.name, slug: org.slug, logoUrl });
+    res.json({ name: org.name, slug: org.slug, logoUrl, hasPerformIq: org.hasPerformIq ?? false });
   } catch (err) {
     logger.error({ err }, "GET /orgs/me error");
     res.json({ name: null, logoUrl: null });

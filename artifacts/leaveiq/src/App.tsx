@@ -23,6 +23,7 @@ import AccountSettings from "@/pages/AccountSettings";
 import SuperAdmin from "@/pages/SuperAdmin";
 import HrisSettings from "@/pages/HrisSettings";
 import Calendar from "@/pages/Calendar";
+import PerformIQDashboard from "@/pages/PerformIQDashboard";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -94,8 +95,9 @@ function Router() {
       <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
-      {/* PerformIQ placeholder routes */}
+      {/* PerformIQ routes */}
       <Route path="/performiq/login" component={() => <GuestRoute component={Login} />} />
+      <Route path="/performiq/dashboard" component={() => <ProtectedRoute component={PerformIQDashboard} />} />
 
       {/* Backward-compat redirects — keep old paths alive */}
       <Route path="/request" component={() => <NavRedirect to="/leaveiq/request" />} />
