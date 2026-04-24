@@ -9,7 +9,8 @@
     "start": "node --enable-source-maps --env-file-if-exists=.env ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "seed-admin": "tsx --env-file-if-exists=.env src/scripts/seed-admin.ts",
-    "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts"
+    "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts",
+    "reset-superadmin-password": "tsx --env-file-if-exists=.env src/scripts/reset-superadmin-password.ts"
   },
   "dependencies": {
     "@swc/helpers": "^0.5.21",
