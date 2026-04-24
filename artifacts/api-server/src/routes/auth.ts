@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
-import { db, usersTable, invitesTable, passwordResetsTable } from "@workspace/db";
+import { db, usersTable, invitesTable, passwordResetsTable, organizationsTable } from "@workspace/db";
 import { signToken, requireAuth, requireAdmin, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { sendPasswordResetEmail, sendInviteEmail } from "../lib/email";
 import { loginLimiter } from "../lib/rateLimiters";
@@ -46,6 +46,16 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
     isSuperAdmin: user.isSuperAdmin ?? false,
   });
 
+  let organizationSlug: string | null = null;
+  if (user.organizationId) {
+    const [org] = await db
+      .select({ slug: organizationsTable.slug })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, user.organizationId))
+      .limit(1);
+    organizationSlug = org?.slug ?? null;
+  }
+
   res.json({
     token,
     user: {
@@ -56,6 +66,7 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
       position: user.position,
       role: user.role,
       organizationId: user.organizationId ?? null,
+      organizationSlug,
       isSuperAdmin: user.isSuperAdmin ?? false,
     },
   });

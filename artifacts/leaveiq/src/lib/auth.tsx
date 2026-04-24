@@ -19,6 +19,7 @@ export interface AuthUser {
   role: "admin" | "user";
   isSuperAdmin?: boolean;
   organizationId?: string | null;
+  organizationSlug?: string | null;
 }
 
 interface AuthContextValue {

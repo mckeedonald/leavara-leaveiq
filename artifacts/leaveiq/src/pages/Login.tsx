@@ -39,7 +39,22 @@ export default function Login() {
     setError(null);
     try {
       const loggedInUser = await login(email, password);
-      navigate(loggedInUser.isSuperAdmin ? "/leaveiq/superadmin" : "/leaveiq/dashboard");
+
+      if (loggedInUser.isSuperAdmin) {
+        navigate("/leaveiq/superadmin");
+        return;
+      }
+
+      // If logging in from the root domain and the user belongs to an org,
+      // redirect to their org subdomain so they always land on the right URL.
+      const hostname = window.location.hostname;
+      const isRootDomain = hostname === "leavara.net" || hostname === "www.leavara.net";
+      if (isRootDomain && loggedInUser.organizationSlug) {
+        window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.leavara.net/leaveiq/dashboard`;
+        return;
+      }
+
+      navigate("/leaveiq/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
