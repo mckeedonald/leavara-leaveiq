@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, desc, isNull, isNotNull, and, count } from "drizzle-orm";
-import { db, usersTable, organizationsTable, leaveCasesTable } from "@workspace/db";
+import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable } from "@workspace/db";
 import { requireSuperAdmin } from "../lib/jwtAuth";
 import { sendWelcomeEmail } from "../lib/email";
 import bcrypt from "bcryptjs";
@@ -68,11 +68,13 @@ router.post("/superadmin/organizations", requireSuperAdmin, async (req: Request,
 // PATCH /superadmin/organizations/:orgId
 router.patch("/superadmin/organizations/:orgId", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
   const { orgId } = req.params;
-  const { isActive, name } = req.body as { isActive?: boolean; name?: string };
+  const { isActive, name, hasPerformIq, hasLeaveIq } = req.body as { isActive?: boolean; name?: string; hasPerformIq?: boolean; hasLeaveIq?: boolean };
 
   const updates: Record<string, unknown> = {};
   if (typeof isActive === "boolean") updates.isActive = isActive;
   if (name?.trim()) updates.name = name.trim();
+  if (typeof hasPerformIq === "boolean") updates.hasPerformIq = hasPerformIq;
+  if (typeof hasLeaveIq === "boolean") updates.hasLeaveIq = hasLeaveIq;
 
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No valid fields to update" });
@@ -188,6 +190,65 @@ router.post("/superadmin/organizations/:orgId/users", requireSuperAdmin, async (
     orgName: org?.name ?? "your organization",
     password,
   }).catch((err) => req.log.error({ err }, "Failed to send welcome email"));
+
+  res.status(201).json({ user: newUser });
+});
+
+// POST /superadmin/organizations/:orgId/piq-users — create a PerformIQ user for an org
+router.post("/superadmin/organizations/:orgId/piq-users", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const { email, fullName, role, password } = req.body as {
+    email?: string; fullName?: string; role?: string; password?: string;
+  };
+
+  if (!email || !fullName || !password) {
+    res.status(400).json({ error: "Email, full name, and password are required" });
+    return;
+  }
+
+  const [org] = await db
+    .select({ id: organizationsTable.id, hasPerformIq: organizationsTable.hasPerformIq })
+    .from(organizationsTable)
+    .where(eq(organizationsTable.id, orgId));
+
+  if (!org) {
+    res.status(404).json({ error: "Organization not found" });
+    return;
+  }
+
+  if (!org.hasPerformIq) {
+    res.status(400).json({ error: "This organization does not have PerformIQ enabled. Enable it first." });
+    return;
+  }
+
+  const [existing] = await db
+    .select({ id: piqUsersTable.id })
+    .from(piqUsersTable)
+    .where(eq(piqUsersTable.email, email.toLowerCase().trim()));
+
+  if (existing) {
+    res.status(409).json({ error: "A PerformIQ user with this email already exists" });
+    return;
+  }
+
+  const validRoles = ["hr_admin", "hr_user", "manager", "supervisor", "system_admin"];
+  const assignedRole = validRoles.includes(role ?? "") ? (role as "hr_admin") : "hr_admin";
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const [newUser] = await db.insert(piqUsersTable).values({
+    organizationId: orgId,
+    email: email.toLowerCase().trim(),
+    passwordHash,
+    fullName: fullName.trim(),
+    role: assignedRole,
+    isActive: true,
+  }).returning({
+    id: piqUsersTable.id,
+    email: piqUsersTable.email,
+    fullName: piqUsersTable.fullName,
+    role: piqUsersTable.role,
+    isActive: piqUsersTable.isActive,
+  });
 
   res.status(201).json({ user: newUser });
 });
