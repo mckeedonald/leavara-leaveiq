@@ -6,12 +6,12 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#4F6FA5",
+  perf: "#2E7B7B",
   card: "#FFFFFF",
-  border: "#D4DCF0",
-  textDark: "#1A2D4A",
-  textMuted: "#6B7FA8",
-  bg: "#F4F6FB",
+  border: "#C4D9D9",
+  textDark: "#1A3333",
+  textMuted: "#6B9090",
+  bg: "#F0EEE9",
 };
 
 interface CaseSummary {
@@ -39,7 +39,7 @@ const ALL_STATUSES = [
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: "Draft",              color: "#6B7FA8", bg: "#EDF1F8" },
+  draft:             { label: "Draft",              color: "#6B9090", bg: "#EDF1F8" },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7" },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2" },
   hr_approval:       { label: "HR Approval",        color: "#7C3AED", bg: "#EDE9FE" },
@@ -49,7 +49,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 };
 
 const BASE_TYPE_COLOR: Record<string, string> = {
-  coaching:        "#4F6FA5",
+  coaching:        "#2E7B7B",
   written_warning: "#B45309",
   final_warning:   "#B91C1C",
 };
@@ -153,7 +153,7 @@ export default function PiqCaseList() {
               </div>
               <div className="divide-y" style={{ borderColor: C.border }}>
                 {filtered.map((c) => {
-                  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B7FA8", bg: "#EDF1F8" };
+                  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B9090", bg: "#EDF1F8" };
                   const baseColor = BASE_TYPE_COLOR[c.docBaseType] ?? C.perf;
                   return (
                     <Link

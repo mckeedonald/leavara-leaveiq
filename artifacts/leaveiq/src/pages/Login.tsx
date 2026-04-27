@@ -45,16 +45,23 @@ export default function Login() {
         return;
       }
 
-      // If logging in from the root domain and the user belongs to an org,
-      // redirect to their org subdomain so they always land on the right URL.
       const hostname = window.location.hostname;
       const isRootDomain = hostname === "leavara.net" || hostname === "www.leavara.net";
+
+      // Determine destination based on enrolled products
+      const hasBoth = loggedInUser.hasLeaveIq && loggedInUser.hasPerformIq;
+      const dest = hasBoth
+        ? "/product-select"
+        : loggedInUser.hasPerformIq
+          ? "/performiq/dashboard"
+          : "/leaveiq/dashboard";
+
       if (isRootDomain && loggedInUser.organizationSlug) {
-        window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.leavara.net/leaveiq/dashboard`;
+        window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.leavara.net${dest}`;
         return;
       }
 
-      navigate("/leaveiq/dashboard");
+      navigate(dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
@@ -68,7 +75,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <img src="/leavara-logo.png" alt="Leavara" className="h-16 w-16 object-contain mb-4" />
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Leavara LeaveIQ</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Leavara</h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>HR Decision Support Platform</p>
         </div>
 

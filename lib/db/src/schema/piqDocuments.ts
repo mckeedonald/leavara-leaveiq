@@ -1,7 +1,7 @@
 import { pgTable, text, uuid, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
 import { piqCasesTable } from "./piqCases";
-import { piqUsersTable } from "./piqUsers";
+import { usersTable } from "./users";
 
 /**
  * Document content JSONB shape — all fields are text for rich-text editing.
@@ -30,7 +30,7 @@ export const piqDocumentsTable = pgTable("piq_document", {
   organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id, { onDelete: "cascade" }),
   version: integer("version").notNull().default(1),
   content: jsonb("content").notNull().$type<PiqDocumentContent>(),
-  createdBy: uuid("created_by").notNull().references(() => piqUsersTable.id),
+  createdBy: uuid("created_by").notNull().references(() => usersTable.id),
   isCurrent: boolean("is_current").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

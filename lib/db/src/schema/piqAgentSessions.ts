@@ -1,6 +1,6 @@
 import { pgTable, text, uuid, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
-import { piqUsersTable } from "./piqUsers";
+import { usersTable } from "./users";
 
 export const PIQ_AGENT_SESSION_STATUSES = ["active", "completed", "abandoned"] as const;
 export type PiqAgentSessionStatus = (typeof PIQ_AGENT_SESSION_STATUSES)[number];
@@ -8,7 +8,7 @@ export type PiqAgentSessionStatus = (typeof PIQ_AGENT_SESSION_STATUSES)[number];
 export const piqAgentSessionsTable = pgTable("piq_agent_session", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id, { onDelete: "cascade" }),
-  initiatedBy: uuid("initiated_by").notNull().references(() => piqUsersTable.id),
+  initiatedBy: uuid("initiated_by").notNull().references(() => usersTable.id),
   status: text("status").$type<PiqAgentSessionStatus>().notNull().default("active"),
   finalDraft: jsonb("final_draft"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

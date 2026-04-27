@@ -2,24 +2,30 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   type ReactNode,
 } from "react";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 const API_BASE = "";
+const TOKEN_KEY = "leavara_token";
+const USER_KEY = "leavara_user";
+
+export type UnifiedRole = "hr_admin" | "hr_user" | "manager";
 
 export interface AuthUser {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  position: string;
-  role: "admin" | "user";
-  isSuperAdmin?: boolean;
-  organizationId?: string | null;
-  organizationSlug?: string | null;
+  fullName: string;
+  position: string | null;
+  role: UnifiedRole;
+  customRoleId: string | null;
+  organizationId: string | null;
+  organizationSlug: string | null;
+  hasLeaveIq: boolean;
+  hasPerformIq: boolean;
+  isSuperAdmin: boolean;
 }
 
 interface AuthContextValue {
@@ -28,31 +34,22 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => void;
-  updateUser: (updated: Partial<Pick<AuthUser, "firstName" | "lastName" | "position">>) => void;
+  updateUser: (partial: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const TOKEN_KEY = "leaveiq_token";
-const USER_KEY = "leaveiq_user";
-
 export async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const headers: Record<string, string> = {
-    ...(opts?.headers as Record<string, string>),
-  };
-  if (token && !headers["Authorization"]) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem("leaveiq_token");
+  const headers: Record<string, string> = { ...(opts?.headers as Record<string, string>) };
+  if (token && !headers["Authorization"]) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const data = await res.json();
   if (!res.ok) {
-    // Session expired or token invalid — clear stored credentials and send to login
     if (res.status === 401) {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
+      [TOKEN_KEY, USER_KEY, "leaveiq_token", "leaveiq_user"].forEach((k) => localStorage.removeItem(k));
       window.location.href = "/leaveiq/login?reason=session_expired";
-      throw new Error("Your session has expired. Please log in again.");
+      throw new Error("Session expired");
     }
     throw new Error((data as { error?: string }).error ?? "Request failed");
   }
@@ -60,22 +57,15 @@ export async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> 
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem("leaveiq_token")
+  );
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const raw = localStorage.getItem(USER_KEY);
+    const raw = localStorage.getItem(USER_KEY) ?? localStorage.getItem("leaveiq_user");
     if (!raw) return null;
-    try {
-      return JSON.parse(raw) as AuthUser;
-    } catch {
-      return null;
-    }
+    try { return JSON.parse(raw) as AuthUser; } catch { return null; }
   });
   const [isLoading, setIsLoading] = useState(false);
-
-  // Wire token into the generated API client
-  useEffect(() => {
-    setAuthTokenGetter(() => localStorage.getItem(TOKEN_KEY));
-  }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<AuthUser> => {
     setIsLoading(true);
@@ -87,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      ["leaveiq_token", "leaveiq_user", "performiq_token", "performiq_user"].forEach((k) => localStorage.removeItem(k));
       setToken(data.token);
       setUser(data.user);
       return data.user;
@@ -96,23 +87,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    [TOKEN_KEY, USER_KEY, "leaveiq_token", "leaveiq_user", "performiq_token", "performiq_user"].forEach(
+      (k) => localStorage.removeItem(k)
+    );
     setToken(null);
     setUser(null);
   }, []);
 
-  const updateUser = useCallback(
-    (updated: Partial<Pick<AuthUser, "firstName" | "lastName" | "position">>) => {
-      setUser((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev, ...updated };
-        localStorage.setItem(USER_KEY, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  const updateUser = useCallback((partial: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...partial };
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser }}>
@@ -125,4 +114,16 @@ export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+export function useRole() {
+  const { user } = useAuth();
+  return {
+    role: user?.role ?? null,
+    isHrAdmin: user?.role === "hr_admin" || user?.isSuperAdmin === true,
+    isHr: user ? ["hr_admin", "hr_user"].includes(user.role) : false,
+    isManager: user?.role === "manager",
+    hasLeaveIq: user?.hasLeaveIq ?? false,
+    hasPerformIq: user?.hasPerformIq ?? false,
+  };
 }

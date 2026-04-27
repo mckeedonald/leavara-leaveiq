@@ -6,14 +6,14 @@ import { usePiqAuth, piqApiFetch } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#4F6FA5",
+  perf: "#2E7B7B",
   perfDark: "#2E4D80",
   perfLight: "#7B97C4",
   perfBg: "#EDF1F8",
   card: "#FFFFFF",
-  border: "#D4DCF0",
-  textDark: "#1A2D4A",
-  textMuted: "#6B7FA8",
+  border: "#C4D9D9",
+  textDark: "#1A3333",
+  textMuted: "#6B9090",
 };
 
 interface CaseSummary {
@@ -29,7 +29,7 @@ interface CaseSummary {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  draft:             { label: "Draft",              color: "#6B7FA8", bg: "#EDF1F8",   icon: Clock },
+  draft:             { label: "Draft",              color: "#6B9090", bg: "#EDF1F8",   icon: Clock },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7",  icon: AlertTriangle },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2",  icon: AlertTriangle },
   hr_approval:       { label: "HR Approval",        color: "#7C3AED", bg: "#EDE9FE",  icon: Clock },
@@ -39,7 +39,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const BASE_TYPE_BADGE: Record<string, { label: string; color: string }> = {
-  coaching:       { label: "Coaching",        color: "#4F6FA5" },
+  coaching:       { label: "Coaching",        color: "#2E7B7B" },
   written_warning:{ label: "Written Warning", color: "#B45309" },
   final_warning:  { label: "Final Warning",   color: "#B91C1C" },
 };
@@ -133,7 +133,7 @@ export default function PiqDashboard() {
           ) : (
             <div className="divide-y" style={{ borderColor: C.border }}>
               {cases.slice(0, 8).map((c) => {
-                const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B7FA8", bg: "#EDF1F8", icon: Clock };
+                const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B9090", bg: "#EDF1F8", icon: Clock };
                 const bt = BASE_TYPE_BADGE[c.docBaseType];
                 return (
                   <Link

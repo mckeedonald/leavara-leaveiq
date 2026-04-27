@@ -5,11 +5,11 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#4F6FA5",
+  perf: "#2E7B7B",
   card: "#FFFFFF",
-  border: "#D4DCF0",
-  textDark: "#1A2D4A",
-  textMuted: "#6B7FA8",
+  border: "#C4D9D9",
+  textDark: "#1A3333",
+  textMuted: "#6B9090",
 };
 
 interface Employee {

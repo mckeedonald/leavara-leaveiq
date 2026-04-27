@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 import { usePiqAuth, usePiqRole } from "@/lib/piqAuth";
 
 const S = {
-  sidebar: "#4F6FA5",
-  sidebarBorder: "#3A5A90",
+  sidebar: "#2E7B7B",
+  sidebarBorder: "#1F5858",
   activeItemBg: "rgba(255,255,255,0.20)",
   textOnDark: "#FFFFFF",
   textMuted: "rgba(255,255,255,0.72)",
@@ -79,7 +79,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           <img src="/leavara-logo.png" alt="Leavara" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Perform<span style={{ color: "#A8C4F0" }}>IQ</span>
+              Perform<span style={{ color: "#A8D9D9" }}>IQ</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMuted }}>
               Performance Management
@@ -158,7 +158,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         >
           <div />
           <div className="flex items-center gap-2 text-sm" style={{ color: "#8C7058" }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: "#4F6FA5" }} />
+            <span className="w-2 h-2 rounded-full" style={{ background: "#2E7B7B" }} />
             <span className="font-medium">PerformIQ</span>
           </div>
         </header>

@@ -58,7 +58,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [productMenuOpen]);
 
   useEffect(() => {
-    const token = localStorage.getItem("leaveiq_token");
+    const token = localStorage.getItem("leavara_token") ?? localStorage.getItem("leaveiq_token");
     if (!token) return;
     fetch("/api/orgs/me", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : null))
@@ -70,18 +70,24 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   const isSuperAdmin = user?.isSuperAdmin ?? false;
+  const isManager = user?.role === "manager";
+  const isHrAdmin = user?.role === "hr_admin";
 
   const navItems = isSuperAdmin
     ? [
-        { icon: ShieldAlert, label: "Super Admin", href: "/leaveiq/superadmin", adminOnly: false },
+        { icon: ShieldAlert, label: "Super Admin", href: "/leaveiq/superadmin", show: true },
+      ]
+    : isManager
+    ? [
+        { icon: CalendarDays, label: "Team Leave", href: "/leaveiq/manager", show: true },
       ]
     : [
-        { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", adminOnly: false },
-        { icon: Files, label: "All Cases", href: "/leaveiq/cases", adminOnly: false },
-        { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", adminOnly: false },
-        { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", adminOnly: false },
-        { icon: Users, label: "Users", href: "/leaveiq/users", adminOnly: true },
-        { icon: Building2, label: "HRIS Integration", href: "/leaveiq/hris-settings", adminOnly: true },
+        { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", show: true },
+        { icon: Files, label: "All Cases", href: "/leaveiq/cases", show: true },
+        { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
+        { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
+        { icon: Users, label: "Users", href: "/leaveiq/users", show: isHrAdmin },
+        { icon: Building2, label: "HRIS Integration", href: "/leaveiq/hris-settings", show: isHrAdmin },
       ];
 
   const initials = user
@@ -140,7 +146,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full mt-1 hover:bg-slate-50 transition-colors"
                       >
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#4F6FA5" }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#2E7B7B" }}>
                           <TrendingUp className="w-4 h-4 text-white" />
                         </div>
                         <div className="text-left">
@@ -168,7 +174,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         <nav className="flex-1 px-4 space-y-1 mt-4">
           {navItems
-            .filter((item) => !item.adminOnly || user?.role === "admin")
+            .filter((item) => item.show)
             .map((item) => {
               const isActive = location === item.href || location.startsWith(item.href + "/");
               return (
@@ -211,8 +217,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </p>
                 <p className="text-xs truncate" style={{ color: S.textMutedDark }}>
                   {user?.position ?? ""}
-                  {user?.role === "admin" && (
-                    <span className="ml-1" style={{ color: S.adminBadge }}>· Admin</span>
+                  {user?.role === "hr_admin" && (
+                    <span className="ml-1" style={{ color: S.adminBadge }}>· HR Admin</span>
+                  )}
+                  {user?.role === "manager" && (
+                    <span className="ml-1" style={{ color: S.adminBadge }}>· Manager</span>
                   )}
                 </p>
               </div>

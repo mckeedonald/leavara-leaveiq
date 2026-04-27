@@ -10,9 +10,11 @@ import hrisRouter from "./hris";
 import portalRouter from "./portal";
 import orgRouter from "./org";
 import piqRouter from "./piq/index.js";
+import employeesRouter from "./employees.js";
 
 const router: IRouter = Router();
 
+router.use("/api", employeesRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(casesRouter);

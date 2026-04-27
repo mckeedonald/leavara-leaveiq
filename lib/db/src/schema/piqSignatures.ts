@@ -1,8 +1,8 @@
 import { pgTable, text, uuid, timestamp } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
 import { piqCasesTable } from "./piqCases";
-import { piqEmployeesTable } from "./piqEmployees";
-import { piqUsersTable } from "./piqUsers";
+import { employeesTable } from "./employees";
+import { usersTable } from "./users";
 
 export const PIQ_SIGNATURE_METHODS = ["esignature", "wet_ink_scan"] as const;
 export type PiqSignatureMethod = (typeof PIQ_SIGNATURE_METHODS)[number];
@@ -22,7 +22,7 @@ export const piqSignaturesTable = pgTable("piq_signature", {
   id: uuid("id").primaryKey().defaultRandom(),
   caseId: uuid("case_id").notNull().references(() => piqCasesTable.id, { onDelete: "cascade" }),
   organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id, { onDelete: "cascade" }),
-  employeeId: uuid("employee_id").notNull().references(() => piqEmployeesTable.id),
+  employeeId: uuid("employee_id").notNull().references(() => employeesTable.id),
   method: text("method").$type<PiqSignatureMethod>().notNull(),
   provider: text("provider").$type<"docusign" | "hellosign">().notNull().default("docusign"),
   providerEnvelopeId: text("provider_envelope_id"),
@@ -30,7 +30,7 @@ export const piqSignaturesTable = pgTable("piq_signature", {
   signedAt: timestamp("signed_at", { withTimezone: true }),
   documentStorageKey: text("document_storage_key"),
   refusedReason: text("refused_reason"),
-  deliveredBy: uuid("delivered_by").references(() => piqUsersTable.id),
+  deliveredBy: uuid("delivered_by").references(() => usersTable.id),
   deliveryDate: timestamp("delivery_date", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

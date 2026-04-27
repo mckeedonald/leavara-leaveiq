@@ -15,14 +15,14 @@ import { piqApiFetch, usePiqAuth } from "@/lib/piqAuth";
 import type { PiqDocumentContent } from "@workspace/db";
 
 const C = {
-  perf: "#4F6FA5",
+  perf: "#2E7B7B",
   perfDark: "#2E4D80",
   card: "#FFFFFF",
-  border: "#D4DCF0",
-  textDark: "#1A2D4A",
-  textMuted: "#6B7FA8",
+  border: "#C4D9D9",
+  textDark: "#1A3333",
+  textMuted: "#6B9090",
   agentBg: "#F0F4FB",
-  userBg: "#4F6FA5",
+  userBg: "#2E7B7B",
 };
 
 interface Employee { id: string; fullName: string; jobTitle: string; department: string; hireDate: string | null; }
@@ -178,7 +178,7 @@ export default function NewCase() {
   );
 
   const BASE_COLORS: Record<string, string> = {
-    coaching: "#4F6FA5",
+    coaching: "#2E7B7B",
     written_warning: "#B45309",
     final_warning: "#B91C1C",
   };

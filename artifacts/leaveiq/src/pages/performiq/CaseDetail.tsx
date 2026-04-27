@@ -20,16 +20,16 @@ import { format } from "date-fns";
 import type { PiqDocumentContent } from "@workspace/db";
 
 const C = {
-  perf: "#4F6FA5",
+  perf: "#2E7B7B",
   card: "#FFFFFF",
-  border: "#D4DCF0",
-  textDark: "#1A2D4A",
-  textMuted: "#6B7FA8",
-  agentBg: "#F4F6FB",
+  border: "#C4D9D9",
+  textDark: "#1A3333",
+  textMuted: "#6B9090",
+  agentBg: "#F0EEE9",
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: "Draft",              color: "#6B7FA8", bg: "#EDF1F8" },
+  draft:             { label: "Draft",              color: "#6B9090", bg: "#EDF1F8" },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7" },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2" },
   hr_approval:       { label: "HR Approval",        color: "#7C3AED", bg: "#EDE9FE" },
@@ -150,7 +150,7 @@ export default function PiqCaseDetail() {
   }
 
   const { case: c, employee, docType, workflowSteps, history } = caseData;
-  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B7FA8", bg: "#EDF1F8" };
+  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B9090", bg: "#EDF1F8" };
 
   const canEdit = (isManager && ["draft", "manager_revision"].includes(c.status)) || isHr || isSupervisor;
   const canSubmit = isManager && ["draft", "manager_revision"].includes(c.status);

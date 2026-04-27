@@ -1,7 +1,7 @@
 import { pgTable, text, uuid, integer, timestamp } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
 import { piqCasesTable } from "./piqCases";
-import { piqUsersTable } from "./piqUsers";
+import { usersTable } from "./users";
 
 export const PIQ_STEP_TYPES = [
   "draft",
@@ -22,12 +22,12 @@ export const piqWorkflowStepsTable = pgTable("piq_workflow_step", {
   stepType: text("step_type").$type<PiqStepType>().notNull(),
   stepOrder: integer("step_order").notNull(),
   status: text("status").$type<PiqStepStatus>().notNull().default("pending"),
-  assignedTo: uuid("assigned_to").references(() => piqUsersTable.id),
-  assignedBy: uuid("assigned_by").references(() => piqUsersTable.id),
-  completedBy: uuid("completed_by").references(() => piqUsersTable.id),
+  assignedTo: uuid("assigned_to").references(() => usersTable.id),
+  assignedBy: uuid("assigned_by").references(() => usersTable.id),
+  completedBy: uuid("completed_by").references(() => usersTable.id),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   feedback: text("feedback"),
-  reassignedFrom: uuid("reassigned_from").references(() => piqUsersTable.id),
+  reassignedFrom: uuid("reassigned_from").references(() => usersTable.id),
   reassignedReason: text("reassigned_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

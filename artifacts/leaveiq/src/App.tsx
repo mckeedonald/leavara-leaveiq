@@ -10,7 +10,9 @@ import { isOrgSubdomain } from "@/lib/subdomain";
 import Landing from "@/pages/Landing";
 import OrgLanding from "@/pages/OrgLanding";
 import Interest from "@/pages/Interest";
+import ProductSelector from "@/pages/ProductSelector";
 import Dashboard from "@/pages/Dashboard";
+import ManagerDashboard from "@/pages/ManagerDashboard";
 import Cases from "@/pages/Cases";
 import CaseDetail from "@/pages/CaseDetail";
 import EmployeePortal from "@/pages/EmployeePortal";
@@ -67,6 +69,8 @@ function SuperAdminRoute({ component: Component }: { component: React.ComponentT
 function GuestRoute({ component: Component }: { component: React.ComponentType }) {
   const { user } = useAuth();
   if (user?.isSuperAdmin) return <Redirect to="/leaveiq/superadmin" />;
+  if (user?.hasLeaveIq && user?.hasPerformIq) return <Redirect to="/product-select" />;
+  if (user?.hasPerformIq) return <Redirect to="/performiq/dashboard" />;
   if (user) return <Redirect to="/leaveiq/dashboard" />;
   return <Component />;
 }
@@ -105,12 +109,16 @@ function Router() {
       <Route path="/leaveiq/request" component={EmployeePortal} />
       <Route path="/leaveiq/portal" component={EmployeePortalCase} />
 
+      {/* Product selector — for orgs with both products */}
+      <Route path="/product-select" component={() => <ProtectedRoute component={ProductSelector} />} />
+
       {/* LeaveIQ HR routes */}
       <Route path="/leaveiq/login" component={() => <GuestRoute component={Login} />} />
       <Route path="/leaveiq/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
       <Route path="/leaveiq/reset-password" component={ResetPassword} />
       <Route path="/leaveiq/register" component={Register} />
       <Route path="/leaveiq/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/leaveiq/manager" component={() => <ProtectedRoute component={ManagerDashboard} />} />
       <Route path="/leaveiq/cases" component={() => <ProtectedRoute component={Cases} />} />
       <Route path="/leaveiq/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
       <Route path="/leaveiq/users" component={() => <ProtectedRoute component={Users} />} />
@@ -119,8 +127,8 @@ function Router() {
       <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
-      {/* PerformIQ routes */}
-      <Route path="/performiq/login" component={() => <PiqGuestRoute component={PiqLogin} />} />
+      {/* PerformIQ routes — login redirects to unified portal */}
+      <Route path="/performiq/login" component={() => <Redirect to="/leaveiq/login" />} />
       <Route path="/performiq/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
       <Route path="/performiq/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
       <Route path="/performiq/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />

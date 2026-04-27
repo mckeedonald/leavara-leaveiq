@@ -13,7 +13,7 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-// POST /auth/login
+// POST /auth/login — unified login for LeaveIQ and PerformIQ
 router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body as { email?: string; password?: string };
 
@@ -38,23 +38,36 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
     return;
   }
 
+  // Fetch org product enrollment
+  let organizationSlug: string | null = null;
+  let hasLeaveIq = true;
+  let hasPerformIq = false;
+
+  if (user.organizationId) {
+    const [org] = await db
+      .select({ slug: organizationsTable.slug, hasLeaveIq: organizationsTable.hasLeaveIq, hasPerformIq: organizationsTable.hasPerformIq })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, user.organizationId))
+      .limit(1);
+    if (org) {
+      organizationSlug = org.slug;
+      hasLeaveIq = org.hasLeaveIq;
+      hasPerformIq = org.hasPerformIq;
+    }
+  }
+
   const token = signToken({
     sub: user.id,
     email: user.email,
     role: user.role,
+    customRoleId: user.customRoleId ?? undefined,
     organizationId: user.organizationId ?? null,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    hasLeaveIq,
+    hasPerformIq,
     isSuperAdmin: user.isSuperAdmin ?? false,
   });
-
-  let organizationSlug: string | null = null;
-  if (user.organizationId) {
-    const [org] = await db
-      .select({ slug: organizationsTable.slug })
-      .from(organizationsTable)
-      .where(eq(organizationsTable.id, user.organizationId))
-      .limit(1);
-    organizationSlug = org?.slug ?? null;
-  }
 
   res.json({
     token,
@@ -63,10 +76,14 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      fullName: user.fullName || `${user.firstName} ${user.lastName}`.trim(),
       position: user.position,
       role: user.role,
+      customRoleId: user.customRoleId ?? null,
       organizationId: user.organizationId ?? null,
       organizationSlug,
+      hasLeaveIq,
+      hasPerformIq,
       isSuperAdmin: user.isSuperAdmin ?? false,
     },
   });

@@ -1,7 +1,7 @@
 import { pgTable, text, uuid, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
 import { piqCasesTable } from "./piqCases";
-import { piqUsersTable } from "./piqUsers";
+import { usersTable } from "./users";
 
 export const piqAuditLogTable = pgTable("piq_audit_log", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -10,7 +10,7 @@ export const piqAuditLogTable = pgTable("piq_audit_log", {
   entity: text("entity").notNull(),
   entityId: uuid("entity_id").notNull(),
   action: text("action").notNull(),
-  actorId: uuid("actor_id").references(() => piqUsersTable.id),
+  actorId: uuid("actor_id").references(() => usersTable.id),
   actorRole: text("actor_role"),
   ipAddress: text("ip_address"),
   metadata: jsonb("metadata"),

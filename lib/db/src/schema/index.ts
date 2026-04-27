@@ -13,7 +13,12 @@ export * from "./hrisEmployeeCache";
 export * from "./caseDocuments";
 export * from "./caseAccessTokens";
 
-// PerformIQ tables
+// Unified tables
+export * from "./employees";
+export * from "./orgRoles";
+export * from "./orgRolePermissions";
+
+// PerformIQ tables (piqUsers kept for reference, data now in hr_user)
 export * from "./piqUsers";
 export * from "./piqEmployees";
 export * from "./piqDocumentTypes";
