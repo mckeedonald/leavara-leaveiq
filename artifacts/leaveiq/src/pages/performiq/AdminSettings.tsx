@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
-  FileText, BookOpen, Users, Plus, Edit3, Save, X, Trash2, CheckCircle2, Loader2, ChevronDown, ChevronUp,
+  FileText, BookOpen, Users, Plus, Edit3, Save, X, Trash2, CheckCircle2, Loader2, ChevronDown, ChevronUp, Upload,
 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch } from "@/lib/piqAuth";
+import { EmployeeDataUpload } from "@/components/EmployeeDataUpload";
 
 const C = {
   perf: "#2E7B7B",
@@ -14,7 +15,7 @@ const C = {
   agentBg: "#F0EEE9",
 };
 
-type Tab = "document_types" | "policies" | "users";
+type Tab = "document_types" | "policies" | "users" | "employee_data";
 
 interface DocType {
   id: string; baseType: string; displayLabel: string;
@@ -117,6 +118,7 @@ export default function PiqAdminSettings() {
     { id: "document_types", label: "Document Types", icon: FileText },
     { id: "policies", label: "Policy Library", icon: BookOpen },
     { id: "users", label: "Team Members", icon: Users },
+    { id: "employee_data", label: "Employee Data", icon: Upload },
   ];
 
   const roleLabels: Record<string, string> = {
@@ -394,6 +396,13 @@ export default function PiqAdminSettings() {
                     <div className="p-10 text-center text-sm" style={{ color: C.textMuted }}>No team members yet.</div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Employee Data */}
+            {tab === "employee_data" && (
+              <div className="rounded-2xl border p-6" style={{ background: C.card, borderColor: C.border }}>
+                <EmployeeDataUpload accentColor={C.perf} heading="Employee Data Upload" />
               </div>
             )}
           </>

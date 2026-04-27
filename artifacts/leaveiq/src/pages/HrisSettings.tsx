@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/auth";
 import { Loader2, CheckCircle2, AlertTriangle, Link2, RefreshCw, Trash2, Building2 } from "lucide-react";
+import { EmployeeDataUpload } from "@/components/EmployeeDataUpload";
 
 type Provider = "bamboohr" | "workday" | "adp" | "rippling";
 
@@ -269,6 +270,22 @@ export default function HrisSettings() {
                 ✅ {syncCount} employee records are now cached and available for case creation.
               </p>
             )}
+
+            {/* CSV Upload — always available as manual alternative */}
+            <div className="mt-8 rounded-2xl border bg-card p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="h-px flex-1" style={{ background: "#E8E2DA" }} />
+                <span className="text-xs font-semibold uppercase tracking-wider px-2" style={{ color: "#A07860" }}>
+                  Manual Upload
+                </span>
+                <div className="h-px flex-1" style={{ background: "#E8E2DA" }} />
+              </div>
+              <p className="text-xs text-muted-foreground text-center mb-5">
+                No HRIS integration? Upload a CSV file to manually add or update employee records.
+                Employee data is shared between LeaveIQ and PerformIQ.
+              </p>
+              <EmployeeDataUpload />
+            </div>
           </>
         )}
       </div>
