@@ -45,7 +45,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [location, navigate] = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
   const [hasPerformIq, setHasPerformIq] = useState(false);
   const [productMenuOpen, setProductMenuOpen] = useState(false);
@@ -64,9 +64,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.logoUrl) setOrgLogoUrl(data.logoUrl);
-        if (data?.hasPerformIq) setHasPerformIq(true);
+        if (data?.hasPerformIq) {
+          setHasPerformIq(true);
+          // Patch stale cached user object so PiqProtectedRoute works without re-login
+          if (user && !user.hasPerformIq) updateUser({ hasPerformIq: true });
+        }
       })
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isSuperAdmin = user?.isSuperAdmin ?? false;
@@ -142,7 +147,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <button
                         onClick={() => {
                           setProductMenuOpen(false);
-                          window.location.href = "/performiq/dashboard";
+                          navigate("/hub");
                         }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full mt-1 hover:bg-slate-50 transition-colors"
                       >

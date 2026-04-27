@@ -87,14 +87,14 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           </div>
         </div>
 
-        {/* Switch to LeaveIQ link */}
+        {/* Switch product link */}
         <Link
-          href="/leaveiq/dashboard"
+          href="/hub"
           className="flex items-center gap-2 px-5 py-2.5 text-xs font-medium transition-opacity hover:opacity-80"
           style={{ color: S.textMuted, borderBottom: `1px solid ${S.sidebarBorder}` }}
         >
           <TrendingUp className="w-3 h-3" />
-          Switch to LeaveIQ
+          Switch Product
         </Link>
 
         {/* Nav */}
