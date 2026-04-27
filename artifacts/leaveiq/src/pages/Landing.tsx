@@ -33,11 +33,11 @@ const C = {
   textBody:     "#5C3D28",
   textMuted:    "#8C7058",
   textOnDark:   "#F0EEE9",
-  // PerformIQ accent — slate indigo
-  perf:         "#4F6FA5",
-  perfLight:    "#7B97C4",
-  perfDark:     "#2E4D80",
-  perfBg:       "#EDF1F8",
+  // PerformIQ accent — teal
+  perf:         "#2E7B7B",
+  perfLight:    "#5BA8A8",
+  perfDark:     "#1E5555",
+  perfBg:       "#EBF5F5",
 };
 
 /* ─── Typewriter hook ──────────────────────────────────────────── */
@@ -204,7 +204,7 @@ function PerformIQIllustration() {
 
       {/* Main dashboard card */}
       <g style={{ opacity: visible ? 1 : 0, transition: "opacity 0.5s" }}>
-        <rect x="10" y="10" width="270" height="250" rx="14" fill={C.bgCard} stroke="#C4D0E3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="10" y="10" width="270" height="250" rx="14" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
 
         {/* Header */}
         <rect x="10" y="10" width="270" height="44" rx="14" fill={C.perfDark} />
@@ -215,7 +215,7 @@ function PerformIQIllustration() {
         <text x="22" y="74" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.5">TEAM OVERVIEW</text>
 
         {/* Circular score */}
-        <circle cx="62" cy="108" r="28" fill="none" stroke="#C4D0E3" strokeWidth="5" />
+        <circle cx="62" cy="108" r="28" fill="none" stroke="#A8CFCF" strokeWidth="5" />
         <circle cx="62" cy="108" r="28" fill="none" stroke={C.perf} strokeWidth="5"
           strokeDasharray={`${visible ? 2 * Math.PI * 28 * 0.79 : 0} ${2 * Math.PI * 28}`}
           strokeDashoffset={2 * Math.PI * 28 * 0.25}
@@ -234,7 +234,7 @@ function PerformIQIllustration() {
         <text x="215" y="107" textAnchor="middle" fontSize="7" fill={C.textMuted} fontFamily="Roboto">need support</text>
 
         {/* Divider */}
-        <line x1="18" y1="128" x2="272" y2="128" stroke="#C4D0E3" strokeWidth="0.8" />
+        <line x1="18" y1="128" x2="272" y2="128" stroke="#A8CFCF" strokeWidth="0.8" />
         <text x="22" y="144" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.5">INDIVIDUAL SCORES</text>
 
         {/* People bars */}
@@ -252,7 +252,7 @@ function PerformIQIllustration() {
               <text x="46" y={y - 2} fontSize="8.5" fontWeight="600" fill={C.textDark} fontFamily="Roboto">{name}</text>
               <text x="46" y={y + 8} fontSize="7" fill={C.textMuted} fontFamily="Roboto">{role}</text>
               {/* Score bar */}
-              <rect x="120" y={y - 7} width="150" height="10" rx="5" fill="#E8EDF5" />
+              <rect x="120" y={y - 7} width="150" height="10" rx="5" fill="#DCF0F0" />
               <rect x="120" y={y - 7} width={barW} height="10" rx="5" fill={color}
                 style={{ transition: "width 0.6s ease" }} />
               <text x="276" y={y + 2} fontSize="8.5" fontWeight="700" fill={color} fontFamily="Roboto">{bars[i] || "—"}</text>
@@ -263,12 +263,12 @@ function PerformIQIllustration() {
 
       {/* Goal card */}
       <g style={{ opacity: visible ? 1 : 0, transform: visible ? "none" : "translateX(20px)", transition: "all 0.6s 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}>
-        <rect x="288" y="20" width="126" height="90" rx="12" fill={C.bgCard} stroke="#C4D0E3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="288" y="20" width="126" height="90" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
         <rect x="296" y="30" width="28" height="28" rx="7" fill={C.perf + "20"} />
         <text x="310" y="50" textAnchor="middle" fontSize="14">🎯</text>
         <text x="332" y="38" fontSize="8.5" fontWeight="700" fill={C.textDark} fontFamily="Roboto">Goal Progress</text>
         <text x="332" y="49" fontSize="7.5" fill={C.textMuted} fontFamily="Roboto">Q2 2026</text>
-        <rect x="296" y="65" width="110" height="6" rx="3" fill="#E8EDF5" />
+        <rect x="296" y="65" width="110" height="6" rx="3" fill="#DCF0F0" />
         <rect x="296" y="65" width={visible ? 88 : 0} height="6" rx="3" fill={C.perf}
           style={{ transition: "width 1.4s ease" }} />
         <text x="296" y="84" fontSize="7.5" fill={C.textMuted} fontFamily="Roboto">8 of 10 goals on track</text>
@@ -282,7 +282,7 @@ function PerformIQIllustration() {
         <rect x="296" y="186" width="112" height="4" rx="2" fill="white" opacity="0.18" />
 
         {/* Sentiment card */}
-        <rect x="288" y="212" width="126" height="62" rx="12" fill={C.bgCard} stroke="#C4D0E3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="288" y="212" width="126" height="62" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
         <text x="300" y="232" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto">TEAM SENTIMENT</text>
         {[C.perf, C.perfLight, C.perf, "#7EC8A4", C.perfLight].map((c, i) => (
           <circle key={i} cx={302 + i * 22} cy={252} r={8} fill={c + "30"} stroke={c} strokeWidth={1.5} />
@@ -539,8 +539,8 @@ export default function Landing() {
 
             {/* PerformIQ Card */}
             <div id="performiq" className="rounded-3xl border overflow-hidden"
-              style={{ background: C.bgCard, borderColor: "#C4D0E3" }}>
-              <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#C4D0E3" }}>
+              style={{ background: C.bgCard, borderColor: "#A8CFCF" }}>
+              <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#A8CFCF" }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl"
                     style={{ background: C.perf + "20" }}>📊</div>
