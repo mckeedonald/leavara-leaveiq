@@ -16,6 +16,23 @@ setAuthTokenGetter(() => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem
 
 export type UnifiedRole = "hr_admin" | "hr_user" | "manager";
 
+/** Maps legacy role values ("admin", "user") to unified roles without requiring re-login */
+function normalizeRole(role: string): UnifiedRole {
+  if (role === "admin" || role === "hr_admin") return "hr_admin";
+  if (role === "manager") return "manager";
+  return "hr_user";
+}
+
+function parseStoredUser(raw: string | null): AuthUser | null {
+  if (!raw) return null;
+  try {
+    const u = JSON.parse(raw) as AuthUser & { role: string };
+    return { ...u, role: normalizeRole(u.role) };
+  } catch {
+    return null;
+  }
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -64,11 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(
     () => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem("leaveiq_token")
   );
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const raw = localStorage.getItem(USER_KEY) ?? localStorage.getItem("leaveiq_user");
-    if (!raw) return null;
-    try { return JSON.parse(raw) as AuthUser; } catch { return null; }
-  });
+  const [user, setUser] = useState<AuthUser | null>(() =>
+    parseStoredUser(localStorage.getItem(USER_KEY) ?? localStorage.getItem("leaveiq_user"))
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const login = useCallback(async (email: string, password: string): Promise<AuthUser> => {
@@ -79,12 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+      const normalizedUser: AuthUser = { ...data.user, role: normalizeRole(data.user.role) };
       localStorage.setItem(TOKEN_KEY, data.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
       ["leaveiq_token", "leaveiq_user", "performiq_token", "performiq_user"].forEach((k) => localStorage.removeItem(k));
       setToken(data.token);
-      setUser(data.user);
-      return data.user;
+      setUser(normalizedUser);
+      return normalizedUser;
     } finally {
       setIsLoading(false);
     }
