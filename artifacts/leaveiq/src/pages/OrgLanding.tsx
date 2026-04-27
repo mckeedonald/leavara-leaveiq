@@ -35,7 +35,7 @@ export default function OrgLanding() {
               subtitle="Performance Management"
               primaryLabel={null}
               primaryHref={null}
-              signInHref="/performiq/login"
+              signInHref="/leaveiq/login"
             />
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function OrgLanding() {
                 </Link>
               )}
 
-              <Link href={products[0] === "performiq" ? "/performiq/login" : "/leaveiq/login"}>
+              <Link href="/leaveiq/login">
                 <a
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold text-base transition-all hover:bg-[#F5E8DF] active:scale-[0.98] border"
                   style={{ background: "#FFFFFF", color: "#3D2010", borderColor: "#C97E5966" }}

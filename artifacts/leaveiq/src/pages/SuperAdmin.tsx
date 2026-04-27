@@ -243,8 +243,9 @@ function CreateUserModal({ orgId, orgName, onClose, onCreated }: { orgId: string
               value={form.role}
               onChange={f("role")}
             >
-              <option value="admin">Admin</option>
-              <option value="user">HR User</option>
+              <option value="hr_admin">HR Admin</option>
+              <option value="hr_user">HR User</option>
+              <option value="manager">Manager</option>
             </select>
           </div>
           <div>
@@ -274,100 +275,6 @@ function CreateUserModal({ orgId, orgName, onClose, onCreated }: { orgId: string
             style={{ background: S.terracotta }}
           >
             {mutation.isPending ? "Creating…" : "Create User"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CreatePiqUserModal({ orgId, orgName, onClose, onCreated }: { orgId: string; orgName: string; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ email: "", fullName: "", role: "hr_admin", password: "" });
-  const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState("");
-  const { toast } = useToast();
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      apiFetch(`/api/superadmin/organizations/${orgId}/piq-users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      }),
-    onSuccess: () => {
-      toast({ title: "PerformIQ user created" });
-      onCreated();
-      onClose();
-    },
-    onError: (e: Error) => setError(e.message),
-  });
-
-  const f = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="rounded-2xl w-full max-w-md p-6 shadow-2xl" style={{ background: S.card }}>
-        <h3 className="text-lg font-bold mb-1" style={{ color: S.textDark }}>Add PerformIQ User to {orgName}</h3>
-        <p className="text-xs mb-4" style={{ color: S.textMuted }}>Create a PerformIQ account for this organization. This user can log in at /performiq/login.</p>
-        <div className="space-y-3">
-          {[
-            { key: "email", label: "Email", placeholder: "hr@company.com", type: "email" },
-            { key: "fullName", label: "Full Name", placeholder: "Jane Smith", type: "text" },
-          ].map(({ key, label, placeholder, type }) => (
-            <div key={key}>
-              <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: S.textMuted }}>{label}</label>
-              <input
-                type={type}
-                className="w-full px-3 py-2 rounded-xl text-sm outline-none focus:ring-2"
-                style={{ border: `1px solid ${S.border}`, color: S.textDark, background: S.bg }}
-                value={(form as Record<string, string>)[key]}
-                onChange={f(key)}
-                placeholder={placeholder}
-              />
-            </div>
-          ))}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: S.textMuted }}>Role</label>
-            <select
-              className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-              style={{ border: `1px solid ${S.border}`, color: S.textDark, background: S.bg }}
-              value={form.role}
-              onChange={f("role")}
-            >
-              <option value="hr_admin">HR Admin</option>
-              <option value="hr_user">HR User</option>
-              <option value="manager">Manager</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="system_admin">System Admin</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wide mb-1 block" style={{ color: S.textMuted }}>Temporary Password</label>
-            <div className="relative">
-              <input
-                type={showPw ? "text" : "password"}
-                className="w-full px-3 py-2 pr-10 rounded-xl text-sm outline-none focus:ring-2"
-                style={{ border: `1px solid ${S.border}`, color: S.textDark, background: S.bg }}
-                value={form.password}
-                onChange={f("password")}
-                placeholder="Min 8 characters"
-              />
-              <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100">
-                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
-        </div>
-        <div className="flex gap-2 mt-5">
-          <button onClick={onClose} className="flex-1 py-2 rounded-xl text-sm font-medium" style={{ border: `1px solid ${S.border}`, color: S.textMid }}>Cancel</button>
-          <button
-            onClick={() => mutation.mutate()}
-            disabled={!form.email || !form.fullName || form.password.length < 8 || mutation.isPending}
-            className="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-50"
-            style={{ background: "#4F6FA5" }}
-          >
-            {mutation.isPending ? "Creating…" : "Create PIQ User"}
           </button>
         </div>
       </div>
@@ -698,7 +605,6 @@ function OrgDetailPanel({
 }) {
   const [activeTab, setActiveTab] = useState<"users" | "products" | "knowledge">("users");
   const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showCreatePiqUser, setShowCreatePiqUser] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -828,8 +734,9 @@ function OrgDetailPanel({
                       value={u.role}
                       onChange={(e) => changeRole.mutate({ userId: u.id, role: e.target.value })}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="user">HR User</option>
+                      <option value="hr_admin">HR Admin</option>
+                      <option value="hr_user">HR User</option>
+                      <option value="manager">Manager</option>
                     </select>
                     <button
                       onClick={() => toggleUser.mutate({ userId: u.id, isActive: u.isActive })}
@@ -870,7 +777,7 @@ function OrgDetailPanel({
               key: "hasPerformIq" as const,
               label: "PerformIQ",
               description: "Performance management, disciplinary documents, coaching workflows, and e-signatures.",
-              color: "#4F6FA5",
+              color: "#2E7B7B",
               enabled: org.hasPerformIq,
             },
           ].map(({ key, label, description, color, enabled }) => (
@@ -901,17 +808,6 @@ function OrgDetailPanel({
                     {enabled ? "Enabled" : "Disabled"}
                   </span>
                 </div>
-                {key === "hasPerformIq" && enabled && (
-                  <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${S.border}` }}>
-                    <button
-                      onClick={() => setShowCreatePiqUser(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white"
-                      style={{ background: "#4F6FA5" }}
-                    >
-                      <UserPlus className="w-3.5 h-3.5" /> Add PerformIQ User
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -920,14 +816,6 @@ function OrgDetailPanel({
 
       {activeTab === "knowledge" && <KnowledgeBaseTab org={org} />}
 
-      {showCreatePiqUser && (
-        <CreatePiqUserModal
-          orgId={org.id}
-          orgName={org.name}
-          onClose={() => setShowCreatePiqUser(false)}
-          onCreated={() => {}}
-        />
-      )}
     </div>
   );
 }
@@ -1261,8 +1149,9 @@ function UsersTab({ organizations }: { organizations: Organization[] }) {
                       value={u.role}
                       onChange={(e) => changeRole.mutate({ userId: u.id, role: e.target.value })}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="user">HR User</option>
+                      <option value="hr_admin">HR Admin</option>
+                      <option value="hr_user">HR User</option>
+                      <option value="manager">Manager</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">
