@@ -6,11 +6,18 @@ import { db, usersTable, invitesTable, passwordResetsTable, organizationsTable }
 import { signToken, requireAuth, requireAdmin, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { sendPasswordResetEmail, sendInviteEmail } from "../lib/email";
 import { loginLimiter } from "../lib/rateLimiters";
+import type { UnifiedRole } from "@workspace/db";
 
 const router: IRouter = Router();
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");
+}
+
+function normalizeRole(dbRole: string): UnifiedRole {
+  if (dbRole === "admin" || dbRole === "hr_admin") return "hr_admin";
+  if (dbRole === "manager") return "manager";
+  return "hr_user";
 }
 
 // POST /auth/login — unified login for LeaveIQ and PerformIQ
@@ -56,10 +63,12 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
     }
   }
 
+  const role = normalizeRole(user.role);
+
   const token = signToken({
     sub: user.id,
     email: user.email,
-    role: user.role,
+    role,
     customRoleId: user.customRoleId ?? undefined,
     organizationId: user.organizationId ?? null,
     firstName: user.firstName,
@@ -78,7 +87,7 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
       lastName: user.lastName,
       fullName: user.fullName || `${user.firstName} ${user.lastName}`.trim(),
       position: user.position,
-      role: user.role,
+      role,
       customRoleId: user.customRoleId ?? null,
       organizationId: user.organizationId ?? null,
       organizationSlug,

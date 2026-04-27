@@ -36,6 +36,12 @@ export function verifyToken(token: string): JwtPayload | null {
   }
 }
 
+function normalizeRole(role: string): UnifiedRole {
+  if (role === "admin" || role === "hr_admin") return "hr_admin";
+  if (role === "manager") return "manager";
+  return "hr_user";
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
@@ -56,7 +62,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     res.status(401).json({ error: "Account is inactive or not found" });
     return;
   }
-  (req as AuthenticatedRequest).user = payload;
+  (req as AuthenticatedRequest).user = { ...payload, role: normalizeRole(payload.role) };
   next();
 }
 
