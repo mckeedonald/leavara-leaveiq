@@ -5,10 +5,14 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 const API_BASE = "";
 const TOKEN_KEY = "leavara_token";
 const USER_KEY = "leavara_user";
+
+// Wire the generated API client hooks to read the same token as apiFetch
+setAuthTokenGetter(() => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem("leaveiq_token"));
 
 export type UnifiedRole = "hr_admin" | "hr_user" | "manager";
 
