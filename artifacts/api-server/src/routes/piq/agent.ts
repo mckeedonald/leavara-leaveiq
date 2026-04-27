@@ -3,8 +3,8 @@ import {
   db,
   piqAgentSessionsTable,
   piqAgentMessagesTable,
-  piqEmployeesTable,
-  piqUsersTable,
+  employeesTable,
+  usersTable,
   piqCasesTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -31,30 +31,30 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
     if (employeeId) {
       const [emp] = await db
         .select()
-        .from(piqEmployeesTable)
+        .from(employeesTable)
         .where(
           and(
-            eq(piqEmployeesTable.id, employeeId),
-            eq(piqEmployeesTable.organizationId, authed.piqUser.organizationId),
+            eq(employeesTable.id, employeeId),
+            eq(employeesTable.organizationId, authed.piqUser.organizationId),
           ),
         )
         .limit(1);
 
       if (emp) {
-        let managerName = "Unknown";
-        if (emp.managerId) {
+        let managerName = emp.managerName ?? "Unknown";
+        if (emp.managerId && !managerName) {
           const [mgr] = await db
-            .select({ fullName: piqUsersTable.fullName })
-            .from(piqUsersTable)
-            .where(eq(piqUsersTable.id, emp.managerId))
+            .select({ fullName: employeesTable.fullName })
+            .from(employeesTable)
+            .where(eq(employeesTable.id, emp.managerId))
             .limit(1);
           if (mgr) managerName = mgr.fullName;
         }
         employeeInfo = {
           fullName: emp.fullName,
-          jobTitle: emp.jobTitle ?? "",
+          jobTitle: emp.position ?? "",
           department: emp.department ?? "",
-          hireDate: emp.hireDate ?? null,
+          hireDate: emp.startDate ?? null,
           managerName,
         };
       }

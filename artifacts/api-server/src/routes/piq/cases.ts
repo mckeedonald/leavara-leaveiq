@@ -4,8 +4,8 @@ import {
   piqCasesTable,
   piqDocumentsTable,
   piqDocumentTypesTable,
-  piqEmployeesTable,
-  piqUsersTable,
+  employeesTable,
+  usersTable,
   piqWorkflowStepsTable,
   piqDocumentHistoryTable,
   piqAgentSessionsTable,
@@ -39,7 +39,6 @@ function buildWorkflowSteps(
   const steps: InsertPiqWorkflowStep[] = [];
   let order = 1;
 
-  // Always start with draft
   steps.push({ caseId, organizationId: orgId, stepType: "draft", stepOrder: order++, status: "in_progress", assignedTo: assigneeId, assignedBy: assigneeId });
 
   if (docType.requiresSupervisorReview) {
@@ -65,35 +64,29 @@ router.get("/performiq/cases", requirePiqAuth, async (req: Request, res: Respons
         caseNumber: piqCasesTable.caseNumber,
         status: piqCasesTable.status,
         employeeId: piqCasesTable.employeeId,
-        employeeName: piqEmployeesTable.fullName,
-        employeeDept: piqEmployeesTable.department,
+        employeeName: employeesTable.fullName,
+        employeeDept: employeesTable.department,
         documentTypeId: piqCasesTable.documentTypeId,
         docTypeLabel: piqDocumentTypesTable.displayLabel,
         docBaseType: piqDocumentTypesTable.baseType,
         initiatedBy: piqCasesTable.initiatedBy,
-        initiatorName: piqUsersTable.fullName,
+        initiatorName: usersTable.fullName,
         currentAssigneeId: piqCasesTable.currentAssigneeId,
         createdAt: piqCasesTable.createdAt,
         updatedAt: piqCasesTable.updatedAt,
       })
       .from(piqCasesTable)
-      .leftJoin(piqEmployeesTable, eq(piqCasesTable.employeeId, piqEmployeesTable.id))
+      .leftJoin(employeesTable, eq(piqCasesTable.employeeId, employeesTable.id))
       .leftJoin(piqDocumentTypesTable, eq(piqCasesTable.documentTypeId, piqDocumentTypesTable.id))
-      .leftJoin(piqUsersTable, eq(piqCasesTable.initiatedBy, piqUsersTable.id))
+      .leftJoin(usersTable, eq(piqCasesTable.initiatedBy, usersTable.id))
       .where(eq(piqCasesTable.organizationId, authed.piqUser.organizationId))
       .orderBy(desc(piqCasesTable.updatedAt));
 
     let filtered = cases;
 
-    // Role-based filtering
     const { role, sub } = authed.piqUser;
     if (role === "manager") {
       filtered = filtered.filter((c) => c.initiatedBy === sub);
-    } else if (role === "supervisor") {
-      // Supervisors see cases assigned to them
-      filtered = filtered.filter(
-        (c) => c.currentAssigneeId === sub || c.status === "supervisor_review",
-      );
     }
 
     if (status) filtered = filtered.filter((c) => c.status === status);
@@ -123,8 +116,7 @@ router.get("/performiq/cases/:caseId", requirePiqAuth, async (req: Request, res:
       return;
     }
 
-    // Load related data
-    const [employee] = await db.select().from(piqEmployeesTable).where(eq(piqEmployeesTable.id, c.employeeId)).limit(1);
+    const [employee] = await db.select().from(employeesTable).where(eq(employeesTable.id, c.employeeId)).limit(1);
     const [docType] = await db.select().from(piqDocumentTypesTable).where(eq(piqDocumentTypesTable.id, c.documentTypeId)).limit(1);
 
     const [currentDoc] = await db
@@ -147,10 +139,10 @@ router.get("/performiq/cases/:caseId", requirePiqAuth, async (req: Request, res:
         notes: piqDocumentHistoryTable.notes,
         createdAt: piqDocumentHistoryTable.createdAt,
         performedById: piqDocumentHistoryTable.performedBy,
-        actorName: piqUsersTable.fullName,
+        actorName: usersTable.fullName,
       })
       .from(piqDocumentHistoryTable)
-      .leftJoin(piqUsersTable, eq(piqDocumentHistoryTable.performedBy, piqUsersTable.id))
+      .leftJoin(usersTable, eq(piqDocumentHistoryTable.performedBy, usersTable.id))
       .where(eq(piqDocumentHistoryTable.caseId, caseId))
       .orderBy(desc(piqDocumentHistoryTable.createdAt));
 
@@ -177,18 +169,16 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       return;
     }
 
-    // Validate employee belongs to org
     const [employee] = await db
       .select()
-      .from(piqEmployeesTable)
-      .where(and(eq(piqEmployeesTable.id, employeeId), eq(piqEmployeesTable.organizationId, authed.piqUser.organizationId)))
+      .from(employeesTable)
+      .where(and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, authed.piqUser.organizationId)))
       .limit(1);
     if (!employee) {
       res.status(400).json({ error: "Employee not found" });
       return;
     }
 
-    // Validate doc type belongs to org
     const [docType] = await db
       .select()
       .from(piqDocumentTypesTable)
@@ -215,7 +205,6 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       })
       .returning();
 
-    // Create initial document if draft provided
     if (initialDraft) {
       await db.insert(piqDocumentsTable).values({
         caseId: newCase.id,
@@ -236,7 +225,6 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       });
     }
 
-    // Build workflow steps
     const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId, docType, authed.piqUser.sub);
     if (steps.length > 0) {
       await db.insert(piqWorkflowStepsTable).values(steps);
@@ -272,21 +260,18 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
       return;
     }
 
-    // Only allow edits in draft, manager_revision, or by hr/supervisor
     const { role } = authed.piqUser;
     const allowedStatuses: PiqCaseStatus[] = ["draft", "manager_revision"];
-    if (!allowedStatuses.includes(c.status) && !["hr_user", "hr_admin", "supervisor"].includes(role)) {
+    if (!allowedStatuses.includes(c.status) && !["hr_user", "hr_admin"].includes(role)) {
       res.status(403).json({ error: "Document cannot be edited in the current workflow state" });
       return;
     }
 
-    // Mark existing doc as not current
     await db
       .update(piqDocumentsTable)
       .set({ isCurrent: false })
       .where(and(eq(piqDocumentsTable.caseId, caseId), eq(piqDocumentsTable.isCurrent, true)));
 
-    // Get next version
     const existing = await db.select({ version: piqDocumentsTable.version }).from(piqDocumentsTable).where(eq(piqDocumentsTable.caseId, caseId));
     const nextVersion = existing.length > 0 ? Math.max(...existing.map((d) => d.version)) + 1 : 1;
 

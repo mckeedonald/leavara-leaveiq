@@ -1,14 +1,15 @@
 import { Router, type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import { db, piqUsersTable, piqInvitesTable, piqPasswordResetsTable, organizationsTable } from "@workspace/db";
+import { db, usersTable, piqInvitesTable, piqPasswordResetsTable, organizationsTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 import { signPiqToken, requirePiqAuth, requirePiqHrAdmin, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
+import type { UnifiedRole } from "@workspace/db";
 
 const router = Router();
 
-// POST /performiq/auth/login
+// POST /performiq/auth/login — legacy endpoint; unified login is /api/auth/login
 router.post("/performiq/auth/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as { email?: string; password?: string };
@@ -19,8 +20,8 @@ router.post("/performiq/auth/login", async (req: Request, res: Response) => {
 
     const [user] = await db
       .select()
-      .from(piqUsersTable)
-      .where(eq(piqUsersTable.email, email.toLowerCase().trim()))
+      .from(usersTable)
+      .where(eq(usersTable.email, email.toLowerCase().trim()))
       .limit(1);
 
     if (!user || !user.isActive) {
@@ -35,9 +36,11 @@ router.post("/performiq/auth/login", async (req: Request, res: Response) => {
     }
 
     // Verify org has PerformIQ enabled
+    let hasLeaveIq = false;
+    let hasPerformIq = false;
     if (user.organizationId) {
       const [org] = await db
-        .select({ hasPerformIq: organizationsTable.hasPerformIq })
+        .select({ hasPerformIq: organizationsTable.hasPerformIq, hasLeaveIq: organizationsTable.hasLeaveIq })
         .from(organizationsTable)
         .where(eq(organizationsTable.id, user.organizationId))
         .limit(1);
@@ -45,15 +48,20 @@ router.post("/performiq/auth/login", async (req: Request, res: Response) => {
         res.status(403).json({ error: "Your organization does not have PerformIQ enabled" });
         return;
       }
+      hasLeaveIq = org.hasLeaveIq ?? false;
+      hasPerformIq = org.hasPerformIq ?? false;
     }
 
     const token = signPiqToken({
       sub: user.id,
       email: user.email,
       role: user.role,
-      organizationId: user.organizationId!,
-      fullName: user.fullName,
-      piq: true,
+      organizationId: user.organizationId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      hasLeaveIq,
+      hasPerformIq,
+      isSuperAdmin: user.isSuperAdmin,
     });
 
     res.json({
@@ -78,14 +86,14 @@ router.get("/performiq/auth/me", requirePiqAuth, async (req: Request, res: Respo
     const authed = req as PiqAuthenticatedRequest;
     const [user] = await db
       .select({
-        id: piqUsersTable.id,
-        email: piqUsersTable.email,
-        fullName: piqUsersTable.fullName,
-        role: piqUsersTable.role,
-        organizationId: piqUsersTable.organizationId,
+        id: usersTable.id,
+        email: usersTable.email,
+        fullName: usersTable.fullName,
+        role: usersTable.role,
+        organizationId: usersTable.organizationId,
       })
-      .from(piqUsersTable)
-      .where(eq(piqUsersTable.id, authed.piqUser.sub))
+      .from(usersTable)
+      .where(eq(usersTable.id, authed.piqUser.sub))
       .limit(1);
 
     if (!user) {
@@ -115,7 +123,7 @@ router.post("/performiq/auth/invite", requirePiqHrAdmin, async (req: Request, re
     await db.insert(piqInvitesTable).values({
       organizationId: authed.piqUser.organizationId,
       email: email.toLowerCase().trim(),
-      role: role as any,
+      role: role as UnifiedRole,
       token,
       sentByUserId: authed.piqUser.sub,
       expiresAt,
@@ -189,14 +197,20 @@ router.post("/performiq/auth/register", async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const nameParts = fullName.trim().split(" ");
+    const firstName = nameParts[0] ?? fullName;
+    const lastName = nameParts.slice(1).join(" ") || firstName;
+
     const [user] = await db
-      .insert(piqUsersTable)
+      .insert(usersTable)
       .values({
         organizationId: invite.organizationId,
         fullName,
+        firstName,
+        lastName,
         email: invite.email,
         passwordHash,
-        role: invite.role,
+        role: invite.role as UnifiedRole,
       })
       .returning();
 
@@ -205,13 +219,29 @@ router.post("/performiq/auth/register", async (req: Request, res: Response) => {
       .set({ usedAt: new Date() })
       .where(eq(piqInvitesTable.id, invite.id));
 
+    // Fetch org products for token
+    let hasLeaveIq = false;
+    let hasPerformIq = true;
+    if (user.organizationId) {
+      const [org] = await db
+        .select({ hasPerformIq: organizationsTable.hasPerformIq, hasLeaveIq: organizationsTable.hasLeaveIq })
+        .from(organizationsTable)
+        .where(eq(organizationsTable.id, user.organizationId))
+        .limit(1);
+      hasLeaveIq = org?.hasLeaveIq ?? false;
+      hasPerformIq = org?.hasPerformIq ?? true;
+    }
+
     const jwtToken = signPiqToken({
       sub: user.id,
       email: user.email,
       role: user.role,
-      organizationId: user.organizationId!,
-      fullName: user.fullName,
-      piq: true,
+      organizationId: user.organizationId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      hasLeaveIq,
+      hasPerformIq,
+      isSuperAdmin: user.isSuperAdmin,
     });
 
     res.json({ token: jwtToken, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role } });
@@ -231,23 +261,21 @@ router.post("/performiq/auth/forgot-password", async (req: Request, res: Respons
     }
 
     const [user] = await db
-      .select({ id: piqUsersTable.id, email: piqUsersTable.email })
-      .from(piqUsersTable)
-      .where(eq(piqUsersTable.email, email.toLowerCase().trim()))
+      .select({ id: usersTable.id, email: usersTable.email })
+      .from(usersTable)
+      .where(eq(usersTable.email, email.toLowerCase().trim()))
       .limit(1);
 
-    // Always return 200 to prevent email enumeration
     if (!user) {
       res.json({ message: "If that email is registered, a reset link has been sent." });
       return;
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await db.insert(piqPasswordResetsTable).values({ userId: user.id, token, expiresAt });
 
-    // Email would be sent here via email service
     logger.info({ email: user.email, token }, "PIQ password reset token generated");
 
     res.json({ message: "If that email is registered, a reset link has been sent." });
@@ -283,9 +311,9 @@ router.post("/performiq/auth/reset-password", async (req: Request, res: Response
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await db
-      .update(piqUsersTable)
+      .update(usersTable)
       .set({ passwordHash, updatedAt: new Date() })
-      .where(eq(piqUsersTable.id, reset.userId));
+      .where(eq(usersTable.id, reset.userId));
 
     await db
       .update(piqPasswordResetsTable)
@@ -305,15 +333,15 @@ router.get("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res:
     const authed = req as PiqAuthenticatedRequest;
     const users = await db
       .select({
-        id: piqUsersTable.id,
-        fullName: piqUsersTable.fullName,
-        email: piqUsersTable.email,
-        role: piqUsersTable.role,
-        isActive: piqUsersTable.isActive,
-        createdAt: piqUsersTable.createdAt,
+        id: usersTable.id,
+        fullName: usersTable.fullName,
+        email: usersTable.email,
+        role: usersTable.role,
+        isActive: usersTable.isActive,
+        createdAt: usersTable.createdAt,
       })
-      .from(piqUsersTable)
-      .where(eq(piqUsersTable.organizationId, authed.piqUser.organizationId));
+      .from(usersTable)
+      .where(eq(usersTable.organizationId, authed.piqUser.organizationId));
 
     res.json(users);
   } catch (err) {
@@ -330,9 +358,9 @@ router.patch("/performiq/auth/users/:userId", requirePiqHrAdmin, async (req: Req
     const { isActive, role } = req.body as { isActive?: boolean; role?: string };
 
     const [existing] = await db
-      .select({ id: piqUsersTable.id })
-      .from(piqUsersTable)
-      .where(and(eq(piqUsersTable.id, userId), eq(piqUsersTable.organizationId, authed.piqUser.organizationId)))
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(and(eq(usersTable.id, userId), eq(usersTable.organizationId, authed.piqUser.organizationId)))
       .limit(1);
 
     if (!existing) {
@@ -345,10 +373,10 @@ router.patch("/performiq/auth/users/:userId", requirePiqHrAdmin, async (req: Req
     if (role) updates.role = role;
 
     const [updated] = await db
-      .update(piqUsersTable)
+      .update(usersTable)
       .set(updates)
-      .where(eq(piqUsersTable.id, userId))
-      .returning({ id: piqUsersTable.id, fullName: piqUsersTable.fullName, role: piqUsersTable.role, isActive: piqUsersTable.isActive });
+      .where(eq(usersTable.id, userId))
+      .returning({ id: usersTable.id, fullName: usersTable.fullName, role: usersTable.role, isActive: usersTable.isActive });
 
     res.json(updated);
   } catch (err) {

@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
-import { db, piqEmployeesTable, piqUsersTable } from "@workspace/db";
-import { eq, and, ilike, or } from "drizzle-orm";
+import { db, employeesTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { requirePiqAuth, requirePiqHrAdmin, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 
@@ -12,23 +12,23 @@ router.get("/performiq/employees", requirePiqAuth, async (req: Request, res: Res
     const authed = req as PiqAuthenticatedRequest;
     const { search, isActive } = req.query as { search?: string; isActive?: string };
 
-    let query = db
+    const employees = await db
       .select({
-        id: piqEmployeesTable.id,
-        fullName: piqEmployeesTable.fullName,
-        workEmail: piqEmployeesTable.workEmail,
-        jobTitle: piqEmployeesTable.jobTitle,
-        department: piqEmployeesTable.department,
-        managerId: piqEmployeesTable.managerId,
-        hireDate: piqEmployeesTable.hireDate,
-        isActive: piqEmployeesTable.isActive,
-        createdAt: piqEmployeesTable.createdAt,
+        id: employeesTable.id,
+        fullName: employeesTable.fullName,
+        workEmail: employeesTable.workEmail,
+        position: employeesTable.position,
+        department: employeesTable.department,
+        location: employeesTable.location,
+        managerId: employeesTable.managerId,
+        managerName: employeesTable.managerName,
+        startDate: employeesTable.startDate,
+        isActive: employeesTable.isActive,
+        dataSource: employeesTable.dataSource,
+        createdAt: employeesTable.createdAt,
       })
-      .from(piqEmployeesTable)
-      .where(eq(piqEmployeesTable.organizationId, authed.piqUser.organizationId))
-      .$dynamic();
-
-    const employees = await query;
+      .from(employeesTable)
+      .where(eq(employeesTable.organizationId, authed.piqUser.organizationId));
 
     let filtered = employees;
     if (isActive !== undefined) {
@@ -60,11 +60,11 @@ router.get("/performiq/employees/:employeeId", requirePiqAuth, async (req: Reque
 
     const [employee] = await db
       .select()
-      .from(piqEmployeesTable)
+      .from(employeesTable)
       .where(
         and(
-          eq(piqEmployeesTable.id, employeeId),
-          eq(piqEmployeesTable.organizationId, authed.piqUser.organizationId),
+          eq(employeesTable.id, employeeId),
+          eq(employeesTable.organizationId, authed.piqUser.organizationId),
         ),
       )
       .limit(1);
@@ -85,16 +85,17 @@ router.get("/performiq/employees/:employeeId", requirePiqAuth, async (req: Reque
 router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { fullName, personalEmail, workEmail, jobTitle, department, managerId, hireDate, hrisEmployeeId } =
+    const { fullName, personalEmail, workEmail, position, department, location, managerId, startDate, hrisId } =
       req.body as {
         fullName?: string;
         personalEmail?: string;
         workEmail?: string;
-        jobTitle?: string;
+        position?: string;
         department?: string;
+        location?: string;
         managerId?: string;
-        hireDate?: string;
-        hrisEmployeeId?: string;
+        startDate?: string;
+        hrisId?: string;
       };
 
     if (!fullName) {
@@ -102,12 +103,12 @@ router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res:
       return;
     }
 
-    // Validate managerId belongs to this org
+    // Validate managerId is an employee in this org (self-referential)
     if (managerId) {
       const [manager] = await db
-        .select({ id: piqUsersTable.id })
-        .from(piqUsersTable)
-        .where(and(eq(piqUsersTable.id, managerId), eq(piqUsersTable.organizationId, authed.piqUser.organizationId)))
+        .select({ id: employeesTable.id })
+        .from(employeesTable)
+        .where(and(eq(employeesTable.id, managerId), eq(employeesTable.organizationId, authed.piqUser.organizationId)))
         .limit(1);
       if (!manager) {
         res.status(400).json({ error: "Manager not found in this organization" });
@@ -116,17 +117,19 @@ router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res:
     }
 
     const [employee] = await db
-      .insert(piqEmployeesTable)
+      .insert(employeesTable)
       .values({
         organizationId: authed.piqUser.organizationId,
         fullName,
         personalEmail,
         workEmail,
-        jobTitle,
+        position,
         department,
+        location,
         managerId,
-        hireDate,
-        hrisEmployeeId,
+        startDate,
+        hrisId,
+        dataSource: "manual",
       })
       .returning();
 
@@ -144,10 +147,10 @@ router.patch("/performiq/employees/:employeeId", requirePiqHrAdmin, async (req: 
     const { employeeId } = req.params;
 
     const [existing] = await db
-      .select({ id: piqEmployeesTable.id })
-      .from(piqEmployeesTable)
+      .select({ id: employeesTable.id })
+      .from(employeesTable)
       .where(
-        and(eq(piqEmployeesTable.id, employeeId), eq(piqEmployeesTable.organizationId, authed.piqUser.organizationId)),
+        and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, authed.piqUser.organizationId)),
       )
       .limit(1);
 
@@ -156,16 +159,16 @@ router.patch("/performiq/employees/:employeeId", requirePiqHrAdmin, async (req: 
       return;
     }
 
-    const allowed = ["fullName", "personalEmail", "workEmail", "jobTitle", "department", "managerId", "hireDate", "isActive", "hrisEmployeeId"];
+    const allowed = ["fullName", "personalEmail", "workEmail", "position", "department", "location", "managerId", "startDate", "isActive", "hrisId"];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of allowed) {
-      if (key in req.body) updates[key === "fullName" ? "fullName" : key] = req.body[key];
+      if (key in req.body) updates[key] = req.body[key];
     }
 
     const [updated] = await db
-      .update(piqEmployeesTable)
+      .update(employeesTable)
       .set(updates)
-      .where(eq(piqEmployeesTable.id, employeeId))
+      .where(eq(employeesTable.id, employeeId))
       .returning();
 
     res.json(updated);

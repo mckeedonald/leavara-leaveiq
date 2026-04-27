@@ -5,7 +5,7 @@ import {
   piqWorkflowStepsTable,
   piqDocumentHistoryTable,
   piqDocumentsTable,
-  piqUsersTable,
+  usersTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
@@ -279,9 +279,9 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         // Validate the new assignee belongs to the org
         const [newAssignee] = await db
-          .select({ id: piqUsersTable.id })
-          .from(piqUsersTable)
-          .where(and(eq(piqUsersTable.id, assigneeId), eq(piqUsersTable.organizationId, authed.piqUser.organizationId)))
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(and(eq(usersTable.id, assigneeId), eq(usersTable.organizationId, authed.piqUser.organizationId)))
           .limit(1);
         if (!newAssignee) {
           res.status(400).json({ error: "Assignee not found in this organization" });

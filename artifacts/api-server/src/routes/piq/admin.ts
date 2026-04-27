@@ -3,7 +3,7 @@ import {
   db,
   piqDocumentTypesTable,
   piqPoliciesTable,
-  piqUsersTable,
+  usersTable,
   organizationsTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -197,32 +197,16 @@ router.delete("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (r
   }
 });
 
-// ── Supervisor / HR Lists for reassignment ──────────────────────────────────
-
-// GET /performiq/admin/supervisors  — users with supervisor role
-router.get("/performiq/admin/supervisors", requirePiqAuth, async (req: Request, res: Response) => {
-  try {
-    const authed = req as PiqAuthenticatedRequest;
-    const supervisors = await db
-      .select({ id: piqUsersTable.id, fullName: piqUsersTable.fullName, email: piqUsersTable.email, role: piqUsersTable.role })
-      .from(piqUsersTable)
-      .where(and(eq(piqUsersTable.organizationId, authed.piqUser.organizationId), eq(piqUsersTable.isActive, true)));
-
-    res.json(supervisors.filter((u) => u.role === "supervisor"));
-  } catch (err) {
-    logger.error({ err }, "PIQ supervisors list error");
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+// ── HR User Lists for assignment ──────────────────────────────────────────
 
 // GET /performiq/admin/hr-users  — users with hr_user or hr_admin role
 router.get("/performiq/admin/hr-users", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
     const hrUsers = await db
-      .select({ id: piqUsersTable.id, fullName: piqUsersTable.fullName, email: piqUsersTable.email, role: piqUsersTable.role })
-      .from(piqUsersTable)
-      .where(and(eq(piqUsersTable.organizationId, authed.piqUser.organizationId), eq(piqUsersTable.isActive, true)));
+      .select({ id: usersTable.id, fullName: usersTable.fullName, email: usersTable.email, role: usersTable.role })
+      .from(usersTable)
+      .where(and(eq(usersTable.organizationId, authed.piqUser.organizationId), eq(usersTable.isActive, true)));
 
     res.json(hrUsers.filter((u) => ["hr_user", "hr_admin"].includes(u.role)));
   } catch (err) {
