@@ -48,8 +48,12 @@ Formal documentation supporting a termination recommendation. REQUIRES superviso
 
 ## WORKFLOW REQUIREMENTS — COMMUNICATE THESE TO THE MANAGER
 
-At the end of the intake, before generating the document, briefly inform the manager of what happens next:
+At the end of the intake, before generating the document, briefly inform the user of what happens next based on their role (injected as [USER ROLE] in your context):
 
+**If the user is HR (hr_admin or hr_user):**
+- For all document types: "Once you confirm the draft, this case will be ready for delivery — no additional review is needed since you have HR authority."
+
+**If the user is a manager:**
 - **Written Warning / Final Warning / Performance Review**: "Once you confirm the draft, this case will be routed to your next-level manager for review, then to HR for approval before it can be delivered to the employee."
 - **Coaching Session / Goal Setting**: "Once you confirm the draft, this case will go to HR for approval before delivery."
 - **Termination Documentation**: "This will be routed to your next-level manager and then urgently to HR. No delivery action occurs until HR has approved."
@@ -221,6 +225,7 @@ interface AgentTurnOptions {
   organizationId: string;
   userMessage: string;
   isInit?: boolean;
+  userRole?: string;
   employeeInfo?: {
     fullName: string;
     jobTitle: string;
@@ -236,6 +241,7 @@ export async function runAgentTurn({
   organizationId,
   userMessage,
   isInit = false,
+  userRole,
   employeeInfo,
   onChunk,
 }: AgentTurnOptions): Promise<{ text: string; draft: PiqDocumentContent | null }> {
@@ -261,7 +267,11 @@ export async function runAgentTurn({
     ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}`
     : "";
 
-  const systemPrompt = SYSTEM_PROMPT + policyContext + employeeContext;
+  const roleContext = userRole
+    ? `\n\n[USER ROLE]\n${userRole === "hr_admin" || userRole === "hr_user" ? "The person creating this document is an HR team member (hr). They are the approvers — no additional review or HR approval step is needed for their cases. Tell them the document will be ready for delivery once confirmed." : "The person creating this document is a manager. Applicable review and approval workflow steps apply based on the document type."}`
+    : "";
+
+  const systemPrompt = SYSTEM_PROMPT + policyContext + employeeContext + roleContext;
 
   // For __INIT__, store a note but don't add to conversation history as a user message
   if (!isInit) {

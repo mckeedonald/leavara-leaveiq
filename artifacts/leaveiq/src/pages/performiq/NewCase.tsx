@@ -215,6 +215,7 @@ export default function NewCase() {
         body: JSON.stringify({
           employeeId: selectedEmployee.id,
           documentTypeId,
+          docBaseType: draftDocBaseType ?? undefined,
           agentSessionId: sessionId,
           initialDraft: draft,
         }),

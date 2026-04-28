@@ -29,24 +29,33 @@ async function generateCaseNumber(orgId: string): Promise<string> {
   return `PIQ-${year}${seq}`;
 }
 
-/** Build the initial workflow steps for a document type */
+/** Build the initial workflow steps for a document type.
+ *  HR admins and HR users are the approvers, so their cases skip review/approval
+ *  and go straight from draft to delivery. */
 function buildWorkflowSteps(
   caseId: string,
   orgId: string,
   docType: { requiresSupervisorReview: boolean; supervisorReviewRequired: boolean; requiresHrApproval: boolean },
   assigneeId: string,
+  initiatorRole?: string,
 ): InsertPiqWorkflowStep[] {
   const steps: InsertPiqWorkflowStep[] = [];
   let order = 1;
 
+  const isHr = initiatorRole === "hr_admin" || initiatorRole === "hr_user";
+
   steps.push({ caseId, organizationId: orgId, stepType: "draft", stepOrder: order++, status: "in_progress", assignedTo: assigneeId, assignedBy: assigneeId });
 
-  if (docType.requiresSupervisorReview) {
-    steps.push({ caseId, organizationId: orgId, stepType: "supervisor_review", stepOrder: order++, status: "pending" });
+  // HR initiators skip review and approval — they ARE the approvers
+  if (!isHr) {
+    if (docType.requiresSupervisorReview) {
+      steps.push({ caseId, organizationId: orgId, stepType: "supervisor_review", stepOrder: order++, status: "pending" });
+    }
+    if (docType.requiresHrApproval) {
+      steps.push({ caseId, organizationId: orgId, stepType: "hr_approval", stepOrder: order++, status: "pending" });
+    }
   }
-  if (docType.requiresHrApproval) {
-    steps.push({ caseId, organizationId: orgId, stepType: "hr_approval", stepOrder: order++, status: "pending" });
-  }
+
   steps.push({ caseId, organizationId: orgId, stepType: "delivery", stepOrder: order++, status: "pending" });
 
   return steps;
@@ -153,19 +162,30 @@ router.get("/performiq/cases/:caseId", requirePiqAuth, async (req: Request, res:
   }
 });
 
+/* Default doc-type config keyed by base type */
+const DOC_TYPE_DEFAULTS: Record<string, { label: string; supervisorReview: boolean; hrApproval: boolean }> = {
+  coaching:            { label: "Coaching Session",            supervisorReview: false, hrApproval: true  },
+  written_warning:     { label: "Written Warning",             supervisorReview: true,  hrApproval: true  },
+  final_warning:       { label: "Final Warning",               supervisorReview: true,  hrApproval: true  },
+  performance_review:  { label: "Performance Review",          supervisorReview: true,  hrApproval: true  },
+  goal_setting:        { label: "Goal Setting",                supervisorReview: false, hrApproval: true  },
+  termination_request: { label: "Termination Documentation",   supervisorReview: true,  hrApproval: true  },
+};
+
 // POST /performiq/cases — create a new case
 router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { employeeId, documentTypeId, agentSessionId, initialDraft } = req.body as {
+    const { employeeId, documentTypeId, docBaseType, agentSessionId, initialDraft } = req.body as {
       employeeId?: string;
       documentTypeId?: string;
+      docBaseType?: string;
       agentSessionId?: string;
       initialDraft?: PiqDocumentContent;
     };
 
-    if (!employeeId || !documentTypeId) {
-      res.status(400).json({ error: "employeeId and documentTypeId are required" });
+    if (!employeeId) {
+      res.status(400).json({ error: "employeeId is required" });
       return;
     }
 
@@ -179,15 +199,56 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       return;
     }
 
+    // Resolve doc type: explicit ID → match by base type → auto-create default
+    let resolvedDocTypeId = documentTypeId;
+    if (!resolvedDocTypeId && docBaseType) {
+      const [existing] = await db
+        .select()
+        .from(piqDocumentTypesTable)
+        .where(and(
+          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqDocumentTypesTable.baseType, docBaseType as any),
+          eq(piqDocumentTypesTable.isActive, true),
+        ))
+        .limit(1);
+
+      if (existing) {
+        resolvedDocTypeId = existing.id;
+      } else {
+        // Auto-create a default doc type for this base type
+        const defaults = DOC_TYPE_DEFAULTS[docBaseType] ?? { label: docBaseType, supervisorReview: true, hrApproval: true };
+        const [created] = await db
+          .insert(piqDocumentTypesTable)
+          .values({
+            organizationId: authed.piqUser.organizationId,
+            baseType: docBaseType as any,
+            displayLabel: defaults.label,
+            requiresSupervisorReview: defaults.supervisorReview,
+            supervisorReviewRequired: defaults.supervisorReview,
+            requiresHrApproval: defaults.hrApproval,
+            isActive: true,
+          })
+          .returning();
+        resolvedDocTypeId = created.id;
+      }
+    }
+
+    if (!resolvedDocTypeId) {
+      res.status(400).json({ error: "documentTypeId or docBaseType is required" });
+      return;
+    }
+
     const [docType] = await db
       .select()
       .from(piqDocumentTypesTable)
-      .where(and(eq(piqDocumentTypesTable.id, documentTypeId), eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId)))
+      .where(eq(piqDocumentTypesTable.id, resolvedDocTypeId))
       .limit(1);
     if (!docType) {
       res.status(400).json({ error: "Document type not found" });
       return;
     }
+
+    const documentTypeId_resolved = resolvedDocTypeId;
 
     const caseNumber = await generateCaseNumber(authed.piqUser.organizationId);
 
@@ -198,7 +259,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
         caseNumber,
         employeeId,
         initiatedBy: authed.piqUser.sub,
-        documentTypeId,
+        documentTypeId: resolvedDocTypeId,
         status: "draft",
         currentAssigneeId: authed.piqUser.sub,
         agentSessionId: agentSessionId ?? null,
@@ -225,7 +286,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       });
     }
 
-    const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId, docType, authed.piqUser.sub);
+    const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId, docType, authed.piqUser.sub, authed.piqUser.role);
     if (steps.length > 0) {
       await db.insert(piqWorkflowStepsTable).values(steps);
     }

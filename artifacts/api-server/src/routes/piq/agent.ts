@@ -75,6 +75,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
       organizationId: authed.piqUser.organizationId,
       userMessage: "__INIT__",
       isInit: true,
+      userRole: authed.piqUser.role,
       employeeInfo,
     });
 
@@ -171,6 +172,7 @@ router.post(
         sessionId,
         organizationId: authed.piqUser.organizationId,
         userMessage: message.trim(),
+        userRole: authed.piqUser.role,
         employeeInfo: employeeInfo ?? undefined,
         onChunk: (chunk) => {
           res.write(`data: ${JSON.stringify({ type: "chunk", text: chunk })}\n\n`);
