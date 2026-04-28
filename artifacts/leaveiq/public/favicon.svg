@@ -1,3 +1,13 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <!-- Bottom elliptical base -->
+  <ellipse cx="90" cy="148" rx="68" ry="18" fill="#B8A992"/>
+
+  <!-- Left face — rose/salmon -->
+  <path d="M22 148 C22 148 18 130 30 100 L90 18 L90 148 Z" fill="#EAA292"/>
+
+  <!-- Right face — mocha/brown -->
+  <path d="M158 148 C158 148 162 130 150 100 L90 18 L90 148 Z" fill="#A07860"/>
+
+  <!-- Top highlight edge -->
+  <path d="M90 18 C90 18 85 30 80 50 C75 70 78 100 90 148 C102 100 105 70 100 50 C95 30 90 18 90 18 Z" fill="#C97E59" opacity="0.35"/>
 </svg>
