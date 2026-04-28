@@ -14,7 +14,7 @@ import employeesRouter from "./employees.js";
 
 const router: IRouter = Router();
 
-router.use("/api", employeesRouter);
+router.use(employeesRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(casesRouter);
