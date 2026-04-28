@@ -69,8 +69,16 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
       })
       .returning();
 
-    // Store employee context in session metadata for later turns
-    res.status(201).json({ sessionId: session.id, employeeInfo });
+    // Fire the __INIT__ turn so the agent opens with its greeting
+    const { text: greeting } = await runAgentTurn({
+      sessionId: session.id,
+      organizationId: authed.piqUser.organizationId,
+      userMessage: "__INIT__",
+      isInit: true,
+      employeeInfo,
+    });
+
+    res.status(201).json({ sessionId: session.id, employeeInfo, greeting });
   } catch (err) {
     logger.error({ err }, "PIQ agent session create error");
     res.status(500).json({ error: "Internal server error" });
@@ -128,6 +136,7 @@ router.post(
         hireDate: string | null;
         managerName: string;
       };
+      isInit?: boolean;
     };
 
     if (!message?.trim()) {
