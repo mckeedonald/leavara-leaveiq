@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Search, UserPlus, Users, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Users, CheckCircle2, XCircle, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
-import { piqApiFetch } from "@/lib/piqAuth";
+import { piqApiFetch, usePiqRole } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
@@ -16,24 +16,50 @@ interface Employee {
   id: string;
   fullName: string;
   workEmail: string | null;
-  jobTitle: string | null;
+  position: string | null;
   department: string | null;
-  hireDate: string | null;
+  startDate: string | null;
   isActive: boolean;
 }
 
 export default function PiqEmployees() {
+  const { isHrAdmin } = usePiqRole();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showActive, setShowActive] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  function loadEmployees() {
+    setLoading(true);
     piqApiFetch<Employee[]>("/api/performiq/employees")
       .then(setEmployees)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  async function toggleActive(emp: Employee) {
+    if (togglingId) return;
+    setTogglingId(emp.id);
+    try {
+      await piqApiFetch(`/api/performiq/employees/${emp.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !emp.isActive }),
+      });
+      setEmployees((prev) =>
+        prev.map((e) => (e.id === emp.id ? { ...e, isActive: !emp.isActive } : e))
+      );
+    } catch {
+      // swallow — employee list will still show current state
+    } finally {
+      setTogglingId(null);
+    }
+  }
 
   const filtered = employees.filter((e) => {
     const matchesSearch =
@@ -51,7 +77,7 @@ export default function PiqEmployees() {
           <div>
             <h1 className="text-2xl font-bold" style={{ color: C.textDark }}>Employees</h1>
             <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>
-              {employees.filter((e) => e.isActive).length} active
+              {employees.filter((e) => e.isActive).length} active · {employees.filter((e) => !e.isActive).length} inactive
             </p>
           </div>
         </div>
@@ -96,14 +122,14 @@ export default function PiqEmployees() {
               <p className="font-medium mb-1" style={{ color: C.textDark }}>No employees found</p>
               <p className="text-sm" style={{ color: C.textMuted }}>
                 {employees.length === 0
-                  ? "Employees sync via HRIS or can be added by an HR Admin."
+                  ? "Upload employee data from HRIS Settings to populate this list."
                   : "Try adjusting your filters."}
               </p>
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: C.border }}>
               {filtered.map((e) => (
-                <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-blue-50 transition-colors">
+                <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-teal-50/40 transition-colors">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
                     style={{ background: e.isActive ? C.perf : "#9CA3AF" }}
@@ -113,16 +139,16 @@ export default function PiqEmployees() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm" style={{ color: C.textDark }}>{e.fullName}</p>
                     <p className="text-xs" style={{ color: C.textMuted }}>
-                      {[e.jobTitle, e.department, e.workEmail].filter(Boolean).join(" · ")}
+                      {[e.position, e.department, e.workEmail].filter(Boolean).join(" · ")}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    {e.hireDate && (
-                      <p className="text-xs" style={{ color: C.textMuted }}>
-                        Hired {format(new Date(e.hireDate), "MMM yyyy")}
+                  <div className="flex items-center gap-4 shrink-0">
+                    {e.startDate && (
+                      <p className="text-xs hidden md:block" style={{ color: C.textMuted }}>
+                        Hired {format(new Date(e.startDate), "MMM yyyy")}
                       </p>
                     )}
-                    <div className="flex items-center gap-1 justify-end mt-0.5">
+                    <div className="flex items-center gap-1">
                       {e.isActive ? (
                         <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#065F46" }} />
                       ) : (
@@ -132,6 +158,28 @@ export default function PiqEmployees() {
                         {e.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
+                    {isHrAdmin && (
+                      <button
+                        onClick={() => toggleActive(e)}
+                        disabled={togglingId === e.id}
+                        title={e.isActive ? "Set Inactive" : "Set Active"}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:opacity-80 disabled:opacity-50"
+                        style={
+                          e.isActive
+                            ? { borderColor: "#FCA5A5", color: "#B91C1C", background: "#FEF2F2" }
+                            : { borderColor: C.border, color: C.perf, background: "#EBF5F5" }
+                        }
+                      >
+                        {togglingId === e.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : e.isActive ? (
+                          <ToggleLeft className="w-3.5 h-3.5" />
+                        ) : (
+                          <ToggleRight className="w-3.5 h-3.5" />
+                        )}
+                        {e.isActive ? "Deactivate" : "Activate"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

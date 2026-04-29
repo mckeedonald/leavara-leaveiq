@@ -11,7 +11,6 @@ import {
   ShieldAlert,
   CalendarDays,
   Building2,
-  ChevronDown,
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,14 +47,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, logout, updateUser } = useAuth();
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
   const [hasPerformIq, setHasPerformIq] = useState(false);
-  const [productMenuOpen, setProductMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (!productMenuOpen) return;
-    const close = () => setProductMenuOpen(false);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [productMenuOpen]);
 
   useEffect(() => {
     const token = localStorage.getItem("leavara_token") ?? localStorage.getItem("leaveiq_token");
@@ -89,6 +80,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     : [
         { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", show: true },
         { icon: Files, label: "All Cases", href: "/leaveiq/cases", show: true },
+        { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
         { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
         { icon: Users, label: "Users", href: "/leaveiq/users", show: isHrAdmin },
@@ -111,66 +103,28 @@ export function AppLayout({ children }: AppLayoutProps) {
         className="w-full md:w-64 flex flex-col shrink-0 md:h-screen sticky top-0 z-50"
         style={{ background: S.sidebar, borderRight: `1px solid ${S.sidebarBorder}` }}
       >
-        {/* Logo / Product Switcher */}
+        {/* Logo */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
           <img src="/leavara-logo.png" alt="Leavara" className="h-9 w-9 object-contain shrink-0" />
-          <div className="flex-1 min-w-0">
-            {hasPerformIq ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProductMenuOpen((v) => !v)}
-                  className="flex items-center gap-1.5 w-full group"
-                >
-                  <span className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>LeaveIQ</span>
-                  <ChevronDown className="w-3.5 h-3.5 mt-0.5 transition-transform" style={{ color: "rgba(255,255,255,0.7)", transform: productMenuOpen ? "rotate(180deg)" : "none" }} />
-                </button>
-                <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>by Leavara</p>
-                {productMenuOpen && (
-                  <div
-                    className="absolute left-0 top-full mt-2 w-52 rounded-xl shadow-xl overflow-hidden z-50"
-                    style={{ background: "#FFF", border: "1px solid #E2D9CE" }}
-                  >
-                    <div className="p-1.5">
-                      <div
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        style={{ background: "rgba(201,126,89,0.10)" }}
-                      >
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#C97E59" }}>
-                          <CalendarDays className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold" style={{ color: "#3D2010" }}>LeaveIQ</p>
-                          <p className="text-[10px]" style={{ color: "#8C7058" }}>Leave management</p>
-                        </div>
-                        <span className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "#F0EEE9", color: "#C97E59" }}>Active</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setProductMenuOpen(false);
-                          navigate("/hub");
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full mt-1 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#2E7B7B" }}>
-                          <TrendingUp className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs font-bold" style={{ color: "#3D2010" }}>PerformIQ</p>
-                          <p className="text-[10px]" style={{ color: "#8C7058" }}>Performance management</p>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>LeaveIQ</h1>
-                <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>HR Decision Support</p>
-              </div>
-            )}
+          <div>
+            <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
+              Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
+            </h1>
+            <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>Leave Management</p>
           </div>
         </div>
+
+        {/* Switch product link — shown when org has PerformIQ */}
+        {hasPerformIq && (
+          <Link
+            href="/hub"
+            className="flex items-center gap-2 px-5 py-2.5 text-xs font-medium transition-opacity hover:opacity-80"
+            style={{ color: S.textMutedDark, borderBottom: `1px solid ${S.sidebarBorder}` }}
+          >
+            <TrendingUp className="w-3 h-3" />
+            Switch Product
+          </Link>
+        )}
         {orgLogoUrl && (
           <div className="px-6 py-3 flex items-center" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
             <img src={orgLogoUrl} alt="Organization Logo" className="h-8 max-h-8 max-w-[140px] object-contain" />

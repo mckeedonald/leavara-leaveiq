@@ -53,8 +53,10 @@ const REASON_LABELS: Record<string, string> = {
   personal: "Company personal leave (unpaid, up to 30 days)",
 };
 
-// Always draft these three notices — the Designation Notice carries the approval/denial decision
-const REQUIRED_NOTICE_TYPES = ["ELIGIBILITY_NOTICE", "DESIGNATION_NOTICE", "MEDICAL_CERTIFICATION"];
+// Notice types that always apply
+const ALWAYS_REQUIRED_NOTICE_TYPES = ["ELIGIBILITY_NOTICE", "DESIGNATION_NOTICE"];
+// Medical certification is NOT required for baby bonding — the event (birth/adoption) serves as its own documentation
+const MEDICAL_CERT_EXEMPT_REASONS = ["bonding"];
 
 const NOTICE_TITLES: Record<string, string> = {
   ELIGIBILITY_NOTICE: "Notice of Eligibility & Rights",
@@ -180,7 +182,7 @@ Your role is to assist HR professionals with legally compliant leave administrat
 
 2. LEAVE DESIGNATION NOTICE — equivalent to FMLA Form WH-382. Must be provided within 5 business days of having sufficient information to designate leave. This notice conveys the final decision (approved, conditionally approved pending certification, or denied).
 
-3. MEDICAL CERTIFICATION FORM — a complete, fillable form the employee takes to their healthcare provider (or completes themselves for bonding/military/personal leave). This is attached to the Eligibility Notice so the employee can begin the certification process immediately.
+3. MEDICAL CERTIFICATION FORM — a complete, fillable form the employee takes to their healthcare provider. NOTE: Do NOT generate a Medical Certification Form for baby bonding leave (bonding with a new child via birth, adoption, or foster care) — the birth/adoption event itself serves as documentation and no medical certification is required or appropriate. Only include this notice for leave reasons involving a medical condition (own health, care for family member, pregnancy disability).
 
 The Designation Notice replaces any separate approval or denial letter — it is the official document communicating the leave decision.
 
@@ -753,7 +755,12 @@ export async function generateAiRecommendation(
     throw new Error("Invalid AI response structure");
   }
 
-  // Always enforce exactly ELIGIBILITY_NOTICE + DESIGNATION_NOTICE
+  // Determine which notice types to include (medical cert excluded for bonding leave)
+  const requiresMedCert = !MEDICAL_CERT_EXEMPT_REASONS.includes(ctx.leaveReasonCategory);
+  const REQUIRED_NOTICE_TYPES = requiresMedCert
+    ? [...ALWAYS_REQUIRED_NOTICE_TYPES, "MEDICAL_CERTIFICATION"]
+    : ALWAYS_REQUIRED_NOTICE_TYPES;
+
   const finalNotices: AiNoticeDraft[] = [];
   for (const noticeType of REQUIRED_NOTICE_TYPES) {
     const aiDraft = parsed.notices.find((n) => n.noticeType === noticeType);

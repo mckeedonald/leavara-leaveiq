@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import multer from "multer";
 import {
   db,
   piqDocumentTypesTable,
@@ -9,6 +10,20 @@ import {
 import { eq, and } from "drizzle-orm";
 import { requirePiqHrAdmin, requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
+
+const policyUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter(_req, file, cb) {
+    const allowed = [
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
 
 const router = Router();
 
@@ -196,6 +211,50 @@ router.delete("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (r
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// POST /performiq/admin/policies/extract-text — extract text from uploaded policy document
+router.post(
+  "/performiq/admin/policies/extract-text",
+  requirePiqHrAdmin,
+  policyUpload.single("file"),
+  async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) { res.status(400).json({ error: "No file provided." }); return; }
+
+    try {
+      let text = "";
+      if (file.mimetype === "text/plain") {
+        text = file.buffer.toString("utf-8");
+      } else if (file.mimetype === "application/pdf") {
+        // Use pdf2json to extract text
+        const PDFParser = (await import("pdf2json")).default;
+        text = await new Promise<string>((resolve, reject) => {
+          const parser = new PDFParser();
+          parser.on("pdfParser_dataReady", (data: any) => {
+            try {
+              const pages: string[] = (data.Pages ?? []).map((page: any) =>
+                (page.Texts ?? [])
+                  .map((t: any) => decodeURIComponent(t.R?.map((r: any) => r.T).join("") ?? ""))
+                  .join(" ")
+              );
+              resolve(pages.join("\n\n"));
+            } catch (e) { reject(e); }
+          });
+          parser.on("pdfParser_dataError", reject);
+          parser.parseBuffer(file.buffer);
+        });
+      } else {
+        // DOC/DOCX — return a message asking to use copy/paste
+        res.json({ text: "", message: "Word documents cannot be parsed automatically. Please copy and paste the policy text into the content field." });
+        return;
+      }
+      res.json({ text: text.trim() });
+    } catch (err) {
+      logger.error({ err }, "Policy text extraction error");
+      res.status(500).json({ error: "Failed to extract text from file. Please paste the policy content directly." });
+    }
+  }
+);
 
 // ── HR User Lists for assignment ──────────────────────────────────────────
 

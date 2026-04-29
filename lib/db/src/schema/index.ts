@@ -15,6 +15,7 @@ export * from "./caseAccessTokens";
 
 // Unified tables
 export * from "./employees";
+export * from "./caseMessages";
 export * from "./orgRoles";
 export * from "./orgRolePermissions";
 

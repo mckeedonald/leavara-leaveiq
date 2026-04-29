@@ -12,20 +12,24 @@ interface HrUser {
   firstName: string;
   lastName: string;
   position: string;
-  role: "admin" | "user";
+  role: string;
   isActive: boolean;
   createdAt: string;
 }
 
-function RoleBadge({ role }: { role: "admin" | "user" }) {
+function RoleBadge({ role }: { role: string }) {
+  const isAdmin = role === "hr_admin" || role === "admin";
+  const isManager = role === "manager";
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
-      role === "admin"
+      isAdmin
         ? "bg-[#F5E8DF] text-[#9E5D38] border-[#C97E5966]"
+        : isManager
+        ? "bg-blue-50 text-blue-700 border-blue-200"
         : "bg-stone-100 text-[#A47864] border-stone-200"
     }`}>
-      {role === "admin" ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
-      {role === "admin" ? "Administrator" : "HR User"}
+      {isAdmin ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+      {isAdmin ? "HR Admin" : isManager ? "Manager" : "HR User"}
     </span>
   );
 }
@@ -35,7 +39,7 @@ export default function Users() {
   const qc = useQueryClient();
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "user">("user");
+  const [inviteRole, setInviteRole] = useState<"hr_admin" | "hr_user" | "manager">("hr_user");
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -84,7 +88,7 @@ export default function Users() {
     }
   }
 
-  if (me?.role !== "admin") {
+  if (me?.role !== "hr_admin" && me?.role !== "admin") {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-48">
@@ -123,11 +127,12 @@ export default function Users() {
             </div>
             <select
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as "admin" | "user")}
+              onChange={(e) => setInviteRole(e.target.value as "hr_admin" | "hr_user" | "manager")}
               className="px-4 py-2.5 rounded-xl border border-input bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
             >
-              <option value="user">HR User</option>
-              <option value="admin">Administrator</option>
+              <option value="hr_user">HR User</option>
+              <option value="hr_admin">HR Admin</option>
+              <option value="manager">Manager</option>
             </select>
             <button
               type="submit"

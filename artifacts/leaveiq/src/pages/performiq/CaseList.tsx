@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Search, Plus, Filter, FolderOpen, ArrowRight, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch } from "@/lib/piqAuth";
@@ -55,10 +55,14 @@ const BASE_TYPE_COLOR: Record<string, string> = {
 };
 
 export default function PiqCaseList() {
+  const searchStr = useSearch();
+  const urlParams = new URLSearchParams(searchStr);
+  const initialStatus = urlParams.get("status") ?? "";
+
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
 
   useEffect(() => {
     piqApiFetch<CaseSummary[]>("/api/performiq/cases")

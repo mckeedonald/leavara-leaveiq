@@ -1,14 +1,86 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useCreateCase, LeaveReasonCategory } from "@workspace/api-client-react";
 import { LEAVE_REASON_LABELS } from "@/components/ui/StatusBadge";
-import { useQueryClient } from "@tanstack/react-query";
-import { getListCasesQueryKey } from "@workspace/api-client-react";
-import { X, Loader2, UserRound, Sparkles } from "lucide-react";
+import { useQueryClient, getListCasesQueryKey } from "@workspace/api-client-react";
+import { X, Loader2, UserRound, Sparkles, Search, Check } from "lucide-react";
+import { apiFetch } from "@/lib/auth";
+
+interface Employee {
+  id: string;
+  fullName: string;
+  employeeId: string | null;
+  workEmail: string | null;
+  personalEmail: string | null;
+  position: string | null;
+  department: string | null;
+  location: string | null;
+  startDate: string | null;
+  avgHoursWorked: string | null;
+}
 
 export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const queryClient = useQueryClient();
   const createCase = useCreateCase();
   const [error, setError] = useState("");
+
+  // Employee search / autofill
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [empSearch, setEmpSearch] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Form field state for autofill
+  const [empNumber, setEmpNumber] = useState("");
+  const [empFirstName, setEmpFirstName] = useState("");
+  const [empLastName, setEmpLastName] = useState("");
+  const [empEmail, setEmpEmail] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    apiFetch<Employee[]>("/api/employees").then(setEmployees).catch(() => {});
+  }, [isOpen]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handle = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [showDropdown]);
+
+  const filtered = employees.filter((e) =>
+    !empSearch ||
+    e.fullName.toLowerCase().includes(empSearch.toLowerCase()) ||
+    (e.employeeId ?? "").toLowerCase().includes(empSearch.toLowerCase()) ||
+    (e.department ?? "").toLowerCase().includes(empSearch.toLowerCase())
+  );
+
+  function selectEmployee(emp: Employee) {
+    setSelectedEmployee(emp);
+    setShowDropdown(false);
+    setEmpSearch(emp.fullName);
+
+    // Autofill fields
+    setEmpNumber(emp.employeeId ?? "");
+    const parts = emp.fullName.trim().split(" ");
+    setEmpFirstName(parts[0] ?? "");
+    setEmpLastName(parts.slice(1).join(" "));
+    setEmpEmail(emp.personalEmail ?? emp.workEmail ?? "");
+  }
+
+  function clearSelection() {
+    setSelectedEmployee(null);
+    setEmpSearch("");
+    setEmpNumber("");
+    setEmpFirstName("");
+    setEmpLastName("");
+    setEmpEmail("");
+  }
 
   if (!isOpen) return null;
 
@@ -53,16 +125,69 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 overflow-y-auto max-h-[80vh]">
           {error && <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">{error}</div>}
 
-          {/* Employee Identity */}
+          {/* Employee Search / Autofill */}
           <div className="rounded-xl border bg-slate-50/50 p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <UserRound className="w-4 h-4 text-[#C97E59]" />
               <span className="text-sm font-semibold text-slate-700">Employee Information</span>
-              <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[#9E5D38] bg-[#F5E8DF] px-2 py-0.5 rounded-full">
-                <Sparkles className="w-3 h-3" />
-                Auto-fills with HRIS
-              </span>
+              {employees.length > 0 && (
+                <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[#9E5D38] bg-[#F5E8DF] px-2 py-0.5 rounded-full">
+                  <Sparkles className="w-3 h-3" />
+                  {employees.length} employees loaded
+                </span>
+              )}
             </div>
+
+            {/* Employee search dropdown */}
+            {employees.length > 0 && (
+              <div className="space-y-1 relative" ref={dropdownRef}>
+                <label className="text-sm font-semibold">Search Employee</label>
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={empSearch}
+                    onChange={(e) => {
+                      setEmpSearch(e.target.value);
+                      setShowDropdown(true);
+                      if (!e.target.value) clearSelection();
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    className="w-full pl-9 pr-4 border rounded-xl py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-sm"
+                    placeholder="Search by name, ID, or department…"
+                    autoComplete="off"
+                  />
+                  {selectedEmployee && (
+                    <Check className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-green-600" />
+                  )}
+                </div>
+                {showDropdown && filtered.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                    {filtered.slice(0, 20).map((emp) => (
+                      <button
+                        key={emp.id}
+                        type="button"
+                        onClick={() => selectEmployee(emp)}
+                        className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors border-b last:border-0 flex items-center gap-3"
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                          style={{ background: "#C97E59" }}
+                        >
+                          {emp.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{emp.fullName}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[emp.employeeId, emp.department, emp.position].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="text-sm font-semibold">Employee Number <span className="text-destructive">*</span></label>
@@ -70,6 +195,8 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 required
                 name="employeeNumber"
                 type="text"
+                value={empNumber}
+                onChange={(e) => setEmpNumber(e.target.value)}
                 className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
                 placeholder="e.g. EMP-10042"
               />
@@ -81,6 +208,8 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 <input
                   name="employeeFirstName"
                   type="text"
+                  value={empFirstName}
+                  onChange={(e) => setEmpFirstName(e.target.value)}
                   className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
                   placeholder="Jane"
                 />
@@ -90,6 +219,8 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 <input
                   name="employeeLastName"
                   type="text"
+                  value={empLastName}
+                  onChange={(e) => setEmpLastName(e.target.value)}
                   className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
                   placeholder="Smith"
                 />
@@ -101,6 +232,8 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
               <input
                 name="employeeEmail"
                 type="email"
+                value={empEmail}
+                onChange={(e) => setEmpEmail(e.target.value)}
                 className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
                 placeholder="jane.smith@company.com"
               />

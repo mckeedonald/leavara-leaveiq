@@ -98,10 +98,26 @@ export default function PiqDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stat("Active Cases", activeCases.length, "in progress", C.perf)}
-          {stat("Needs Your Action", pendingAction.length, "draft or revision needed", "#B45309")}
-          {stat("In Review", inReview.length, "with supervisor or HR", "#7C3AED")}
-          {stat("Closed", closed.length, "completed this year", "#065F46")}
+          <Link href="/performiq/cases" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+            <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Active Cases</p>
+            <p className="text-3xl font-bold" style={{ color: C.perf }}>{activeCases.length}</p>
+            <p className="text-xs mt-1" style={{ color: C.textMuted }}>in progress</p>
+          </Link>
+          <Link href="/performiq/cases?status=draft" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+            <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Needs Your Action</p>
+            <p className="text-3xl font-bold" style={{ color: "#B45309" }}>{pendingAction.length}</p>
+            <p className="text-xs mt-1" style={{ color: C.textMuted }}>draft or revision needed</p>
+          </Link>
+          <Link href="/performiq/cases?status=supervisor_review" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+            <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>In Review</p>
+            <p className="text-3xl font-bold" style={{ color: "#7C3AED" }}>{inReview.length}</p>
+            <p className="text-xs mt-1" style={{ color: C.textMuted }}>with supervisor or HR</p>
+          </Link>
+          <Link href="/performiq/cases?status=closed" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+            <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Closed</p>
+            <p className="text-3xl font-bold" style={{ color: "#065F46" }}>{closed.length}</p>
+            <p className="text-xs mt-1" style={{ color: C.textMuted }}>completed this year</p>
+          </Link>
         </div>
 
         {/* Recent Cases */}

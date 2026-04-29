@@ -65,10 +65,11 @@ router.get("/employees/hierarchy", requireAuth, async (req: Request, res: Respon
  * POST /api/employees/csv-upload
  * Accepts a CSV with columns:
  *   employee_name, employee_id, position, location, department,
- *   manager_name, start_date, avg_hours_worked
+ *   manager_name, start_date, avg_hours_worked, work_email, personal_email
  *
  * Upserts employees by employee_id (or full_name if no ID).
  * Resolves managerId by matching manager_name to existing employees in the same upload.
+ * Data uploaded here is shared between LeaveIQ and PerformIQ (same employees table).
  */
 router.post("/employees/csv-upload", requireHrAdmin, async (req: Request, res: Response): Promise<void> => {
   const { organizationId } = (req as AuthenticatedRequest).user;
@@ -112,6 +113,8 @@ router.post("/employees/csv-upload", requireHrAdmin, async (req: Request, res: R
     const managerName = row["manager_name"]?.trim() || null;
     const startDate = row["start_date"]?.trim() || null;
     const avgHours = row["avg_hours_worked"]?.trim() || null;
+    const workEmail = row["work_email"]?.trim() || null;
+    const personalEmail = row["personal_email"]?.trim() || null;
 
     // Upsert by employeeId if present, otherwise by fullName within org
     const existing = employeeId
@@ -127,6 +130,8 @@ router.post("/employees/csv-upload", requireHrAdmin, async (req: Request, res: R
         fullName, employeeId, position, location, department, managerName,
         startDate: startDate ?? undefined,
         avgHoursWorked: avgHours ?? undefined,
+        workEmail: workEmail ?? undefined,
+        personalEmail: personalEmail ?? undefined,
         dataSource: "csv",
         lastSyncAt: new Date(),
         updatedAt: new Date(),
@@ -137,6 +142,8 @@ router.post("/employees/csv-upload", requireHrAdmin, async (req: Request, res: R
         organizationId, fullName, employeeId, position, location, department, managerName,
         startDate: startDate ?? undefined,
         avgHoursWorked: avgHours ?? undefined,
+        workEmail: workEmail ?? undefined,
+        personalEmail: personalEmail ?? undefined,
         dataSource: "csv",
         lastSyncAt: new Date(),
       }).returning({ id: employeesTable.id });

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  FileText, BookOpen, Users, Plus, Edit3, Save, X, Trash2, CheckCircle2, Loader2, ChevronDown, ChevronUp, Upload,
+  FileText, BookOpen, Users, Plus, Edit3, Save, X, Trash2, CheckCircle2, Loader2, ChevronDown, ChevronUp, Upload, FileUp, AlertTriangle,
 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch } from "@/lib/piqAuth";
@@ -48,6 +48,10 @@ export default function PiqAdminSettings() {
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [showPolicyForm, setShowPolicyForm] = useState(false);
   const [expandedPolicy, setExpandedPolicy] = useState<string | null>(null);
+  const [policyFileDragging, setPolicyFileDragging] = useState(false);
+  const [policyFileLoading, setPolicyFileLoading] = useState(false);
+  const [policyFileMessage, setPolicyFileMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const policyFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadAll();
@@ -95,6 +99,7 @@ export default function PiqAdminSettings() {
       });
       setPolicies((prev) => [...prev, created]);
       setNewPolicy({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
+      setPolicyFileMessage(null);
       setShowPolicyForm(false);
     } catch {}
     setSavingPolicy(false);
@@ -103,6 +108,39 @@ export default function PiqAdminSettings() {
   async function deletePolicy(policyId: string) {
     await piqApiFetch(`/api/performiq/admin/policies/${policyId}`, { method: "DELETE" });
     setPolicies((prev) => prev.filter((p) => p.id !== policyId));
+  }
+
+  async function handlePolicyFile(file: File) {
+    const allowed = [".pdf", ".txt", ".doc", ".docx"];
+    const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    if (!allowed.includes(ext)) {
+      setPolicyFileMessage({ type: "error", text: "Only PDF, TXT, DOC, and DOCX files are supported." });
+      return;
+    }
+    setPolicyFileLoading(true);
+    setPolicyFileMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("leavara_token") ?? localStorage.getItem("performiq_token") ?? "";
+      const res = await fetch("/api/performiq/admin/policies/extract-text", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Extraction failed");
+      const data = await res.json() as { text?: string; message?: string };
+      if (data.text) {
+        setNewPolicy((p) => ({ ...p, content: data.text! }));
+        setPolicyFileMessage({ type: "success", text: `Text extracted from "${file.name}". Review and edit below, then save.` });
+      } else if (data.message) {
+        setPolicyFileMessage({ type: "info", text: data.message });
+      }
+    } catch {
+      setPolicyFileMessage({ type: "error", text: "Could not extract text. Please paste the policy content directly." });
+    } finally {
+      setPolicyFileLoading(false);
+    }
   }
 
   async function toggleUserActive(userId: string, isActive: boolean) {
@@ -308,14 +346,75 @@ export default function PiqAdminSettings() {
                       </div>
                     </div>
                     <div className="mb-4">
-                      <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Policy Content *</label>
+                      <label className="block text-xs font-medium mb-2" style={{ color: C.textMuted }}>Policy Content *</label>
+
+                      {/* Drag-and-drop upload zone */}
+                      <div
+                        className="relative border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer mb-3 transition-colors"
+                        style={{
+                          borderColor: policyFileDragging ? C.perf : C.border,
+                          background: policyFileDragging ? "#EBF5F5" : C.agentBg,
+                        }}
+                        onDragOver={(e) => { e.preventDefault(); setPolicyFileDragging(true); }}
+                        onDragLeave={() => setPolicyFileDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setPolicyFileDragging(false);
+                          const file = e.dataTransfer.files[0];
+                          if (file) handlePolicyFile(file);
+                        }}
+                        onClick={() => policyFileInputRef.current?.click()}
+                      >
+                        <input
+                          ref={policyFileInputRef}
+                          type="file"
+                          accept=".pdf,.txt,.doc,.docx"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePolicyFile(file);
+                            e.target.value = "";
+                          }}
+                        />
+                        {policyFileLoading ? (
+                          <Loader2 className="w-6 h-6 animate-spin" style={{ color: C.perf }} />
+                        ) : (
+                          <FileUp className="w-6 h-6" style={{ color: C.textMuted }} />
+                        )}
+                        <p className="text-xs font-medium" style={{ color: C.textDark }}>
+                          {policyFileLoading ? "Extracting text…" : "Drop a policy file here, or click to browse"}
+                        </p>
+                        <p className="text-xs" style={{ color: C.textMuted }}>PDF, TXT, DOC, DOCX · Text will be extracted automatically</p>
+                      </div>
+
+                      {/* File message banner */}
+                      {policyFileMessage && (
+                        <div
+                          className="flex items-start gap-2 text-xs rounded-xl px-3 py-2 mb-3 border"
+                          style={
+                            policyFileMessage.type === "success"
+                              ? { background: "#F0FDF4", borderColor: "#86EFAC", color: "#166534" }
+                              : policyFileMessage.type === "error"
+                              ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+                              : { background: "#EFF6FF", borderColor: "#93C5FD", color: "#1E40AF" }
+                          }
+                        >
+                          {policyFileMessage.type === "success" ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          ) : (
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          )}
+                          {policyFileMessage.text}
+                        </div>
+                      )}
+
                       <textarea value={newPolicy.content} onChange={(e) => setNewPolicy((p) => ({ ...p, content: e.target.value }))}
-                        rows={6} placeholder="Paste the full policy text here. The AI agent will reference this when documenting violations."
+                        rows={6} placeholder="Or paste the full policy text here. The AI agent will reference this when documenting violations."
                         className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-y"
                         style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setShowPolicyForm(false)} className="px-4 py-2 rounded-xl text-sm border" style={{ borderColor: C.border, color: C.textMuted }}>Cancel</button>
+                      <button onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); }} className="px-4 py-2 rounded-xl text-sm border" style={{ borderColor: C.border, color: C.textMuted }}>Cancel</button>
                       <button onClick={createPolicy} disabled={savingPolicy || !newPolicy.title || !newPolicy.category || !newPolicy.content}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
                         style={{ background: C.perf }}>

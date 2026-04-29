@@ -14,6 +14,8 @@ import { TransitionCaseModal } from "@/components/cases/TransitionCaseModal";
 import { RecordDecisionModal } from "@/components/cases/RecordDecisionModal";
 import { AiAssistantPanel } from "@/components/cases/AiAssistantPanel";
 import { CaseDocumentsPanel } from "@/components/cases/CaseDocumentsPanel";
+import { CaseMessaging, type CaseMessage } from "@/components/cases/CaseMessaging";
+import { BenefitsContinuationPanel } from "@/components/cases/BenefitsContinuationPanel";
 import { useAuth, apiFetch } from "@/lib/auth";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -253,6 +255,15 @@ export default function CaseDetail() {
             {caseData.state === LeaveState.NOTICE_DRAFTED && (
               <>
                 <button
+                  onClick={handleDraftNoticeClick}
+                  className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
+                  style={{ background: "#A47864" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#9E5D38")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#A47864")}
+                >
+                  <Sparkles className="w-4 h-4" /> Draft Notices with AI
+                </button>
+                <button
                   onClick={() => setShowCloseModal(true)}
                   className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
                   style={{ background: "#5C8A5C" }}
@@ -423,6 +434,26 @@ export default function CaseDetail() {
 
             {/* Case Documents */}
             <CaseDocumentsPanel caseId={caseId} refreshKey={docsRefreshKey} />
+
+            {/* Benefits Continuation Letter */}
+            <BenefitsContinuationPanel caseId={caseId} employeeEmail={caseData.employeeEmail} />
+
+            {/* Case Messaging */}
+            <div className="bg-card border shadow-sm rounded-2xl overflow-hidden">
+              <CaseMessaging
+                viewerType="hr"
+                fetchMessages={() =>
+                  apiFetch<CaseMessage[]>(`/api/cases/${caseId}/messages`)
+                }
+                sendMessage={(content) =>
+                  apiFetch<CaseMessage>(`/api/cases/${caseId}/messages`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content }),
+                  })
+                }
+              />
+            </div>
           </div>
 
           {/* Right column */}

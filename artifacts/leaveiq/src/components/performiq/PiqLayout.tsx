@@ -44,6 +44,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/performiq/dashboard", show: true },
     { icon: FolderOpen, label: "Cases", href: "/performiq/cases", show: true },
+    { icon: TrendingUp, label: "Analytics", href: "/performiq/analytics", show: true },
     { icon: Users, label: "Employees", href: "/performiq/employees", show: isHr },
     { icon: BookOpen, label: "Policies", href: "/performiq/admin/policies", show: isHrAdmin },
     { icon: FileText, label: "Document Types", href: "/performiq/admin/document-types", show: isHrAdmin },

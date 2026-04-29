@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { EmployeeLayout } from "@/components/layout/EmployeeLayout";
 import { Upload, FileText, Download, CheckCircle2, AlertTriangle, Loader2, File, X } from "lucide-react";
+import { CaseMessaging, type CaseMessage } from "@/components/cases/CaseMessaging";
 import { formatDate } from "@/lib/utils";
 import { useOrgBranding } from "@/lib/useOrgBranding";
 
@@ -423,8 +424,31 @@ export default function EmployeePortalCase() {
           </div>
         )}
 
+        {/* Messaging panel */}
+        <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+          <CaseMessaging
+            viewerType="employee"
+            fetchMessages={async () => {
+              const res = await fetch(
+                `/api/portal/cases/${caseData.id}/messages?token=${encodeURIComponent(token)}`
+              );
+              if (!res.ok) return [];
+              return res.json();
+            }}
+            sendMessage={async (content) => {
+              const res = await fetch(`/api/portal/cases/${caseData.id}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, content }),
+              });
+              if (!res.ok) throw new Error("Failed to send message");
+              return res.json();
+            }}
+          />
+        </div>
+
         <p className="text-center text-xs text-muted-foreground pb-4">
-          If you have questions about your case, please contact your HR department directly.
+          Messages are saved to your case file and visible to your HR team.
           <br />Your case portal link is private — please do not share it.
         </p>
       </div>

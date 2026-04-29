@@ -52,10 +52,14 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId, refreshKey]);
 
+  function getToken() {
+    return localStorage.getItem("leavara_token") ?? localStorage.getItem("leaveiq_token") ?? "";
+  }
+
   async function handleDownload(docId: string, fileName: string) {
     setDownloadError(null);
     try {
-      const token = localStorage.getItem("leaveiq_token");
+      const token = getToken();
       const res = await fetch(`/api/cases/${caseId}/documents/${docId}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -102,7 +106,7 @@ export function CaseDocumentsPanel({ caseId, refreshKey }: Props) {
 
     setIsUploading(true);
     try {
-      const token = localStorage.getItem("leaveiq_token");
+      const token = getToken();
       const res = await fetch(`/api/cases/${caseId}/documents`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},

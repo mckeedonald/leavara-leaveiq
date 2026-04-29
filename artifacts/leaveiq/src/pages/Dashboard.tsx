@@ -62,27 +62,31 @@ export default function Dashboard() {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-in opacity-0 stagger-2">
-        <MetricCard 
-          title="Total Cases" 
-          value={stats.total} 
-          icon={<Users className="w-5 h-5 text-[#C97E59]" />} 
+        <MetricCard
+          title="Total Cases"
+          value={stats.total}
+          icon={<Users className="w-5 h-5 text-[#C97E59]" />}
           trend={caseTrend.label ?? undefined}
+          href="/leaveiq/cases"
         />
-        <MetricCard 
-          title="Pending HR Review" 
-          value={stats.pendingHr} 
-          icon={<AlertCircle className="w-5 h-5 text-amber-500" />} 
+        <MetricCard
+          title="Pending HR Review"
+          value={stats.pendingHr}
+          icon={<AlertCircle className="w-5 h-5 text-amber-500" />}
           highlight={stats.pendingHr > 0}
+          href="/leaveiq/cases?state=HR_REVIEW_QUEUE"
         />
-        <MetricCard 
-          title="In Analysis" 
-          value={stats.inAnalysis} 
-          icon={<Clock className="w-5 h-5 text-amber-500" />} 
+        <MetricCard
+          title="In Analysis"
+          value={stats.inAnalysis}
+          icon={<Clock className="w-5 h-5 text-amber-500" />}
+          href="/leaveiq/cases?state=ELIGIBILITY_ANALYSIS"
         />
-        <MetricCard 
-          title="Recently Closed" 
-          value={stats.closed} 
-          icon={<CheckCircle2 className="w-5 h-5 text-[#A47864]" />} 
+        <MetricCard
+          title="Recently Closed"
+          value={stats.closed}
+          icon={<CheckCircle2 className="w-5 h-5 text-[#A47864]" />}
+          href="/leaveiq/cases?state=CLOSED"
         />
       </div>
 
@@ -166,7 +170,7 @@ export default function Dashboard() {
   );
 }
 
-function MetricCard({ title, value, icon, trend, trendDirection = "neutral", highlight }: { title: string; value: number | string; icon: React.ReactNode; trend?: string; trendDirection?: "up" | "down" | "neutral"; highlight?: boolean }) {
+function MetricCard({ title, value, icon, trend, trendDirection = "neutral", highlight, href }: { title: string; value: number | string; icon: React.ReactNode; trend?: string; trendDirection?: "up" | "down" | "neutral"; highlight?: boolean; href?: string }) {
   const trendStyle =
     trendDirection === "up"
       ? { color: "#166534", background: "#dcfce7" }
@@ -174,11 +178,8 @@ function MetricCard({ title, value, icon, trend, trendDirection = "neutral", hig
       ? { color: "#991b1b", background: "#fee2e2" }
       : { color: "#9E5D38", background: "#F5E8DF" };
 
-  return (
-    <div className={cn(
-      "bg-card p-6 rounded-2xl border shadow-sm transition-all hover:shadow-md",
-      highlight ? "ring-2 ring-amber-400 border-amber-200 bg-amber-50/10" : ""
-    )}>
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <div className="p-2 bg-muted/50 rounded-xl">{icon}</div>
@@ -187,6 +188,17 @@ function MetricCard({ title, value, icon, trend, trendDirection = "neutral", hig
         <h4 className="text-3xl font-display font-bold">{value}</h4>
         {trend && <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={trendStyle}>{trend}</span>}
       </div>
-    </div>
+    </>
   );
+
+  const cls = cn(
+    "bg-card p-6 rounded-2xl border shadow-sm transition-all hover:shadow-md block",
+    highlight ? "ring-2 ring-amber-400 border-amber-200 bg-amber-50/10" : "",
+    href ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-lg" : ""
+  );
+
+  if (href) {
+    return <Link href={href} className={cls}>{inner}</Link>;
+  }
+  return <div className={cls}>{inner}</div>;
 }

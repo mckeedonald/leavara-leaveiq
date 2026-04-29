@@ -423,8 +423,11 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         }),
       });
       setSendSuccess(true);
-      // Clear persisted notices — they've been sent, no need to restore them on next visit
+      // Clear persisted notices — they've been sent
       if (caseId) { try { localStorage.removeItem(avaStorageKey(caseId)); } catch { /* ignore */ } }
+      // Remove notices from view now that they've been sent
+      setResult(null);
+      setEditedNotices([]);
       // Notify parent so it can transition case state (e.g. ELIGIBILITY_ANALYSIS → NOTICE_DRAFTED)
       onNoticesSent?.();
     } catch (err) {

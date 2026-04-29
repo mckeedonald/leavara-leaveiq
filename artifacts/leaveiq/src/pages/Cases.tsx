@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListCases, LeaveState } from "@workspace/api-client-react";
 import { ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
@@ -8,7 +8,10 @@ import { Search, Loader2, Filter, Plus } from "lucide-react";
 import { CreateCaseModal } from "@/components/cases/CreateCaseModal";
 
 export default function Cases() {
-  const [filterState, setFilterState] = useState<string>("ALL");
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const initialState = params.get("state") ?? "ALL";
+  const [filterState, setFilterState] = useState<string>(initialState);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { data, isLoading } = useListCases(filterState !== "ALL" ? { state: filterState } : undefined);
   const cases = data?.cases || [];

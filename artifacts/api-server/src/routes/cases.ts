@@ -759,8 +759,16 @@ router.post(
     });
 
     let nextState = "NOTICE_DRAFTED";
-    let hrDecisionDisplayStatus: string | undefined;
-    if (body.data.decisionType === "REQUEST_MORE_INFO") {
+    let hrDecisionDisplayStatus: string;
+    if (body.data.decisionType === "APPROVE") {
+      hrDecisionDisplayStatus = "Approved — Notice Pending";
+    } else if (body.data.decisionType === "APPROVE_PARTIAL") {
+      nextState = "NOTICE_DRAFTED";
+      hrDecisionDisplayStatus = "Partially Approved — Notice Pending";
+    } else if (body.data.decisionType === "DENY") {
+      hrDecisionDisplayStatus = "Denied — Notice Pending";
+    } else {
+      // REQUEST_MORE_INFO
       nextState = "INTAKE";
       hrDecisionDisplayStatus = leaveCase.assignedToUserId ? "In Review" : "Case Received";
     }
@@ -769,7 +777,7 @@ router.post(
       .update(leaveCasesTable)
       .set({
         state: nextState,
-        ...(hrDecisionDisplayStatus !== undefined ? { displayStatus: hrDecisionDisplayStatus } : {}),
+        displayStatus: hrDecisionDisplayStatus,
         updatedAt: new Date(),
       })
       .where(eq(leaveCasesTable.id, leaveCase.id))
@@ -1608,6 +1616,93 @@ Respond ONLY with valid JSON in exactly this format:
 
     res.json(parsed);
   },
+);
+
+// POST /cases/:caseId/benefits-continuation-letter
+// Generates a benefits continuation letter with HR-provided benefit details
+router.post(
+  "/cases/:caseId/benefits-continuation-letter",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+    const { benefits } = req.body as {
+      benefits?: Array<{ name: string; monthlyAmount: string | number }>;
+    };
+
+    if (!Array.isArray(benefits) || benefits.length === 0) {
+      res.status(400).json({ error: "benefits array is required" });
+      return;
+    }
+
+    const [leaveCase] = await db
+      .select()
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied" }); return;
+    }
+
+    const employeeName = [leaveCase.employeeFirstName, leaveCase.employeeLastName].filter(Boolean).join(" ") || `Employee #${leaveCase.employeeNumber}`;
+    const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+    const benefitLines = benefits
+      .map((b) => `- ${b.name}: $${b.monthlyAmount}/month`)
+      .join("\n");
+
+    const totalMonthly = benefits.reduce((sum, b) => sum + parseFloat(String(b.monthlyAmount) || "0"), 0);
+
+    const prompt = `You are an HR compliance specialist. Generate a professional FMLA Benefits Continuation Letter for the following case.
+
+CASE INFORMATION:
+- Employee: ${employeeName}
+- Leave Start: ${leaveCase.requestedStart}
+- Leave End: ${leaveCase.requestedEnd ?? "TBD"}
+- Leave Reason: ${leaveCase.leaveReasonCategory}
+- Case Number: ${leaveCase.caseNumber}
+- Today's Date: ${today}
+
+BENEFITS CONTINUING DURING LEAVE:
+${benefitLines}
+- TOTAL monthly cost: $${totalMonthly.toFixed(2)}/month
+
+Generate a formal, professional benefits continuation letter addressed to the employee. The letter must:
+1. Confirm the employee's approved leave period
+2. List each continuing benefit and its monthly cost
+3. State the total monthly value of continued benefits
+4. Explain the employee's responsibility for any premium co-payments (if applicable)
+5. Provide contact information for benefits questions (use "HR Department" as the contact)
+6. Be professional and empathetic in tone
+7. Include a signature block for the HR representative
+
+Return ONLY the letter text, formatted for direct use. No additional commentary.`;
+
+    try {
+      const { anthropic } = await import("../lib/anthropic.js");
+      const message = await anthropic.messages.create({
+        model: "claude-opus-4-5",
+        max_tokens: 1500,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const letterContent = message.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as { type: "text"; text: string }).text)
+        .join("\n");
+
+      res.json({
+        noticeType: "BENEFITS_CONTINUATION",
+        title: "Benefits Continuation Letter",
+        content: letterContent,
+      });
+    } catch (err) {
+      logger.error({ err }, "benefits continuation letter generation error");
+      res.status(500).json({ error: "Failed to generate letter" });
+    }
+  }
 );
 
 // GET /notifications

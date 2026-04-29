@@ -473,6 +473,7 @@ export default function PiqCaseDetail() {
                 )}
               </div>
             </div>
+
           </div>
         </div>
       </div>

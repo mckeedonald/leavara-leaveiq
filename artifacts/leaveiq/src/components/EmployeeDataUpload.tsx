@@ -11,11 +11,13 @@ const CSV_HEADERS = [
   "manager_name",
   "start_date",
   "avg_hours_worked",
+  "work_email",
+  "personal_email",
 ];
 
 const CSV_EXAMPLE = [
-  "Jane Smith,EMP001,HR Manager,Los Angeles,Human Resources,John Doe,2021-03-15,40.0",
-  "John Doe,EMP002,Director,Los Angeles,Human Resources,,2019-07-01,42.5",
+  "Jane Smith,EMP001,HR Manager,Los Angeles,Human Resources,John Doe,2021-03-15,40.0,jane.smith@company.com,jsmith@personal.com",
+  "John Doe,EMP002,Director,Los Angeles,Human Resources,,2019-07-01,42.5,john.doe@company.com,",
 ];
 
 function downloadTemplate() {
@@ -128,8 +130,8 @@ export function EmployeeDataUpload({
           ))}
         </div>
         <p className="mt-2" style={{ color: "#8C7058" }}>
-          Only <span className="font-semibold">employee_name</span> is required. Include manager_name to build the reporting hierarchy.
-          Date format: YYYY-MM-DD.
+          Only <span className="font-semibold">employee_name</span> is required. Include <span className="font-semibold">personal_email</span> so employees can receive notices at their personal address. Include manager_name to build the reporting hierarchy.
+          Date format: YYYY-MM-DD. Data is shared across LeaveIQ and PerformIQ.
         </p>
       </div>
 

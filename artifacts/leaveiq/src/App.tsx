@@ -38,6 +38,8 @@ import PiqCaseDetail from "@/pages/performiq/CaseDetail";
 import NewCase from "@/pages/performiq/NewCase";
 import PiqEmployees from "@/pages/performiq/Employees";
 import PiqAdminSettings from "@/pages/performiq/AdminSettings";
+import PiqAnalytics from "@/pages/performiq/Analytics";
+import Analytics from "@/pages/Analytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -129,11 +131,13 @@ function Router() {
       <Route path="/leaveiq/account" component={() => <ProtectedRoute component={AccountSettings} />} />
       <Route path="/leaveiq/calendar" component={() => <ProtectedRoute component={Calendar} />} />
       <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
+      <Route path="/leaveiq/analytics" component={() => <ProtectedRoute component={Analytics} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
       {/* PerformIQ routes — login redirects to unified portal */}
       <Route path="/performiq/login" component={() => <Redirect to="/leaveiq/login" />} />
       <Route path="/performiq/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
+      <Route path="/performiq/analytics" component={() => <PiqProtectedRoute component={PiqAnalytics} />} />
       <Route path="/performiq/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
       <Route path="/performiq/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />
       <Route path="/performiq/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
