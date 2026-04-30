@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Building2,
   TrendingUp,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -80,6 +81,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     : [
         { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", show: true },
         { icon: Files, label: "All Cases", href: "/leaveiq/cases", show: true },
+        { icon: ShieldCheck, label: "ADA Cases", href: "/leaveiq/ada-cases", show: true },
         { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
         { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },

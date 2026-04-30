@@ -40,6 +40,8 @@ import PiqEmployees from "@/pages/performiq/Employees";
 import PiqAdminSettings from "@/pages/performiq/AdminSettings";
 import PiqAnalytics from "@/pages/performiq/Analytics";
 import Analytics from "@/pages/Analytics";
+import AdaCases from "@/pages/AdaCases";
+import AdaCase from "@/pages/AdaCase";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,6 +134,8 @@ function Router() {
       <Route path="/leaveiq/calendar" component={() => <ProtectedRoute component={Calendar} />} />
       <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
       <Route path="/leaveiq/analytics" component={() => <ProtectedRoute component={Analytics} />} />
+      <Route path="/leaveiq/ada-cases" component={() => <ProtectedRoute component={AdaCases} />} />
+      <Route path="/leaveiq/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
       {/* PerformIQ routes — login redirects to unified portal */}

@@ -12,6 +12,7 @@ import orgRouter from "./org";
 import piqRouter from "./piq/index.js";
 import employeesRouter from "./employees.js";
 import caseMessagesRouter from "./caseMessages.js";
+import adaRouter from "./ada.js";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(portalRouter);
 router.use(orgRouter);
 router.use(piqRouter);
 router.use(caseMessagesRouter);
+router.use(adaRouter);
 
 export default router;

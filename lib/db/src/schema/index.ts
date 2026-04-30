@@ -16,6 +16,13 @@ export * from "./caseAccessTokens";
 // Unified tables
 export * from "./employees";
 export * from "./caseMessages";
+
+// ADA Accommodations
+export * from "./adaCases";
+export * from "./adaInteractiveLog";
+export * from "./approvedAccommodations";
+export * from "./calendarInvites";
+export * from "./leaveKnowledgeSources";
 export * from "./orgRoles";
 export * from "./orgRolePermissions";
 

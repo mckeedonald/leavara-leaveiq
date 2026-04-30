@@ -14,52 +14,81 @@ function getOrgSlug(): string {
   return new URLSearchParams(window.location.search).get("org") ?? "";
 }
 
-type LeaveReason = "own_health" | "care_family" | "pregnancy_disability" | "bonding" | "personal";
-
 interface ChatMessage {
   id: string;
   role: "bot" | "user";
   text: string;
   options?: { label: string; value: string }[];
-  inputType?: "text" | "date";
+  inputType?: "text" | "date" | "textarea";
 }
 
+type Branch = "leave" | "accommodation";
+
 type Step =
+  // Common
   | "welcome"
+  | "choose_branch"
   | "employee_number"
   | "email"
-  | "reason"
+  // Leave branch
+  | "leave_reason"
+  | "leave_reason_other"
   | "start_date"
   | "end_date"
   | "intermittent"
-  | "your_name"
-  | "summary"
-  | "submitted";
+  | "leave_name"
+  | "leave_summary"
+  | "leave_submitted"
+  // Accommodation branch
+  | "ada_name"
+  | "ada_limitation"
+  | "ada_accommodation_requested"
+  | "ada_is_temporary"
+  | "ada_duration"
+  | "ada_notes"
+  | "ada_summary"
+  | "ada_submitted";
 
 interface IntakeData {
+  // Common
+  branch?: Branch;
   employeeNumber?: string;
   employeeEmail?: string;
-  leaveReasonCategory?: LeaveReason;
+  submittedBy?: string;
+  // Leave
+  leaveReasonCategory?: string;
+  leaveReasonOther?: string;
   requestedStart?: string;
   requestedEnd?: string | null;
   intermittent?: boolean;
-  submittedBy?: string;
+  // ADA
+  functionalLimitations?: string;
+  accommodationRequested?: string;
+  isTemporary?: boolean;
+  estimatedDuration?: string;
+  additionalNotes?: string;
 }
 
-const REASON_OPTIONS = [
+const LEAVE_REASON_OPTIONS = [
   { label: "My Own Health Condition", value: "own_health" },
   { label: "Caring for a Family Member", value: "care_family" },
-  { label: "Pregnancy Disability", value: "pregnancy_disability" },
+  { label: "Pregnancy / Childbirth Disability", value: "pregnancy_disability" },
   { label: "Bonding with a New Child", value: "bonding" },
-  { label: "Personal", value: "personal" },
+  { label: "Military / USERRA Leave", value: "military" },
+  { label: "Bereavement Leave", value: "bereavement" },
+  { label: "Jury Duty or Witness Leave", value: "jury_duty" },
+  { label: "Another type of leave", value: "other" },
 ];
 
 const REASON_LABELS: Record<string, string> = {
-  own_health: "Employee's Own Health",
+  own_health: "Employee's Own Health Condition",
   care_family: "Care for a Family Member",
-  pregnancy_disability: "Pregnancy Disability",
+  pregnancy_disability: "Pregnancy / Childbirth Disability",
   bonding: "Bonding with a New Child",
-  personal: "Personal",
+  military: "Military / USERRA Leave",
+  bereavement: "Bereavement Leave",
+  jury_duty: "Jury Duty or Witness Leave",
+  other: "Other",
 };
 
 function formatDateDisplay(dateStr: string): string {
@@ -76,12 +105,12 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: "welcome-1",
     role: "bot",
-    text: "👋 Hi! I'm Ava, your leave request assistant. I'll walk you through submitting a leave of absence — it only takes a few minutes.",
+    text: "👋 Hi! I'm Ava, your leave and accommodations assistant. I'm here to help you submit a request — it only takes a few minutes, and your HR team will take it from there.",
   },
   {
     id: "welcome-2",
     role: "bot",
-    text: "Once submitted, your HR team will review the request and reach out to you directly. Whenever you're ready, let's get started!",
+    text: "Once submitted, HR will review your request and reach out directly. Whenever you're ready, let's get started!",
     options: [{ label: "Let's begin", value: "begin" }],
   },
 ];
@@ -94,10 +123,9 @@ export default function EmployeePortal() {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [caseNumber, setCaseNumber] = useState<string | null>(null);
-  const [portalToken, setPortalToken] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -119,86 +147,161 @@ export default function EmployeePortal() {
     }, ms);
   };
 
+  const focusInput = () => setTimeout(() => inputRef.current?.focus(), 100);
+
+  // ─── Option click handler ─────────────────────────────────────────────────
   const handleOptionClick = (value: string, label: string) => {
     addUserMessage(label);
 
+    // Welcome → ask leave or accommodation
     if (step === "welcome") {
+      botDelay(() => {
+        addBotMessage(
+          "Are you looking to request a leave of absence, or are you seeking a workplace accommodation?",
+          {
+            options: [
+              { label: "Request a Leave of Absence", value: "leave" },
+              { label: "Request a Workplace Accommodation", value: "accommodation" },
+            ],
+          }
+        );
+        setStep("choose_branch");
+      });
+      return;
+    }
+
+    // Choose branch
+    if (step === "choose_branch") {
+      const branch = value as Branch;
+      setData((d) => ({ ...d, branch }));
       botDelay(() => {
         addBotMessage("To start, what's your employee number?", { inputType: "text" });
         setStep("employee_number");
-        setTimeout(() => inputRef.current?.focus(), 100);
+        focusInput();
       });
       return;
     }
 
-    if (step === "reason") {
-      const reason = value as LeaveReason;
-      setData((d) => ({ ...d, leaveReasonCategory: reason }));
-      botDelay(() => {
-        addBotMessage("Got it. What date do you need your leave to start?", { inputType: "date" });
-        setStep("start_date");
-        setTimeout(() => inputRef.current?.focus(), 100);
-      });
-      return;
-    }
-
-    if (step === "end_date") {
-      if (value === "no_end") {
-        setData((d) => ({ ...d, requestedEnd: null }));
+    // Leave reason selected
+    if (step === "leave_reason") {
+      setData((d) => ({ ...d, leaveReasonCategory: value }));
+      if (value === "other") {
         botDelay(() => {
-          addBotMessage("No problem — we can revisit that later. Will this be intermittent leave? That means taking leave in separate blocks (like a few hours or days at a time) rather than all at once.", {
-            options: [
-              { label: "Yes, intermittent", value: "yes" },
-              { label: "No, continuous", value: "no" },
-            ],
-          });
-          setStep("intermittent");
+          addBotMessage(
+            "Of course! Could you briefly describe the type of leave you need? For example, domestic violence leave, school activities leave, organ donation leave, or something else.",
+            { inputType: "text" }
+          );
+          setStep("leave_reason_other");
+          focusInput();
+        });
+      } else {
+        botDelay(() => {
+          addBotMessage("Got it. What date do you need your leave to start?", { inputType: "date" });
+          setStep("start_date");
+          focusInput();
         });
       }
       return;
     }
 
-    if (step === "intermittent") {
-      const intermittent = value === "yes";
-      setData((d) => ({ ...d, intermittent }));
+    // End date "not sure yet"
+    if (step === "end_date" && value === "no_end") {
+      setData((d) => ({ ...d, requestedEnd: null }));
       botDelay(() => {
-        addBotMessage("Great. Last thing — what's your full name so we can submit the request properly?", {
-          inputType: "text",
-        });
-        setStep("your_name");
-        setTimeout(() => inputRef.current?.focus(), 100);
+        addBotMessage(
+          "No problem — we can revisit that later. Will this be intermittent leave? That means taking leave in separate blocks (like a few hours or days at a time) rather than all at once.",
+          {
+            options: [
+              { label: "Yes, intermittent", value: "yes" },
+              { label: "No, continuous", value: "no" },
+            ],
+          }
+        );
+        setStep("intermittent");
       });
       return;
     }
 
-    if (step === "summary") {
+    // Intermittent
+    if (step === "intermittent") {
+      const intermittent = value === "yes";
+      setData((d) => ({ ...d, intermittent }));
+      botDelay(() => {
+        addBotMessage(
+          "Almost done! What's your full name so we can submit the request?",
+          { inputType: "text" }
+        );
+        setStep("leave_name");
+        focusInput();
+      });
+      return;
+    }
+
+    // Leave summary confirm/restart
+    if (step === "leave_summary") {
       if (value === "confirm") {
-        submitCase();
+        submitLeaveCase();
       } else {
-        setMessages(INITIAL_MESSAGES);
-        setStep("welcome");
-        setData({});
-        setInputValue("");
+        resetPortal();
+      }
+      return;
+    }
+
+    // ADA: is temporary
+    if (step === "ada_is_temporary") {
+      const isTemporary = value === "yes";
+      setData((d) => ({ ...d, isTemporary }));
+      if (isTemporary) {
+        botDelay(() => {
+          addBotMessage(
+            "How long do you expect this limitation to last? (e.g., \"3 months\", \"6 weeks\", \"until after surgery\")",
+            { inputType: "text" }
+          );
+          setStep("ada_duration");
+          focusInput();
+        });
+      } else {
+        botDelay(() => {
+          addBotMessage(
+            "Understood. Is there anything else you'd like HR to know about your situation — medical context, prior accommodations, or specific concerns? (Optional — press Enter to skip.)",
+            { inputType: "textarea" }
+          );
+          setStep("ada_notes");
+          focusInput();
+        });
+      }
+      return;
+    }
+
+    // ADA summary confirm/restart
+    if (step === "ada_summary") {
+      if (value === "confirm") {
+        submitAdaCase();
+      } else {
+        resetPortal();
       }
       return;
     }
   };
 
+  // ─── Text submit handler ──────────────────────────────────────────────────
   const handleTextSubmit = (value: string) => {
-    if (!value.trim()) return;
     const trimmed = value.trim();
-    addUserMessage(trimmed);
+
+    // ada_notes allows empty submit (skip)
+    if (!trimmed && step !== "ada_notes") return;
+    addUserMessage(trimmed || "(no additional notes)");
     setInputValue("");
 
     if (step === "employee_number") {
       setData((d) => ({ ...d, employeeNumber: trimmed }));
       botDelay(() => {
         addBotMessage(
-          "Thanks! What email address should HR use to send you leave notices and updates?",
+          "Thanks! What email address should HR use to send you updates?",
           { inputType: "text" }
         );
         setStep("email");
-        setTimeout(() => inputRef.current?.focus(), 100);
+        focusInput();
       });
       return;
     }
@@ -206,17 +309,47 @@ export default function EmployeePortal() {
     if (step === "email") {
       if (!trimmed.includes("@") || !trimmed.includes(".")) {
         botDelay(() => {
-          addBotMessage("Hmm, that doesn't look quite right. Could you double-check and enter a valid email address? (e.g., jane@company.com)", { inputType: "text" });
-          setTimeout(() => inputRef.current?.focus(), 100);
+          addBotMessage(
+            "Hmm, that doesn't look quite right. Could you enter a valid email address? (e.g., jane@company.com)",
+            { inputType: "text" }
+          );
+          focusInput();
         }, 350);
         return;
       }
       setData((d) => ({ ...d, employeeEmail: trimmed }));
-      botDelay(() => {
-        addBotMessage("Perfect. What's the reason for your leave request?", {
-          options: REASON_OPTIONS,
+      const branch = data.branch;
+      if (branch === "leave") {
+        botDelay(() => {
+          addBotMessage("What's the reason for your leave request?", {
+            options: LEAVE_REASON_OPTIONS,
+          });
+          setStep("leave_reason");
         });
-        setStep("reason");
+      } else {
+        // accommodation branch → go to name
+        botDelay(() => {
+          addBotMessage(
+            "What's your full name?",
+            { inputType: "text" }
+          );
+          setStep("ada_name");
+          focusInput();
+        });
+      }
+      return;
+    }
+
+    // Leave branch: other reason description
+    if (step === "leave_reason_other") {
+      setData((d) => ({ ...d, leaveReasonOther: trimmed }));
+      botDelay(() => {
+        addBotMessage(
+          `Got it — I'll note that as: "${trimmed}". HR will review the specifics with you.\n\nWhat date do you need your leave to start?`,
+          { inputType: "date" }
+        );
+        setStep("start_date");
+        focusInput();
       });
       return;
     }
@@ -224,8 +357,11 @@ export default function EmployeePortal() {
     if (step === "start_date") {
       if (!isValidDate(trimmed)) {
         botDelay(() => {
-          addBotMessage("I couldn't quite parse that date. Try entering it like \"2026-04-15\" or \"April 15, 2026\".", { inputType: "date" });
-          setTimeout(() => inputRef.current?.focus(), 100);
+          addBotMessage(
+            "I couldn't quite parse that date. Try entering it like \"2026-08-01\" or \"August 1, 2026\".",
+            { inputType: "date" }
+          );
+          focusInput();
         }, 350);
         return;
       }
@@ -240,7 +376,7 @@ export default function EmployeePortal() {
           }
         );
         setStep("end_date");
-        setTimeout(() => inputRef.current?.focus(), 100);
+        focusInput();
       });
       return;
     }
@@ -253,14 +389,17 @@ export default function EmployeePortal() {
         setData((d) => ({ ...d, requestedEnd: normalizeDate(trimmed) }));
       } else {
         botDelay(() => {
-          addBotMessage(`No worries if it's uncertain — just click "Not sure yet" or enter a date like "2026-06-01".`, { inputType: "date" });
-          setTimeout(() => inputRef.current?.focus(), 100);
+          addBotMessage(
+            `No worries if it's uncertain — click "Not sure yet" or enter a date like "2026-06-01".`,
+            { inputType: "date" }
+          );
+          focusInput();
         }, 350);
         return;
       }
       botDelay(() => {
         addBotMessage(
-          "Will this be intermittent leave? That means taking leave in separate blocks (like a few hours or days at a time) rather than all at once.",
+          "Will this be intermittent leave? That means taking leave in separate blocks rather than all at once.",
           {
             options: [
               { label: "Yes, intermittent", value: "yes" },
@@ -273,29 +412,120 @@ export default function EmployeePortal() {
       return;
     }
 
-    if (step === "your_name") {
+    if (step === "leave_name") {
       setData((prev) => {
         const updated = { ...prev, submittedBy: trimmed };
-        // Show summary with fully updated data
-        botDelay(() => showSummary(updated));
+        botDelay(() => showLeaveSummary(updated));
+        return updated;
+      });
+      return;
+    }
+
+    // ADA branch steps
+    if (step === "ada_name") {
+      setData((d) => ({ ...d, submittedBy: trimmed }));
+      botDelay(() => {
+        addBotMessage(
+          `Thank you, ${trimmed.split(" ")[0]}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: \"I have difficulty standing for more than 20 minutes\" or \"I struggle with concentrating in noisy environments.\"`,
+          { inputType: "textarea" }
+        );
+        setStep("ada_limitation");
+        focusInput();
+      });
+      return;
+    }
+
+    if (step === "ada_limitation") {
+      if (!trimmed) {
+        botDelay(() => {
+          addBotMessage(
+            "Please describe the limitation you're experiencing at work — this helps HR understand what type of accommodation may help.",
+            { inputType: "textarea" }
+          );
+          focusInput();
+        }, 350);
+        return;
+      }
+      setData((d) => ({ ...d, functionalLimitations: trimmed }));
+      botDelay(() => {
+        addBotMessage(
+          "Thank you for sharing that. What accommodation are you requesting? If you're not sure of the exact accommodation, describe what you think would help — HR and the accommodation process will work with you to identify the right solution.",
+          { inputType: "textarea" }
+        );
+        setStep("ada_accommodation_requested");
+        focusInput();
+      });
+      return;
+    }
+
+    if (step === "ada_accommodation_requested") {
+      if (!trimmed) {
+        botDelay(() => {
+          addBotMessage(
+            "What accommodation do you think would help with your limitation? If you're unsure, just describe what you need.",
+            { inputType: "textarea" }
+          );
+          focusInput();
+        }, 350);
+        return;
+      }
+      setData((d) => ({ ...d, accommodationRequested: trimmed }));
+      botDelay(() => {
+        addBotMessage(
+          "Is this limitation temporary (e.g., recovering from an injury or procedure) or is it an ongoing condition?",
+          {
+            options: [
+              { label: "Temporary", value: "yes" },
+              { label: "Ongoing / Permanent", value: "no" },
+            ],
+          }
+        );
+        setStep("ada_is_temporary");
+      });
+      return;
+    }
+
+    if (step === "ada_duration") {
+      setData((d) => ({ ...d, estimatedDuration: trimmed }));
+      botDelay(() => {
+        addBotMessage(
+          "Is there anything else you'd like HR to know — prior accommodations, specific concerns, or additional context? (Optional — press Enter or click Submit to skip.)",
+          { inputType: "textarea" }
+        );
+        setStep("ada_notes");
+        focusInput();
+      });
+      return;
+    }
+
+    if (step === "ada_notes") {
+      setData((prev) => {
+        const updated = { ...prev, additionalNotes: trimmed || undefined };
+        botDelay(() => showAdaSummary(updated));
         return updated;
       });
       return;
     }
   };
 
-  const showSummary = (finalData: IntakeData) => {
+  // ─── Summary builders ─────────────────────────────────────────────────────
+  const showLeaveSummary = (finalData: IntakeData) => {
+    const reasonLabel =
+      finalData.leaveReasonCategory === "other"
+        ? `Other — ${finalData.leaveReasonOther ?? "Not specified"}`
+        : REASON_LABELS[finalData.leaveReasonCategory ?? ""] ?? finalData.leaveReasonCategory;
+
     const lines = [
       `**Employee number:** ${finalData.employeeNumber}`,
       `**Email:** ${finalData.employeeEmail ?? "Not provided"}`,
-      `**Reason:** ${REASON_LABELS[finalData.leaveReasonCategory ?? ""] ?? finalData.leaveReasonCategory}`,
+      `**Name:** ${finalData.submittedBy}`,
+      `**Reason:** ${reasonLabel}`,
       `**Start date:** ${formatDateDisplay(finalData.requestedStart ?? "")}`,
       `**End date:** ${finalData.requestedEnd ? formatDateDisplay(finalData.requestedEnd) : "Not specified"}`,
       `**Intermittent:** ${finalData.intermittent ? "Yes" : "No"}`,
-      `**Submitted by:** ${finalData.submittedBy}`,
     ];
     addBotMessage(
-      `Here's a summary of your request:\n\n${lines.join("\n")}\n\nDoes everything look correct?`,
+      `Here's a summary of your leave request:\n\n${lines.join("\n")}\n\nDoes everything look correct?`,
       {
         options: [
           { label: "✅ Submit my request", value: "confirm" },
@@ -303,10 +533,34 @@ export default function EmployeePortal() {
         ],
       }
     );
-    setStep("summary");
+    setStep("leave_summary");
   };
 
-  const submitCase = async () => {
+  const showAdaSummary = (finalData: IntakeData) => {
+    const lines = [
+      `**Employee number:** ${finalData.employeeNumber}`,
+      `**Email:** ${finalData.employeeEmail ?? "Not provided"}`,
+      `**Name:** ${finalData.submittedBy}`,
+      `**Limitation described:** ${finalData.functionalLimitations}`,
+      `**Accommodation requested:** ${finalData.accommodationRequested}`,
+      `**Temporary:** ${finalData.isTemporary ? `Yes${finalData.estimatedDuration ? ` (${finalData.estimatedDuration})` : ""}` : "No — ongoing"}`,
+      finalData.additionalNotes ? `**Additional notes:** ${finalData.additionalNotes}` : null,
+    ].filter(Boolean) as string[];
+
+    addBotMessage(
+      `Here's a summary of your accommodation request:\n\n${lines.join("\n")}\n\nHR will review this and reach out to begin the interactive process. Does everything look correct?`,
+      {
+        options: [
+          { label: "✅ Submit my request", value: "confirm" },
+          { label: "↩ Start over", value: "restart" },
+        ],
+      }
+    );
+    setStep("ada_summary");
+  };
+
+  // ─── Submit handlers ──────────────────────────────────────────────────────
+  const submitLeaveCase = async () => {
     setIsTyping(true);
     try {
       const orgSlug = getOrgSlug();
@@ -321,7 +575,10 @@ export default function EmployeePortal() {
           employeeLastName: data.submittedBy?.split(" ").slice(1).join(" ") || undefined,
           requestedStart: data.requestedStart!,
           requestedEnd: data.requestedEnd ?? undefined,
-          leaveReasonCategory: data.leaveReasonCategory! as string,
+          leaveReasonCategory: data.leaveReasonCategory === "other"
+            ? "other"
+            : data.leaveReasonCategory!,
+          leaveReasonOther: data.leaveReasonOther,
           intermittent: data.intermittent ?? false,
           submittedBy: data.submittedBy!,
         }),
@@ -329,26 +586,74 @@ export default function EmployeePortal() {
       const result = await res.json();
       if (!res.ok) throw new Error((result as { error?: string }).error ?? "Submission failed");
       setIsTyping(false);
-      const submitted = result as { caseNumber?: string; id?: string };
+      const submitted = result as { caseNumber?: string };
       const cn = submitted.caseNumber ?? "N/A";
       setCaseNumber(cn);
-      // Extract portal token from magic link if the server includes it
-      // (we don't get it directly, but the email is sent — show a friendly message)
       addBotMessage(
-        `🎉 You're all set! Your leave request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your eligibility and reach out to you — typically within 2–3 business days.\n\nIf you provided an email address, a confirmation has been sent there with a secure link to upload supporting documents and track your case status.`
+        `🎉 You're all set! Your leave request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your eligibility and contact you — typically within 2–3 business days.\n\nIf you provided an email address, a confirmation has been sent there with a secure link to track your case and upload any supporting documents.`
       );
-      setStep("submitted");
+      setStep("leave_submitted");
     } catch {
       setIsTyping(false);
       addBotMessage(
-        "Something went wrong on our end when submitting your request. Please try again, or reach out to HR directly.",
-        {
-          options: [{ label: "Try again", value: "confirm" }],
-        }
+        "Something went wrong when submitting your request. Please try again, or reach out to HR directly.",
+        { options: [{ label: "Try again", value: "confirm" }] }
       );
     }
   };
 
+  const submitAdaCase = async () => {
+    setIsTyping(true);
+    try {
+      const orgSlug = getOrgSlug();
+      const url = orgSlug ? `/api/ada/cases?org=${encodeURIComponent(orgSlug)}` : "/api/ada/cases";
+      const firstName = data.submittedBy?.split(" ")[0] ?? "";
+      const lastName = data.submittedBy?.split(" ").slice(1).join(" ") || "";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeNumber: data.employeeNumber!,
+          employeeEmail: data.employeeEmail ?? undefined,
+          employeeFirstName: firstName || undefined,
+          employeeLastName: lastName || undefined,
+          disabilityDescription: data.functionalLimitations,
+          functionalLimitations: data.functionalLimitations,
+          accommodationRequested: data.accommodationRequested,
+          isTemporary: data.isTemporary ?? false,
+          estimatedDuration: data.estimatedDuration,
+          additionalNotes: data.additionalNotes,
+          submittedBy: data.submittedBy!,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error((result as { error?: string }).error ?? "Submission failed");
+      setIsTyping(false);
+      const submitted = result as { caseNumber?: string };
+      const cn = submitted.caseNumber ?? "N/A";
+      setCaseNumber(cn);
+      addBotMessage(
+        `🎉 Your accommodation request has been submitted.\n\n**Case number: ${cn}**\n\nHR will review your request and reach out to begin the interactive process — typically within a few business days. No physician documentation is needed at this stage; HR will guide you through next steps.\n\nIf you provided an email address, a confirmation has been sent there with a secure link to track your case.`
+      );
+      setStep("ada_submitted");
+    } catch {
+      setIsTyping(false);
+      addBotMessage(
+        "Something went wrong when submitting your request. Please try again, or reach out to HR directly.",
+        { options: [{ label: "Try again", value: "confirm" }] }
+      );
+    }
+  };
+
+  const resetPortal = () => {
+    setMessages(INITIAL_MESSAGES);
+    setStep("welcome");
+    setData({});
+    setInputValue("");
+    setCaseNumber(null);
+  };
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
   const isValidDate = (str: string) => {
     const d = new Date(str);
     return !isNaN(d.getTime());
@@ -361,7 +666,22 @@ export default function EmployeePortal() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const currentInputType = messages.filter((m) => m.role === "bot").slice(-1)[0]?.inputType;
+  const isSubmitted = step === "leave_submitted" || step === "ada_submitted";
+  const lastBotMsg = [...messages].reverse().find((m) => m.role === "bot");
+  const currentInputType = lastBotMsg?.inputType;
+  const showInput = !!currentInputType && !isSubmitted && !isTyping;
+
+  const inputPlaceholder = () => {
+    if (currentInputType === "date") return "e.g. 2026-08-01 or August 1, 2026";
+    if (currentInputType === "textarea") return "Type your answer… (Enter to submit)";
+    switch (step) {
+      case "employee_number": return "e.g. 1023 or EMP-1023";
+      case "email": return "your.email@company.com";
+      case "leave_name":
+      case "ada_name": return "Your full name";
+      default: return "Type your answer…";
+    }
+  };
 
   return (
     <EmployeeLayout showBack orgLogoUrl={orgLogoUrl} orgName={orgName}>
@@ -373,14 +693,17 @@ export default function EmployeePortal() {
               key={msg.id}
               message={msg}
               onOptionClick={handleOptionClick}
-              disabled={step === "submitted" || isTyping}
+              disabled={isSubmitted || isTyping}
             />
           ))}
 
           {isTyping && (
             <div className="flex items-end gap-2">
               <BotAvatar />
-              <div className="bg-white shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5" style={{ border: "1px solid #D4C9BB" }}>
+              <div
+                className="bg-white shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5"
+                style={{ border: "1px solid #D4C9BB" }}
+              >
                 <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: "#C8A888" }} />
                 <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:150ms]" style={{ background: "#C8A888" }} />
                 <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:300ms]" style={{ background: "#C8A888" }} />
@@ -388,99 +711,189 @@ export default function EmployeePortal() {
             </div>
           )}
 
-          {step === "submitted" && caseNumber && (
-            <div className="rounded-2xl p-5 flex flex-col gap-3 text-center mt-2 shadow-sm" style={{ background: "#FDF6F2", border: "1.5px solid #C97E5966" }}>
-              <div className="flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "#C97E5922" }}>
-                  <CheckCircle className="w-8 h-8" style={{ color: "#C97E59" }} />
-                </div>
-              </div>
-              <p className="font-bold text-lg" style={{ color: "#3D2010" }}>Request Submitted</p>
-              <div className="rounded-xl px-4 py-3" style={{ background: "#F5E8DF", border: "1px solid #C97E5933" }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#A47864" }}>Your Case Number</p>
-                <p className="font-mono font-bold text-xl" style={{ color: "#9E5D38" }}>{caseNumber}</p>
-              </div>
-              <p className="text-sm" style={{ color: "#5C3D28" }}>
-                HR will review your eligibility and contact you — typically within 2–3 business days.
-              </p>
-              {data.employeeEmail && (
-                <p className="text-xs" style={{ color: "#A47864" }}>
-                  A confirmation with your secure case portal link has been sent to <strong>{data.employeeEmail}</strong>. Check your inbox (and spam folder) for next steps.
-                </p>
-              )}
-              <button
-                onClick={() => {
-                  setMessages(INITIAL_MESSAGES);
-                  setStep("welcome");
-                  setData({});
-                  setInputValue("");
-                  setCaseNumber(null);
-                  setPortalToken(null);
-                }}
-                className="mx-auto flex items-center gap-2 text-sm font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
-                style={{ color: "#A47864" }}
-              >
-                <RotateCcw className="w-4 h-4" /> Submit another request
-              </button>
-            </div>
+          {isSubmitted && caseNumber && (
+            <SubmittedCard
+              caseNumber={caseNumber}
+              email={data.employeeEmail}
+              isAda={step === "ada_submitted"}
+              onReset={resetPortal}
+            />
           )}
 
           <div ref={bottomRef} />
         </div>
 
         {/* Input area */}
-        {currentInputType && step !== "submitted" && !isTyping && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleTextSubmit(inputValue);
-            }}
-            className="flex items-center gap-2 bg-white rounded-2xl shadow-sm px-4 py-2 sticky bottom-0"
-            style={{ border: "1px solid #D4C9BB" }}
-          >
-            <input
-              ref={inputRef}
-              type="text"
+        {showInput && (
+          currentInputType === "textarea" ? (
+            <TextareaInput
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                currentInputType === "date"
-                  ? "e.g. 2025-08-01 or August 1, 2025"
-                  : step === "employee_number"
-                  ? "e.g. 1023 or EMP-1023"
-                  : step === "email"
-                  ? "your.email@company.com"
-                  : step === "your_name"
-                  ? "Your full name"
-                  : "Type your answer…"
-              }
-              className="flex-1 text-sm bg-transparent outline-none py-1"
-              style={{ color: "#3D2010" }}
-              autoFocus
+              onChange={setInputValue}
+              onSubmit={() => handleTextSubmit(inputValue)}
+              placeholder={inputPlaceholder()}
+              allowEmpty={step === "ada_notes"}
+              inputRef={inputRef as React.RefObject<HTMLTextAreaElement>}
             />
-            <button
-              type="submit"
-              disabled={!inputValue.trim()}
-              className="disabled:opacity-40 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-opacity hover:opacity-90"
-              style={{ background: "#C97E59" }}
+          ) : (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleTextSubmit(inputValue); }}
+              className="flex items-center gap-2 bg-white rounded-2xl shadow-sm px-4 py-2 sticky bottom-0"
+              style={{ border: "1px solid #D4C9BB" }}
             >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+              <input
+                ref={inputRef as React.RefObject<HTMLInputElement>}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={inputPlaceholder()}
+                className="flex-1 text-sm bg-transparent outline-none py-1"
+                style={{ color: "#3D2010" }}
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={!inputValue.trim()}
+                className="disabled:opacity-40 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-opacity hover:opacity-90"
+                style={{ background: "#C97E59" }}
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          )
         )}
       </div>
     </EmployeeLayout>
   );
 }
 
+// ─── Textarea input component ──────────────────────────────────────────────
+function TextareaInput({
+  value,
+  onChange,
+  onSubmit,
+  placeholder,
+  allowEmpty,
+  inputRef,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  placeholder: string;
+  allowEmpty: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-2 bg-white rounded-2xl shadow-sm px-4 py-3 sticky bottom-0"
+      style={{ border: "1px solid #D4C9BB" }}
+    >
+      <textarea
+        ref={inputRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (value.trim() || allowEmpty) onSubmit();
+          }
+        }}
+        placeholder={placeholder}
+        rows={3}
+        className="flex-1 text-sm bg-transparent outline-none resize-none py-1 w-full"
+        style={{ color: "#3D2010" }}
+        autoFocus
+      />
+      <div className="flex justify-between items-center">
+        <span className="text-xs" style={{ color: "#A47864" }}>
+          {allowEmpty ? "Press Enter to submit, or skip" : "Shift+Enter for new line · Enter to submit"}
+        </span>
+        <button
+          onClick={onSubmit}
+          disabled={!value.trim() && !allowEmpty}
+          className="disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-90 flex items-center gap-1.5"
+          style={{ background: "#C97E59" }}
+        >
+          <Send className="w-3 h-3" /> Submit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Submitted card ────────────────────────────────────────────────────────
+function SubmittedCard({
+  caseNumber,
+  email,
+  isAda,
+  onReset,
+}: {
+  caseNumber: string;
+  email?: string;
+  isAda: boolean;
+  onReset: () => void;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-5 flex flex-col gap-3 text-center mt-2 shadow-sm"
+      style={{ background: "#FDF6F2", border: "1.5px solid #C97E5966" }}
+    >
+      <div className="flex items-center justify-center">
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center"
+          style={{ background: "#C97E5922" }}
+        >
+          <CheckCircle className="w-8 h-8" style={{ color: "#C97E59" }} />
+        </div>
+      </div>
+      <p className="font-bold text-lg" style={{ color: "#3D2010" }}>
+        {isAda ? "Accommodation Request Submitted" : "Leave Request Submitted"}
+      </p>
+      <div
+        className="rounded-xl px-4 py-3"
+        style={{ background: "#F5E8DF", border: "1px solid #C97E5933" }}
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#A47864" }}>
+          Your Case Number
+        </p>
+        <p className="font-mono font-bold text-xl" style={{ color: "#9E5D38" }}>
+          {caseNumber}
+        </p>
+      </div>
+      <p className="text-sm" style={{ color: "#5C3D28" }}>
+        {isAda
+          ? "HR will review your request and contact you to begin the interactive accommodation process — typically within 2–3 business days."
+          : "HR will review your eligibility and contact you — typically within 2–3 business days."}
+      </p>
+      {email && (
+        <p className="text-xs" style={{ color: "#A47864" }}>
+          A confirmation with your secure case portal link has been sent to{" "}
+          <strong>{email}</strong>. Check your inbox (and spam folder) for next steps.
+        </p>
+      )}
+      <button
+        onClick={onReset}
+        className="mx-auto flex items-center gap-2 text-sm font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
+        style={{ color: "#A47864" }}
+      >
+        <RotateCcw className="w-4 h-4" /> Submit another request
+      </button>
+    </div>
+  );
+}
+
+// ─── Bot avatar ────────────────────────────────────────────────────────────
 function BotAvatar() {
   return (
-    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm" style={{ background: "#C97E59", boxShadow: "0 2px 6px #C97E5944" }}>
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
+      style={{ background: "#C97E59", boxShadow: "0 2px 6px #C97E5944" }}
+    >
       <UserRound className="w-4 h-4 text-white" />
     </div>
   );
 }
 
+// ─── Message bubble ────────────────────────────────────────────────────────
 function MessageBubble({
   message,
   onOptionClick,
@@ -497,7 +910,10 @@ function MessageBubble({
       {isBot ? (
         <BotAvatar />
       ) : (
-        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm" style={{ background: "linear-gradient(135deg, #C97E59, #EAA292)" }}>
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
+          style={{ background: "linear-gradient(135deg, #C97E59, #EAA292)" }}
+        >
           <User className="w-4 h-4 text-white" />
         </div>
       )}
@@ -520,41 +936,64 @@ function MessageBubble({
         {isBot && message.options && (
           <div className="flex flex-wrap gap-2 mt-1">
             {message.options.map((opt) => (
-              <button
+              <OptionButton
                 key={opt.value}
-                onClick={() => !disabled && onOptionClick(opt.value, opt.label)}
+                label={opt.label}
+                value={opt.value}
                 disabled={disabled}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-xl border transition-all",
-                  disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:text-white"
-                )}
-                style={
-                  disabled
-                    ? { background: "#F7F4F0", borderColor: "#D4C9BB", color: "#8C7058" }
-                    : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#7A5540" }
-                }
-                onMouseEnter={(e) => {
-                  if (!disabled) {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#C97E59";
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E59";
-                    (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!disabled) {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#FFFFFF";
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#C97E5966";
-                    (e.currentTarget as HTMLButtonElement).style.color = "#7A5540";
-                  }
-                }}
-              >
-                {opt.label}
-              </button>
+                onClick={onOptionClick}
+              />
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function OptionButton({
+  label,
+  value,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  disabled: boolean;
+  onClick: (value: string, label: string) => void;
+}) {
+  return (
+    <button
+      onClick={() => !disabled && onClick(value, label)}
+      disabled={disabled}
+      className={cn(
+        "px-4 py-2 text-sm font-medium rounded-xl border transition-all",
+        disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:text-white"
+      )}
+      style={
+        disabled
+          ? { background: "#F7F4F0", borderColor: "#D4C9BB", color: "#8C7058" }
+          : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#7A5540" }
+      }
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "#C97E59";
+          el.style.borderColor = "#C97E59";
+          el.style.color = "#FFFFFF";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "#FFFFFF";
+          el.style.borderColor = "#C97E5966";
+          el.style.color = "#7A5540";
+        }
+      }}
+    >
+      {label}
+    </button>
   );
 }
 
