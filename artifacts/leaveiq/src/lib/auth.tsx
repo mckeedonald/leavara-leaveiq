@@ -64,6 +64,13 @@ export async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> 
   const token = localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem("leaveiq_token");
   const headers: Record<string, string> = { ...(opts?.headers as Record<string, string>) };
   if (token && !headers["Authorization"]) headers["Authorization"] = `Bearer ${token}`;
+  // Auto-set Content-Type for JSON string bodies when not already specified
+  if (typeof opts?.body === "string" && !headers["Content-Type"]) {
+    const trimmed = opts.body.trimStart();
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      headers["Content-Type"] = "application/json";
+    }
+  }
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
   const data = await res.json();
   if (!res.ok) {
