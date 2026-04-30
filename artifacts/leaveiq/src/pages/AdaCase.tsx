@@ -114,8 +114,8 @@ function PhysicianCertModal({
     try {
       const res = await apiFetch<{ letter: string }>(`/api/ada/cases/${caseId}/physician-cert`);
       setLetter(res.letter);
-    } catch {
-      setError("Failed to generate letter. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate letter. Please try again.");
     } finally {
       setLoading(false);
     }

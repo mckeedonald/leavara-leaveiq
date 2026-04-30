@@ -229,16 +229,80 @@ REQUIREMENTS:
 
 Return ONLY the letter text, formatted for direct use.`;
 
-  const message = await anthropic.messages.create({
-    model: "claude-opus-4-5",
-    max_tokens: 1500,
-    messages: [{ role: "user", content: prompt }],
-  });
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-opus-4-5",
+      max_tokens: 1500,
+      messages: [{ role: "user", content: prompt }],
+    });
 
-  return message.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
-    .join("\n");
+    const text = message.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as { type: "text"; text: string }).text)
+      .join("\n");
+
+    if (text.trim()) return text;
+  } catch (err) {
+    logger.error({ err }, "Claude API call failed for physician cert — falling back to template");
+  }
+
+  // Fallback: ADA-compliant template if Claude is unavailable
+  return `${today}
+
+RE: Request for Medical Information to Support ADA Accommodation Request
+Employee: ${employeeName}
+Case Number: ${caseData.caseNumber ?? ""}
+
+Dear Healthcare Provider,
+
+We are writing to request your professional opinion to assist us in evaluating a request for reasonable accommodation under the Americans with Disabilities Act (ADA).
+
+Your patient, ${employeeName}, has requested the following workplace accommodation:
+${caseData.accommodationRequested ?? "Workplace accommodation (see employee's request)"}
+
+To evaluate this request in accordance with EEOC guidance, we are asking you to provide the following information ONLY — we are NOT requesting a specific diagnosis or complete medical records:
+
+1. Does your patient have a physical or mental impairment that substantially limits one or more major life activities as defined by the ADA?
+   [ ] Yes  [ ] No
+
+2. The nature and extent of the functional limitations resulting from this impairment as they relate to the employee's ability to perform job duties:
+   _______________________________________________________________
+   _______________________________________________________________
+
+3. Your professional recommendation regarding accommodations that would enable the employee to perform their essential job functions effectively:
+   _______________________________________________________________
+   _______________________________________________________________
+
+4. Are the limitations temporary or permanent?
+   [ ] Temporary — expected duration: ________________________
+   [ ] Permanent or long-term
+
+**IMPORTANT:** We are NOT requesting the employee's specific diagnosis, complete medical records, or unrelated medical history. Please limit your response to the functional limitations and accommodation recommendations relevant to this request.
+
+---
+
+**CONFIDENTIALITY STATEMENT**
+
+All medical information provided in response to this request will be kept strictly confidential, stored separately from the employee's personnel file, and disclosed only to individuals with a legitimate need to know as required by the ADA.
+
+---
+
+Please return this completed form within **15 business days** to:
+
+Human Resources Department
+[Organization Name]
+
+Physician Name: _______________________________
+License Number: _______________________________
+Signature: ____________________________________
+Date: ________________________________________
+Phone: _______________________________________
+
+Thank you for your prompt attention to this matter.
+
+Sincerely,
+
+Human Resources Department`;
 }
 
 /**
