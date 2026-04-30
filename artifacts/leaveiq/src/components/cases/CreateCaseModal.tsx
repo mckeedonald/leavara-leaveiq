@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useCreateCase, LeaveReasonCategory } from "@workspace/api-client-react";
+import { useCreateCase, LeaveReasonCategory, getListCasesQueryKey } from "@workspace/api-client-react";
 import { LEAVE_REASON_LABELS } from "@/components/ui/StatusBadge";
-import { useQueryClient, getListCasesQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { X, Loader2, UserRound, Sparkles, Search, Check } from "lucide-react";
 import { apiFetch } from "@/lib/auth";
 
