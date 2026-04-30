@@ -223,29 +223,35 @@ router.post(
 
     try {
       let text = "";
-      if (file.mimetype === "text/plain") {
+      // Use file extension as fallback since some browsers send application/octet-stream
+      const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
+      const isPdf = file.mimetype === "application/pdf" || ext === "pdf";
+      const isTxt = file.mimetype === "text/plain" || ext === "txt";
+
+      if (isTxt) {
         text = file.buffer.toString("utf-8");
-      } else if (file.mimetype === "application/pdf") {
-        // Use pdf2json to extract text
+      } else if (isPdf) {
         const PDFParser = (await import("pdf2json")).default;
-        text = await new Promise<string>((resolve, reject) => {
-          const parser = new PDFParser();
-          parser.on("pdfParser_dataReady", (data: any) => {
-            try {
-              const pages: string[] = (data.Pages ?? []).map((page: any) =>
-                (page.Texts ?? [])
-                  .map((t: any) => decodeURIComponent(t.R?.map((r: any) => r.T).join("") ?? ""))
-                  .join(" ")
-              );
-              resolve(pages.join("\n\n"));
-            } catch (e) { reject(e); }
+        const parser = new PDFParser(null, 1);
+        await new Promise<void>((resolve, reject) => {
+          parser.on("pdfParser_dataReady", () => resolve());
+          parser.on("pdfParser_dataError", (errData: any) => {
+            reject(new Error(errData?.parserError ?? "PDF parse error"));
           });
-          parser.on("pdfParser_dataError", reject);
           parser.parseBuffer(file.buffer);
         });
+        text = parser.getRawTextContent()
+          // getRawTextContent uses form-feed chars as page breaks — convert to newlines
+          .replace(/\f/g, "\n\n")
+          .trim();
       } else {
         // DOC/DOCX — return a message asking to use copy/paste
         res.json({ text: "", message: "Word documents cannot be parsed automatically. Please copy and paste the policy text into the content field." });
+        return;
+      }
+
+      if (!text) {
+        res.json({ text: "", message: "No text could be extracted from this file. Please paste the policy content directly." });
         return;
       }
       res.json({ text: text.trim() });

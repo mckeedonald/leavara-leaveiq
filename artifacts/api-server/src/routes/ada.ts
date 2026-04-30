@@ -85,7 +85,6 @@ router.get("/ada/cases/:caseId", requireAuth, async (req: Request, res: Response
 router.post("/ada/cases", async (req: Request, res: Response) => {
   try {
     const {
-      orgSlug,
       employeeNumber,
       employeeFirstName,
       employeeLastName,
@@ -100,10 +99,13 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
       submittedBy,
     } = req.body as Record<string, unknown>;
 
-    // Resolve org
+    // Resolve org — accept from query param (?org=slug) or request body (orgSlug)
+    const orgSlug = (req.query["org"] as string | undefined)
+      ?? ((req.body as Record<string, unknown>).orgSlug as string | undefined);
+
     let organizationId: string | null = null;
     if (orgSlug) {
-      const [org] = await db.select({ id: organizationsTable.id }).from(organizationsTable).where(eq(organizationsTable.slug, orgSlug as string)).limit(1);
+      const [org] = await db.select({ id: organizationsTable.id }).from(organizationsTable).where(eq(organizationsTable.slug, orgSlug)).limit(1);
       organizationId = org?.id ?? null;
     }
     if (!organizationId) { res.status(400).json({ error: "Organization not found" }); return; }

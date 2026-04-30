@@ -153,7 +153,8 @@ export default function PiqCaseDetail() {
   const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B9090", bg: "#EDF1F8" };
 
   const canEdit = (isManager && ["draft", "manager_revision"].includes(c.status)) || isHr || isSupervisor;
-  const canSubmit = isManager && ["draft", "manager_revision"].includes(c.status);
+  // HR admins can also submit/progress draft cases (e.g. when they created the case or are covering)
+  const canSubmit = (isManager || isHrAdmin) && ["draft", "manager_revision"].includes(c.status);
   const canSupervisorApprove = isSupervisor && c.status === "supervisor_review";
   const canHrApprove = isHr && c.status === "hr_approval";
   const canDeliver = (isManager || isHr) && c.status === "delivery";
