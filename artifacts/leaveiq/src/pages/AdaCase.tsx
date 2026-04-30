@@ -412,7 +412,6 @@ export default function AdaCase() {
   const [showPhysicianModal, setShowPhysicianModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [suggestedFollowUpDate, setSuggestedFollowUpDate] = useState<string | undefined>();
-  const [actionSuggested, setActionSuggested] = useState<string | undefined>();
 
   const queryKey = ["ada-case", caseId];
 
@@ -425,7 +424,6 @@ export default function AdaCase() {
   const refresh = useCallback(() => qc.invalidateQueries({ queryKey }), [qc, queryKey]);
 
   const handleActionSuggested = (action: string) => {
-    setActionSuggested(action);
     if (action === "send_physician_cert") {
       setShowPhysicianModal(true);
     }

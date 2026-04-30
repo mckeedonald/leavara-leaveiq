@@ -37,7 +37,6 @@ function withPiqUser(
 export const requirePiqAuth = withPiqUser(requireAuth);
 export const requirePiqHrAccess = withPiqUser(requireHrAccess);
 export const requirePiqHrAdmin = withPiqUser(requireHrAdmin);
-export const requirePiqSupervisorOrHr = withPiqUser(requireHrAccess);
 export { requirePerformIq };
 export const signPiqToken = signToken;
 export const verifyPiqToken = verifyToken;

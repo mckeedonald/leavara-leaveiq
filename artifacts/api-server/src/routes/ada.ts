@@ -6,7 +6,6 @@ import {
   adaInteractiveLogTable,
   approvedAccommodationsTable,
   calendarInvitesTable,
-  usersTable,
   organizationsTable,
 } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../lib/jwtAuth.js";
@@ -19,7 +18,7 @@ import {
   type AdaMessage,
 } from "../lib/adaAgent.js";
 import { generateIcs } from "../lib/icsGenerator.js";
-import { sendNoticeEmail, getAppUrl } from "../lib/email.js";
+import { sendNoticeEmail } from "../lib/email.js";
 
 const router = Router();
 
