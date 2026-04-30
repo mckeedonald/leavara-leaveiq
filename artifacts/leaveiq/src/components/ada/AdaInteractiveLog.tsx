@@ -69,11 +69,13 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
   const [entryType, setEntryType] = useState("hr_note");
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
     setSaving(true);
+    setError(null);
     try {
       await apiFetch(`/api/ada/cases/${caseId}/log`, {
         method: "POST",
@@ -82,6 +84,8 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
       setContent("");
       setOpen(false);
       onAdded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add entry. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -130,6 +134,9 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
               autoFocus
             />
           </div>
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+          )}
           <div className="flex gap-2 justify-end">
             <button
               type="button"
