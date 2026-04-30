@@ -125,9 +125,10 @@ function PhysicianCertModal({
     if (!email.trim() || !letter) return;
     setLoading(true);
     try {
+      // Pass the pre-generated letter so the server skips the extra AI call
       await apiFetch(`/api/ada/cases/${caseId}/physician-cert`, {
         method: "POST",
-        body: JSON.stringify({ recipientEmail: email }),
+        body: JSON.stringify({ employeeEmail: email, certContent: letter }),
       });
       onSent();
       onClose();
