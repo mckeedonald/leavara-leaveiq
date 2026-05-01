@@ -1521,14 +1521,8 @@ Respond ONLY with valid JSON in exactly this format:
     // Add each document as a content block
     for (const doc of docs) {
       try {
-        if (doc.contentInline) {
-          // Inline text document
-          contentBlocks.push({
-            type: "text",
-            text: `\n--- DOCUMENT: ${doc.fileName} ---\n${doc.contentInline}\n--- END DOCUMENT ---`,
-          });
-        } else if (doc.storageKey) {
-          // R2-stored file (PDF)
+        if (doc.storageKey) {
+          // R2-stored file — download and send as base64 document
           const { downloadFile } = await import("../lib/storage.js");
           const buffer = await downloadFile(doc.storageKey);
           const mimeType = doc.mimeType ?? "application/pdf";
@@ -1541,6 +1535,26 @@ Respond ONLY with valid JSON in exactly this format:
             },
             title: doc.fileName,
           });
+        } else if (doc.contentInline) {
+          // contentInline may be a base64-encoded PDF (uploaded file, no storage configured)
+          // or raw text (HR-generated notices). Handle both correctly.
+          if (isBase64Pdf(doc.contentInline)) {
+            contentBlocks.push({
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: doc.contentInline,
+              },
+              title: doc.fileName,
+            });
+          } else {
+            // Raw text document (e.g. HR notices stored as plain text)
+            contentBlocks.push({
+              type: "text",
+              text: `\n--- DOCUMENT: ${doc.fileName} ---\n${doc.contentInline}\n--- END DOCUMENT ---`,
+            });
+          }
         }
       } catch (docErr) {
         logger.warn({ docErr, docId: doc.id }, "Could not load document for review — skipping");
