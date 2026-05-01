@@ -39,6 +39,7 @@ import NewCase from "@/pages/performiq/NewCase";
 import PiqEmployees from "@/pages/performiq/Employees";
 import PiqAdminSettings from "@/pages/performiq/AdminSettings";
 import PiqAnalytics from "@/pages/performiq/Analytics";
+import SignDocument from "@/pages/performiq/SignDocument";
 import Analytics from "@/pages/Analytics";
 import AdaCases from "@/pages/AdaCases";
 import AdaCase from "@/pages/AdaCase";
@@ -137,6 +138,9 @@ function Router() {
       <Route path="/leaveiq/ada-cases" component={() => <ProtectedRoute component={AdaCases} />} />
       <Route path="/leaveiq/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
+
+      {/* PerformIQ public routes — no auth required */}
+      <Route path="/performiq/sign" component={SignDocument} />
 
       {/* PerformIQ routes — login redirects to unified portal */}
       <Route path="/performiq/login" component={() => <Redirect to="/leaveiq/login" />} />

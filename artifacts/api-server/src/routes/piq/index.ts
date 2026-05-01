@@ -5,6 +5,7 @@ import employeesRouter from "./employees.js";
 import workflowRouter from "./workflow.js";
 import agentRouter from "./agent.js";
 import adminRouter from "./admin.js";
+import signaturesRouter from "./signatures.js";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use(employeesRouter);
 router.use(workflowRouter);
 router.use(agentRouter);
 router.use(adminRouter);
+router.use(signaturesRouter);
 
 export default router;

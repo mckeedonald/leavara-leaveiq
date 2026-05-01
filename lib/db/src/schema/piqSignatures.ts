@@ -15,6 +15,10 @@ export const PIQ_SIGNATURE_STATUSES = [
   "declined",
   "expired",
   "refused",
+  // Native built-in e-signature statuses
+  "employee_signed",
+  "manager_signed",
+  "completed",
 ] as const;
 export type PiqSignatureStatus = (typeof PIQ_SIGNATURE_STATUSES)[number];
 
@@ -24,7 +28,7 @@ export const piqSignaturesTable = pgTable("piq_signature", {
   organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id, { onDelete: "cascade" }),
   employeeId: uuid("employee_id").notNull().references(() => employeesTable.id),
   method: text("method").$type<PiqSignatureMethod>().notNull(),
-  provider: text("provider").$type<"docusign" | "hellosign">().notNull().default("docusign"),
+  provider: text("provider").$type<"docusign" | "hellosign" | "native">().notNull().default("docusign"),
   providerEnvelopeId: text("provider_envelope_id"),
   status: text("status").$type<PiqSignatureStatus>().notNull().default("pending"),
   signedAt: timestamp("signed_at", { withTimezone: true }),
@@ -32,6 +36,16 @@ export const piqSignaturesTable = pgTable("piq_signature", {
   refusedReason: text("refused_reason"),
   deliveredBy: uuid("delivered_by").references(() => usersTable.id),
   deliveryDate: timestamp("delivery_date", { withTimezone: true }),
+
+  // Native built-in e-signature fields
+  employeeAccessToken: text("employee_access_token"),
+  employeeSignatureData: text("employee_signature_data"),
+  employeeSignedAt: timestamp("employee_signed_at", { withTimezone: true }),
+  employeeComment: text("employee_comment"),
+  managerSignatureData: text("manager_signature_data"),
+  managerSignedAt: timestamp("manager_signed_at", { withTimezone: true }),
+  signedPdfContent: text("signed_pdf_content"), // base64 PDF after both signatures
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -13,6 +13,9 @@ import {
   X,
   ArrowLeft,
   Loader2,
+  PenLine,
+  Download,
+  Mail,
 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch, usePiqRole } from "@/lib/piqAuth";
@@ -76,6 +79,14 @@ export default function PiqCaseDetail() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
+  // E-signature state
+  const [sigRecord, setSigRecord] = useState<any>(null);
+  const [sigLoading, setSigLoading] = useState(false);
+  const [sendingSig, setSendingSig] = useState(false);
+  const [managerSigInput, setManagerSigInput] = useState("");
+  const [managerSigning, setManagerSigning] = useState(false);
+  const [sigResult, setSigResult] = useState<"completed" | null>(null);
+
   async function loadCase() {
     try {
       const data = await piqApiFetch<any>(`/api/performiq/cases/${caseId}`);
@@ -91,7 +102,50 @@ export default function PiqCaseDetail() {
     }
   }
 
+  async function loadSignature() {
+    setSigLoading(true);
+    try {
+      const data = await piqApiFetch<any>(`/api/performiq/cases/${caseId}/signatures`);
+      setSigRecord(data);
+    } catch {
+      // non-fatal
+    } finally {
+      setSigLoading(false);
+    }
+  }
+
+  async function requestSignature() {
+    setSendingSig(true);
+    try {
+      await piqApiFetch(`/api/performiq/cases/${caseId}/signatures/request`, { method: "POST" });
+      await loadSignature();
+    } catch {
+      // handle
+    } finally {
+      setSendingSig(false);
+    }
+  }
+
+  async function submitManagerSign() {
+    if (!managerSigInput.trim()) return;
+    setManagerSigning(true);
+    try {
+      await piqApiFetch(`/api/performiq/cases/${caseId}/signatures/manager-sign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signatureData: managerSigInput.trim() }),
+      });
+      setSigResult("completed");
+      await loadCase();
+    } catch {
+      // handle
+    } finally {
+      setManagerSigning(false);
+    }
+  }
+
   useEffect(() => { loadCase(); }, [caseId]);
+  useEffect(() => { if (caseId) loadSignature(); }, [caseId]);
 
   async function saveDocument() {
     if (!editedContent) return;
@@ -429,17 +483,118 @@ export default function PiqCaseDetail() {
                   )}
 
                   {canDeliver && (
-                    <button
-                      onClick={() => doWorkflowAction("deliver")}
-                      disabled={!!actionLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 hover:opacity-90"
-                      style={{ background: "#065F46" }}
-                    >
-                      {actionLoading === "deliver" ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                      Mark as Delivered
-                    </button>
+                    <>
+                      {/* Send for e-signature (only if no active sig or sig was declined) */}
+                      {(!sigRecord || sigRecord.status === "declined") && (
+                        <button
+                          onClick={requestSignature}
+                          disabled={sendingSig}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 hover:opacity-90"
+                          style={{ background: C.perf }}
+                        >
+                          {sendingSig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                          {sendingSig ? "Sending…" : "Send for E-Signature"}
+                        </button>
+                      )}
+                      {/* Show status if sig is active */}
+                      {sigRecord && sigRecord.status === "sent" && (
+                        <div className="rounded-xl px-4 py-2.5 text-xs text-center" style={{ background: "#FEF3C7", color: "#92400E" }}>
+                          Awaiting employee — link sent
+                        </div>
+                      )}
+                      {sigRecord && sigRecord.status === "viewed" && (
+                        <div className="rounded-xl px-4 py-2.5 text-xs text-center" style={{ background: "#DBEAFE", color: "#1E40AF" }}>
+                          Employee has viewed the document
+                        </div>
+                      )}
+                      {/* Mark as delivered without e-sig */}
+                      <button
+                        onClick={() => doWorkflowAction("deliver")}
+                        disabled={!!actionLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border disabled:opacity-60 hover:opacity-90"
+                        style={{ borderColor: C.border, color: C.textMuted }}
+                      >
+                        {actionLoading === "deliver" ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        Mark Delivered (No E-Sig)
+                      </button>
+                    </>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Manager e-sign panel — shown when employee has signed */}
+            {sigRecord?.status === "employee_signed" && !sigResult && (
+              <div className="rounded-2xl border p-5" style={{ background: C.card, borderColor: "#BBF7D0" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <PenLine className="w-4 h-4 text-green-600" />
+                  <h3 className="font-semibold text-sm" style={{ color: "#166534" }}>Employee Has Signed</h3>
+                </div>
+                <p className="text-xs mb-4" style={{ color: C.textMuted }}>
+                  {sigRecord.employeeSignatureData && (
+                    <>Signed as: <em className="font-semibold" style={{ color: C.textDark }}>{sigRecord.employeeSignatureData}</em><br /></>
+                  )}
+                  Now provide your countersignature to finalize the document.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold block mb-1.5" style={{ color: C.textMuted }}>
+                      Your Full Name (electronic signature)
+                    </label>
+                    <input
+                      type="text"
+                      value={managerSigInput}
+                      onChange={(e) => setManagerSigInput(e.target.value)}
+                      placeholder="Your full name"
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2"
+                      style={{
+                        borderColor: C.border,
+                        color: C.textDark,
+                        fontFamily: "Georgia, serif",
+                        fontStyle: "italic",
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={submitManagerSign}
+                    disabled={!managerSigInput.trim() || managerSigning}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 hover:opacity-90"
+                    style={{ background: "#065F46" }}
+                  >
+                    {managerSigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                    {managerSigning ? "Signing…" : "Sign & Close Case"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Signature complete — show PDF download */}
+            {(sigResult === "completed" || sigRecord?.status === "completed") && (
+              <div className="rounded-2xl border p-5" style={{ background: "#F0FDF4", borderColor: "#BBF7D0" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <h3 className="font-semibold text-sm" style={{ color: "#166534" }}>Document Fully Signed</h3>
+                </div>
+                <p className="text-xs mb-3" style={{ color: C.textMuted }}>Both parties have signed. Download the final signed PDF below.</p>
+                <a
+                  href={`/api/performiq/cases/${caseId}/signatures/download-pdf`}
+                  className="flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-white"
+                  style={{ background: C.perf }}
+                  download
+                >
+                  <Download className="w-4 h-4" /> Download Signed PDF
+                </a>
+              </div>
+            )}
+
+            {/* Signature declined notice */}
+            {sigRecord?.status === "declined" && (
+              <div className="rounded-2xl border p-5" style={{ background: "#FFF7ED", borderColor: "#FCA5A5" }}>
+                <h3 className="font-semibold text-sm mb-1" style={{ color: "#B91C1C" }}>Employee Declined to Sign</h3>
+                {sigRecord.employeeComment && (
+                  <p className="text-xs italic" style={{ color: C.textMuted }}>"{sigRecord.employeeComment}"</p>
+                )}
+                <p className="text-xs mt-2" style={{ color: C.textMuted }}>Use "Send for E-Signature" above to resend after revision.</p>
               </div>
             )}
 
