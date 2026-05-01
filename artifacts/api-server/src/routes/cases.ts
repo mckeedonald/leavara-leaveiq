@@ -1042,6 +1042,8 @@ router.post(
       logger.warn({ caseId: leaveCase.id }, "No medical certification found — eligibility notice will send without attachment");
     }
 
+    let anyEmailDelivered = false;
+
     for (const notice of notices) {
       // Medical cert is attached to the eligibility notice — don't send as a standalone email
       if (notice.noticeType !== "MEDICAL_CERTIFICATION") {
@@ -1051,7 +1053,7 @@ router.post(
         }
 
         try {
-          await sendNoticeEmail({
+          const delivered = await sendNoticeEmail({
             to: recipientEmail,
             noticeType: notice.noticeType,
             content: notice.content,
@@ -1059,6 +1061,7 @@ router.post(
             employeeNumber: leaveCase.employeeNumber,
             attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
           });
+          if (delivered) anyEmailDelivered = true;
         } catch (emailErr) {
           logger.error({ emailErr, noticeType: notice.noticeType, to: recipientEmail }, "Email delivery failed — notice still archived");
         }
@@ -1112,7 +1115,7 @@ router.post(
       .set({ displayStatus: newDisplayStatus, updatedAt: new Date() })
       .where(eq(leaveCasesTable.id, leaveCase.id));
 
-    res.json({ sent: notices.length, auditEntries });
+    res.json({ sent: notices.length, auditEntries, emailDelivered: anyEmailDelivered });
   },
 );
 

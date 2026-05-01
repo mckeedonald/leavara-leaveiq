@@ -52,6 +52,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
   const [sending, setSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [sendEmailWarning, setSendEmailWarning] = useState(false);
 
   function addBenefit(name = "") {
     setBenefits((prev) => [...prev, { id: uid(), name, monthlyAmount: "" }]);
@@ -100,7 +101,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
     setSending(true);
     setSendError(null);
     try {
-      await apiFetch(`/api/cases/${caseId}/send-notices`, {
+      const result = await apiFetch<{ sent: number; emailDelivered: boolean }>(`/api/cases/${caseId}/send-notices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,6 +111,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
         }),
       });
       setSendSuccess(true);
+      if (!result.emailDelivered) setSendEmailWarning(true);
       setLetter(null);
       setEditedContent("");
     } catch (err) {
@@ -249,10 +251,22 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
           )}
 
           {sendSuccess && (
-            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border text-sm"
-              style={{ background: "#F0FDF4", borderColor: "#86EFAC", color: "#166534" }}>
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-              Benefits continuation letter sent successfully to <strong>{overrideEmail}</strong>.
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border text-sm"
+                style={{ background: "#F0FDF4", borderColor: "#86EFAC", color: "#166534" }}>
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                Benefits continuation letter recorded for <strong>{overrideEmail}</strong>.
+              </div>
+              {sendEmailWarning && (
+                <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl border text-sm"
+                  style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                  <div>
+                    <p className="font-medium text-amber-800">Email not delivered</p>
+                    <p className="text-amber-700 mt-0.5">Letter archived in audit log but email was not sent. Check <code className="text-xs bg-amber-100 px-1 rounded">RESEND_API_KEY</code> in Railway.</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -16,4 +16,7 @@ export const LeaveReasonCategory = {
   bonding: "bonding",
   military: "military",
   personal: "personal",
+  bereavement: "bereavement",
+  jury_duty: "jury_duty",
+  other: "other",
 } as const;

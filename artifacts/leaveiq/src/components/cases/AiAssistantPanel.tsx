@@ -132,6 +132,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [sending, setSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [sendEmailWarning, setSendEmailWarning] = useState(false);
   const [regeneratingNotice, setRegeneratingNotice] = useState<string | null>(null);
   const [overrideEmail, setOverrideEmail] = useState(employeeEmail ?? "");
 
@@ -154,6 +155,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [docReviewSending, setDocReviewSending] = useState(false);
   const [docReviewSendSuccess, setDocReviewSendSuccess] = useState(false);
   const [docReviewSendError, setDocReviewSendError] = useState<string | null>(null);
+  const [docReviewEmailWarning, setDocReviewEmailWarning] = useState(false);
 
   // Derive case-state booleans BEFORE any useEffect that depends on them
   const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
@@ -366,7 +368,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
     setDocReviewSending(true);
     setDocReviewSendError(null);
     try {
-      await apiFetch(`/api/cases/${caseId}/send-notices`, {
+      const result = await apiFetch<{ sent: number; emailDelivered: boolean }>(`/api/cases/${caseId}/send-notices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -376,6 +378,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         }),
       });
       setDocReviewSendSuccess(true);
+      if (!result.emailDelivered) setDocReviewEmailWarning(true);
       onNoticesSent?.();
     } catch (err) {
       setDocReviewSendError(err instanceof Error ? err.message : "Failed to send");
@@ -413,7 +416,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
     setSending(true);
     setSendError(null);
     try {
-      await apiFetch(`/api/cases/${caseId}/send-notices`, {
+      const result = await apiFetch<{ sent: number; emailDelivered: boolean }>(`/api/cases/${caseId}/send-notices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -423,6 +426,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         }),
       });
       setSendSuccess(true);
+      if (!result.emailDelivered) setSendEmailWarning(true);
       // Clear persisted notices — they've been sent
       if (caseId) { try { localStorage.removeItem(avaStorageKey(caseId)); } catch { /* ignore */ } }
       // Remove notices from view now that they've been sent
@@ -569,15 +573,26 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
               </div>
 
               {sendSuccess ? (
-                <div className="border rounded-xl p-4 flex items-start gap-3" style={{ background: "#FDF6F0", borderColor: "#C97E5966" }}>
-                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#9E5D38" }} />
-                  <div>
-                    <p className="font-medium text-sm" style={{ color: "#3D2010" }}>Notices sent successfully</p>
-                    <p className="text-sm mt-1" style={{ color: "#A47864" }}>
-                      {editedNotices.filter((n) => n.reviewed).length} notice(s) were delivered to{" "}
-                      <strong>{overrideEmail}</strong> and recorded in the audit log.
-                    </p>
+                <div className="flex flex-col gap-2">
+                  <div className="border rounded-xl p-4 flex items-start gap-3" style={{ background: "#FDF6F0", borderColor: "#C97E5966" }}>
+                    <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#9E5D38" }} />
+                    <div>
+                      <p className="font-medium text-sm" style={{ color: "#3D2010" }}>Notices recorded successfully</p>
+                      <p className="text-sm mt-1" style={{ color: "#A47864" }}>
+                        {editedNotices.filter((n) => n.reviewed).length} notice(s) archived to the audit log for{" "}
+                        <strong>{overrideEmail}</strong>.
+                      </p>
+                    </div>
                   </div>
+                  {sendEmailWarning && (
+                    <div className="border rounded-xl p-3 flex items-start gap-2 text-sm" style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                      <div>
+                        <p className="font-medium text-amber-800">Email not delivered</p>
+                        <p className="text-amber-700 mt-0.5">The notices were recorded in the audit log but the email could not be sent. Check that <code className="text-xs bg-amber-100 px-1 rounded">RESEND_API_KEY</code> is configured in Railway.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
@@ -775,9 +790,20 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                     </div>
 
                     {docReviewSendSuccess ? (
-                      <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "#F0FDF4", border: "1px solid #86EFAC" }}>
-                        <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                        <p className="text-sm text-green-800">Final Designation Notice sent to {overrideEmail}.</p>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "#F0FDF4", border: "1px solid #86EFAC" }}>
+                          <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                          <p className="text-sm text-green-800">Final Designation Notice recorded for {overrideEmail}.</p>
+                        </div>
+                        {docReviewEmailWarning && (
+                          <div className="border rounded-xl p-3 flex items-start gap-2 text-sm" style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
+                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                            <div>
+                              <p className="font-medium text-amber-800">Email not delivered</p>
+                              <p className="text-amber-700 mt-0.5">Notice recorded in audit log but email was not sent. Check <code className="text-xs bg-amber-100 px-1 rounded">RESEND_API_KEY</code> in Railway.</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="flex items-center justify-between gap-3">

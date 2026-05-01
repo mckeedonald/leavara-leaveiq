@@ -85,6 +85,9 @@ export const LEAVE_REASON_LABELS: Record<string, string> = {
   bonding: "Bonding with a New Child",
   military: "Military",
   personal: "Personal",
+  bereavement: "Bereavement",
+  jury_duty: "Jury Duty",
+  other: "Other",
 };
 
 export function ReasonBadge({ reason, className }: { reason: string; className?: string }) {
