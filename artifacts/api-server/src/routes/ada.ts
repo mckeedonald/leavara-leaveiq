@@ -158,7 +158,7 @@ router.patch("/ada/cases/:caseId", requireAuth, async (req: Request, res: Respon
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId))).limit(1);
     if (!existing) { res.status(404).json({ error: "Case not found" }); return; }
 
-    const allowed = ["status", "displayStatus", "decision", "decisionDate", "decisionNotes", "hardshipJustification", "assignedToUserId", "physicianCertSentAt", "physicianCertReceivedAt"];
+    const allowed = ["status", "displayStatus", "decision", "decisionDate", "decisionNotes", "hardshipJustification", "assignedToUserId", "physicianCertSentAt", "physicianCertReceivedAt", "employeeEmail"];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
@@ -305,19 +305,27 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
 
     // Send email — use the explicit recipient address, fall back to case email
     const recipientEmail = employeeEmail?.trim() || adaCase.employeeEmail;
+    let emailSent = false;
+    let emailError: string | undefined;
     if (recipientEmail) {
       try {
-        await sendNoticeEmail({
+        emailSent = await sendNoticeEmail({
           to: recipientEmail,
           content: certContent,
           caseNumber: adaCase.caseNumber,
           employeeNumber: adaCase.employeeNumber ?? "",
           noticeType: "ADA_PHYSICIAN_CERT",
         });
+        if (!emailSent) {
+          emailError = "Email delivery is not configured (RESEND_API_KEY missing). The certification has been recorded.";
+        }
       } catch (emailErr) {
         // Email delivery failure is logged but non-fatal — cert is still recorded in the case
         logger.error({ emailErr }, "ADA physician cert email delivery failed — recording cert anyway");
+        emailError = emailErr instanceof Error ? emailErr.message : "Email delivery failed";
       }
+    } else {
+      emailError = "No email address on file for this employee. The certification has been recorded.";
     }
 
     // Mark cert as sent; use "awaiting_physician" so the UI status badge renders correctly
@@ -339,7 +347,7 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
       metadata: JSON.stringify({ certContent }),
     });
 
-    res.json({ ok: true, certContent });
+    res.json({ ok: true, certContent, emailSent, emailError });
   } catch (err) {
     logger.error({ err }, "ADA physician cert error");
     res.status(500).json({ error: "Failed to send physician certification" });

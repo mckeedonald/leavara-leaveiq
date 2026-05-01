@@ -7,7 +7,8 @@ import { ReasonBadge, LEAVE_REASON_LABELS, DisplayStatusBadge } from "@/componen
 import { formatDate, formatDateTime, cn } from "@/lib/utils";
 import {
   ArrowLeft, Calendar, User, Clock, ShieldAlert,
-  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw, Sparkles, LogIn
+  CheckCircle, XCircle, AlertTriangle, FileText, Activity, Mail, Trash2, RefreshCw, Sparkles, LogIn,
+  Pencil, Check, X, Loader2
 } from "lucide-react";
 import { AnalyzeCaseModal } from "@/components/cases/AnalyzeCaseModal";
 import { TransitionCaseModal } from "@/components/cases/TransitionCaseModal";
@@ -70,6 +71,11 @@ export default function CaseDetail() {
   const [autoGenerateAi, setAutoGenerateAi] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [docsRefreshKey, setDocsRefreshKey] = useState(0);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailValue, setEmailValue] = useState<string>("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [localEmail, setLocalEmail] = useState<string | null | undefined>(undefined);
 
   const aiPanelRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -167,10 +173,71 @@ export default function CaseDetail() {
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5"><User className="w-4 h-4" /> EMP-{caseData.employeeNumber}</div>
-              {(caseData as { employeeEmail?: string | null }).employeeEmail && (
+              {/* Editable employee email */}
+              {editingEmail ? (
                 <div className="flex items-center gap-1.5">
                   <Mail className="w-4 h-4" />
-                  {(caseData as { employeeEmail?: string | null }).employeeEmail}
+                  <input
+                    type="email"
+                    value={emailValue}
+                    onChange={(e) => setEmailValue(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Escape") { setEditingEmail(false); setEmailError(null); }
+                      if (e.key === "Enter") {
+                        if (!emailValue.trim()) return;
+                        setEmailSaving(true); setEmailError(null);
+                        try {
+                          await apiFetch(`/api/cases/${caseId}/email`, { method: "PATCH", body: JSON.stringify({ employeeEmail: emailValue.trim() }) });
+                          setLocalEmail(emailValue.trim());
+                          setEditingEmail(false);
+                          queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+                        } catch (err) { setEmailError(err instanceof Error ? err.message : "Failed to update"); }
+                        finally { setEmailSaving(false); }
+                      }
+                    }}
+                    autoFocus
+                    className="text-sm border rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary"
+                    style={{ width: "200px" }}
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!emailValue.trim()) return;
+                      setEmailSaving(true); setEmailError(null);
+                      try {
+                        await apiFetch(`/api/cases/${caseId}/email`, { method: "PATCH", body: JSON.stringify({ employeeEmail: emailValue.trim() }) });
+                        setLocalEmail(emailValue.trim());
+                        setEditingEmail(false);
+                        queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) });
+                      } catch (err) { setEmailError(err instanceof Error ? err.message : "Failed to update"); }
+                      finally { setEmailSaving(false); }
+                    }}
+                    disabled={emailSaving || !emailValue.trim()}
+                    className="p-0.5 text-green-700 hover:bg-green-50 rounded disabled:opacity-40"
+                  >
+                    {emailSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button onClick={() => { setEditingEmail(false); setEmailError(null); }} className="p-0.5 text-muted-foreground hover:bg-gray-100 rounded">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  {emailError && <span className="text-xs text-red-600">{emailError}</span>}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 group">
+                  <Mail className="w-4 h-4" />
+                  <span>
+                    {localEmail ?? (caseData as { employeeEmail?: string | null }).employeeEmail ?? <span className="italic text-muted-foreground">No email on file</span>}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const current = localEmail ?? (caseData as { employeeEmail?: string | null }).employeeEmail ?? "";
+                      setEmailValue(current);
+                      setEditingEmail(true);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-primary rounded transition-opacity"
+                    title="Edit email"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
                 </div>
               )}
               <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Opened {formatDate(caseData.createdAt)}</div>

@@ -1746,4 +1746,44 @@ router.get("/notifications", requireAuth, async (req: Request, res: Response) =>
   res.json({ notifications: rows });
 });
 
+// PATCH /cases/:caseId/email  (HR — update employee email address)
+router.patch(
+  "/cases/:caseId/email",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+    const { employeeEmail } = req.body as { employeeEmail?: string };
+
+    if (!employeeEmail?.trim()) {
+      res.status(400).json({ error: "employeeEmail is required" });
+      return;
+    }
+
+    const [leaveCase] = await db
+      .select()
+      .from(leaveCasesTable)
+      .where(eq(leaveCasesTable.id, caseId))
+      .limit(1);
+
+    if (!leaveCase) {
+      res.status(404).json({ error: "Case not found." });
+      return;
+    }
+
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." });
+      return;
+    }
+
+    await db
+      .update(leaveCasesTable)
+      .set({ employeeEmail: employeeEmail.trim(), updatedAt: new Date() })
+      .where(eq(leaveCasesTable.id, caseId));
+
+    await logAudit(caseId, "EMPLOYEE_EMAIL_UPDATED", authed.user.email);
+    res.json({ ok: true, employeeEmail: employeeEmail.trim() });
+  },
+);
+
 export default router;

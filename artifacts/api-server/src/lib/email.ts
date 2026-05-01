@@ -24,10 +24,10 @@ async function sendEmail(
   subject: string,
   html: string,
   attachments?: EmailAttachment[],
-): Promise<void> {
+): Promise<boolean> {
   if (!RESEND_API_KEY) {
     logger.warn({ to, subject }, "RESEND_API_KEY not set — email not sent");
-    return;
+    return false;
   }
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -52,6 +52,7 @@ async function sendEmail(
   }
 
   logger.info({ to, subject }, "Email sent successfully");
+  return true;
 }
 
 export async function sendPasswordResetEmail(to: string, token: string): Promise<void> {
@@ -103,7 +104,7 @@ export async function sendNoticeEmail(data: {
   caseNumber: string;
   employeeNumber: string;
   attachments?: EmailAttachment[];
-}): Promise<void> {
+}): Promise<boolean> {
   const noticeTitles: Record<string, string> = {
     ELIGIBILITY_NOTICE: "Notice of Eligibility & Rights",
     DESIGNATION_NOTICE: "FMLA/CFRA Designation Notice",
@@ -124,7 +125,7 @@ export async function sendNoticeEmail(data: {
     .map((line) => `<p style="margin:0 0 12px;line-height:1.6">${line.length > 0 ? line : "&nbsp;"}</p>`)
     .join("");
 
-  await sendEmail(
+  return sendEmail(
     data.to,
     subject,
     `

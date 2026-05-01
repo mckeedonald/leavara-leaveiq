@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, ShieldCheck, User, Mail, FileText, Stethoscope,
   CheckCircle, XCircle, Calendar, Clock, Loader2, AlertTriangle,
-  Send, Plus, ChevronDown, Pencil
+  Send, Plus, ChevronDown, Pencil, Check, X
 } from "lucide-react";
 import { AdaAgentPanel } from "@/components/ada/AdaAgentPanel";
 import { AdaInteractiveLog, type LogEntry } from "@/components/ada/AdaInteractiveLog";
@@ -107,6 +107,7 @@ function PhysicianCertModal({
   const [letter, setLetter] = useState<string | null>(null);
   const [email, setEmail] = useState(employeeEmail ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [sendResult, setSendResult] = useState<{ emailSent: boolean; emailError?: string } | null>(null);
 
   const generate = async () => {
     setLoading(true);
@@ -124,14 +125,15 @@ function PhysicianCertModal({
   const send = async () => {
     if (!email.trim() || !letter) return;
     setLoading(true);
+    setError(null);
     try {
       // Pass the pre-generated letter so the server skips the extra AI call
-      await apiFetch(`/api/ada/cases/${caseId}/physician-cert`, {
+      const result = await apiFetch<{ ok: boolean; emailSent: boolean; emailError?: string }>(`/api/ada/cases/${caseId}/physician-cert`, {
         method: "POST",
         body: JSON.stringify({ employeeEmail: email, certContent: letter }),
       });
+      setSendResult({ emailSent: result.emailSent, emailError: result.emailError });
       onSent();
-      onClose();
     } catch {
       setError("Failed to send. Please try again.");
     } finally {
@@ -151,7 +153,35 @@ function PhysicianCertModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-          {!letter ? (
+          {sendResult ? (
+            /* Post-send result screen */
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              {sendResult.emailSent ? (
+                <>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "#F0FDF4" }}>
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-green-800">Physician Cert Sent!</p>
+                    <p className="text-sm text-muted-foreground mt-1">Email delivered to <strong>{email}</strong></p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "#FFF7ED" }}>
+                    <AlertTriangle className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <div className="max-w-sm">
+                    <p className="font-semibold text-amber-800">Cert Recorded — Email Not Sent</p>
+                    <p className="text-sm text-amber-700 mt-1">{sendResult.emailError}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      The certification has been saved to the interactive process log. You can manually send the letter text to the employee.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : !letter ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
               <Stethoscope className="w-12 h-12" style={{ color: "#DDD6FE" }} />
               <p className="text-sm text-muted-foreground max-w-sm">
@@ -199,23 +229,30 @@ function PhysicianCertModal({
           )}
         </div>
 
-        {letter && (
-          <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#EDE9FE" }}>
-            <button onClick={onClose} className="text-sm px-4 py-2 rounded-xl border hover:bg-gray-50"
-              style={{ borderColor: "#D1D5DB", color: "#374151" }}>
-              Cancel
+        <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#EDE9FE" }}>
+          {sendResult ? (
+            <button onClick={onClose} className="text-sm px-5 py-2 rounded-xl text-white font-medium"
+              style={{ background: "#7C3AED" }}>
+              Done
             </button>
-            <button
-              onClick={send}
-              disabled={!email.trim() || loading}
-              className="flex items-center gap-2 text-sm px-5 py-2 rounded-xl text-white font-medium disabled:opacity-50"
-              style={{ background: "#7C3AED" }}
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Send Physician Cert
-            </button>
-          </div>
-        )}
+          ) : letter ? (
+            <>
+              <button onClick={onClose} className="text-sm px-4 py-2 rounded-xl border hover:bg-gray-50"
+                style={{ borderColor: "#D1D5DB", color: "#374151" }}>
+                Cancel
+              </button>
+              <button
+                onClick={send}
+                disabled={!email.trim() || loading}
+                className="flex items-center gap-2 text-sm px-5 py-2 rounded-xl text-white font-medium disabled:opacity-50"
+                style={{ background: "#7C3AED" }}
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Send Physician Cert
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -403,6 +440,83 @@ function UpdateStatusDropdown({
   );
 }
 
+// ── Inline email editor ────────────────────────────────────────────────────────
+function EditableEmailRow({
+  caseId,
+  initialEmail,
+  onUpdated,
+}: { caseId: string; initialEmail?: string | null; onUpdated: (email: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(initialEmail ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    if (!value.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await apiFetch(`/api/ada/cases/${caseId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ employeeEmail: value.trim() }),
+      });
+      onUpdated(value.trim());
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update email");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancel = () => {
+    setValue(initialEmail ?? "");
+    setEditing(false);
+    setError(null);
+  };
+
+  return (
+    <div className="flex items-start gap-2">
+      <span className="text-muted-foreground shrink-0 mt-0.5"><Mail className="w-4 h-4" /></span>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-muted-foreground">Email</p>
+        {editing ? (
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <input
+              type="email"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") cancel(); }}
+              autoFocus
+              className="text-sm border rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-violet-200 flex-1 min-w-0"
+              style={{ borderColor: "#DDD6FE" }}
+            />
+            <button onClick={save} disabled={saving || !value.trim()}
+              className="p-1 rounded-lg text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors">
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+            </button>
+            <button onClick={cancel} className="p-1 rounded-lg text-muted-foreground hover:bg-gray-100 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <p className="font-medium text-foreground truncate">{value || <span className="text-muted-foreground italic">No email on file</span>}</p>
+            <button
+              onClick={() => setEditing(true)}
+              className="p-0.5 rounded hover:bg-violet-50 text-muted-foreground hover:text-violet-700 transition-colors shrink-0"
+              title="Edit email"
+            >
+              <Pencil className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+        {error && <p className="text-xs text-red-600 mt-0.5">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ── Main AdaCase page ─────────────────────────────────────────────────────────
 export default function AdaCase() {
   const [location] = useLocation();
@@ -413,6 +527,7 @@ export default function AdaCase() {
   const [showPhysicianModal, setShowPhysicianModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [suggestedFollowUpDate, setSuggestedFollowUpDate] = useState<string | undefined>();
+  const [localEmployeeEmail, setLocalEmployeeEmail] = useState<string | null | undefined>(undefined);
 
   const queryKey = ["ada-case", caseId];
 
@@ -470,13 +585,15 @@ export default function AdaCase() {
   const { case: adaCase, log, accommodations } = data;
   const employeeName = [adaCase.employeeFirstName, adaCase.employeeLastName].filter(Boolean).join(" ")
     || `Employee #${adaCase.employeeNumber}`;
+  // Use locally-updated email if HR changed it this session, otherwise use server value
+  const displayEmail = localEmployeeEmail !== undefined ? localEmployeeEmail : adaCase.employeeEmail;
 
   return (
     <AppLayout>
       {showPhysicianModal && (
         <PhysicianCertModal
           caseId={caseId}
-          employeeEmail={adaCase.employeeEmail}
+          employeeEmail={displayEmail}
           onClose={() => setShowPhysicianModal(false)}
           onSent={refresh}
         />
@@ -485,7 +602,7 @@ export default function AdaCase() {
         <ScheduleFollowUpModal
           caseId={caseId}
           caseNumber={adaCase.caseNumber}
-          employeeEmail={adaCase.employeeEmail}
+          employeeEmail={displayEmail}
           suggestedDate={suggestedFollowUpDate}
           onClose={() => setShowScheduleModal(false)}
           onScheduled={refresh}
@@ -552,9 +669,11 @@ export default function AdaCase() {
               {adaCase.employeeNumber && (
                 <InfoRow icon={<User className="w-4 h-4" />} label="Employee #" value={adaCase.employeeNumber} />
               )}
-              {adaCase.employeeEmail && (
-                <InfoRow icon={<Mail className="w-4 h-4" />} label="Email" value={adaCase.employeeEmail} />
-              )}
+              <EditableEmailRow
+                caseId={caseId}
+                initialEmail={displayEmail}
+                onUpdated={(email) => setLocalEmployeeEmail(email)}
+              />
               <InfoRow
                 icon={<Clock className="w-4 h-4" />}
                 label="Submitted"
