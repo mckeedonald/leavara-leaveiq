@@ -13,6 +13,8 @@ import {
   Building2,
   TrendingUp,
   ShieldCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -48,6 +50,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, logout, updateUser } = useAuth();
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
   const [hasPerformIq, setHasPerformIq] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("leavara_token") ?? localStorage.getItem("leaveiq_token");
@@ -100,9 +103,71 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Sidebar */}
+      {/* Mobile top bar */}
+      <div
+        className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
+        style={{ background: S.sidebar, borderBottom: `1px solid ${S.sidebarBorder}` }}
+      >
+        <div className="flex items-center gap-2">
+          <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
+          <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
+            Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
+          </span>
+        </div>
+        <button
+          onClick={() => setMobileNavOpen((o) => !o)}
+          className="p-2 rounded-lg"
+          style={{ color: S.textOnDark }}
+        >
+          {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile nav overlay */}
+      {mobileNavOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
+          style={{ background: S.sidebar }}
+        >
+          <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+            {navItems.filter((item) => item.show).map((item) => {
+              const isActive = location === item.href || location.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium text-sm",
+                    isActive ? "shadow-sm" : "hover:opacity-90"
+                  )}
+                  style={
+                    isActive
+                      ? { background: S.activeItemBg, color: S.textOnDark, borderLeft: `3px solid ${S.activeItem}` }
+                      : { color: S.textMutedDark, paddingLeft: "calc(0.75rem + 3px)" }
+                  }
+                >
+                  <item.icon className="w-5 h-5" style={{ color: isActive ? S.activeItem : S.textMutedDark }} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="p-4">
+            <button
+              onClick={() => { handleLogout(); setMobileNavOpen(false); }}
+              className="w-full flex items-center justify-center gap-2 text-sm font-medium py-3 rounded-xl border transition-opacity hover:opacity-80"
+              style={{ color: S.textMutedDark, borderColor: S.sidebarBorder }}
+            >
+              <LogOut className="w-4 h-4" /> Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar — desktop only */}
       <aside
-        className="w-full md:w-64 flex flex-col shrink-0 md:h-screen sticky top-0 z-50"
+        className="hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
         style={{ background: S.sidebar, borderRight: `1px solid ${S.sidebarBorder}` }}
       >
         {/* Logo */}

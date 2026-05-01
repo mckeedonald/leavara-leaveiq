@@ -423,7 +423,7 @@ function UpdateStatusDropdown({
         <ChevronDown className="w-3.5 h-3.5" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 bg-white rounded-xl border shadow-lg min-w-[180px] py-1" style={{ borderColor: "#DDD6FE" }}>
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border shadow-lg min-w-[180px] py-1" style={{ borderColor: "#DDD6FE" }}>
           {statuses.map((s) => (
             <button
               key={s.value}
@@ -528,6 +528,7 @@ export default function AdaCase() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [suggestedFollowUpDate, setSuggestedFollowUpDate] = useState<string | undefined>();
   const [localEmployeeEmail, setLocalEmployeeEmail] = useState<string | null | undefined>(undefined);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const queryKey = ["ada-case", caseId];
 
@@ -538,6 +539,22 @@ export default function AdaCase() {
   });
 
   const refresh = useCallback(() => qc.invalidateQueries({ queryKey }), [qc, queryKey]);
+
+  const handleClaimCase = async () => {
+    if (!user?.id) return;
+    setIsClaiming(true);
+    try {
+      await apiFetch(`/api/ada/cases/${caseId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ assignedToUserId: user.id }),
+      });
+      refresh();
+    } catch (e) {
+      console.error("Failed to claim case:", e);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   const handleActionSuggested = (action: string) => {
     if (action === "send_physician_cert") {
@@ -631,7 +648,26 @@ export default function AdaCase() {
               <p className="text-muted-foreground text-sm mt-0.5">{employeeName}</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Claim / assigned badge */}
+            {adaCase.assignedToUserId ? (
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border"
+                style={{ background: "#EDE9FE", color: "#5B21B6", borderColor: "#DDD6FE" }}>
+                <User className="w-3 h-3" /> Assigned to: {(adaCase as any).assignedToName ?? "HR"}
+              </span>
+            ) : (
+              <button
+                onClick={handleClaimCase}
+                disabled={isClaiming}
+                className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all disabled:opacity-50"
+                style={{ borderColor: "#DDD6FE", color: "#5B21B6", background: "#F5F3FF" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#EDE9FE"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#F5F3FF"; }}
+              >
+                {isClaiming ? <Loader2 className="w-3 h-3 animate-spin" /> : <User className="w-3 h-3" />}
+                {isClaiming ? "Claiming…" : "Claim Case"}
+              </button>
+            )}
             <button
               onClick={() => setShowPhysicianModal(true)}
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border font-medium transition-colors hover:bg-violet-50"
@@ -658,11 +694,9 @@ export default function AdaCase() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in opacity-0 stagger-2">
-        {/* Left / main column */}
-        <div className="xl:col-span-2 flex flex-col gap-6">
-          {/* Case info card */}
-          <div className="bg-card border rounded-2xl p-6 shadow-sm" style={{ borderColor: "#DDD6FE" }}>
+      <div className="flex flex-col gap-6 animate-in opacity-0 stagger-2">
+        {/* Case info card */}
+        <div className="bg-card border rounded-2xl p-6 shadow-sm" style={{ borderColor: "#DDD6FE" }}>
             <h3 className="font-semibold text-sm mb-4" style={{ color: "#4C1D95" }}>Case Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
               <InfoRow icon={<User className="w-4 h-4" />} label="Employee" value={employeeName} />
@@ -775,30 +809,7 @@ export default function AdaCase() {
             </div>
           )}
 
-          {/* Interactive process log */}
-          <AdaInteractiveLog entries={log} caseId={caseId} onRefresh={refresh} />
-
-          {/* Case messaging */}
-          <div className="bg-card border rounded-2xl overflow-hidden shadow-sm" style={{ borderColor: "#DDD6FE" }}>
-            <div className="px-5 py-4 border-b flex items-center gap-2" style={{ background: "#F5F3FF", borderColor: "#DDD6FE" }}>
-              <Mail className="w-4 h-4" style={{ color: "#7C3AED" }} />
-              <span className="font-semibold text-sm" style={{ color: "#4C1D95" }}>Employee Messaging</span>
-            </div>
-            <div className="p-4">
-              <CaseMessaging
-                fetchMessages={fetchMessages}
-                sendMessage={sendMessage}
-                viewerType="hr"
-                accentColor="#7C3AED"
-                borderColor="#DDD6FE"
-                cardBg="#FAFAFE"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Right sidebar — Ada agent */}
-        <div className="flex flex-col gap-6">
+          {/* Ada agent panel — placed below case details */}
           <AdaAgentPanel
             caseId={caseId}
             onActionSuggested={handleActionSuggested}
@@ -807,10 +818,10 @@ export default function AdaCase() {
             }}
           />
 
-          {/* Quick actions */}
+          {/* Quick actions — horizontal row */}
           <div className="bg-card border rounded-2xl p-5 shadow-sm" style={{ borderColor: "#DDD6FE" }}>
             <p className="font-semibold text-sm mb-4" style={{ color: "#4C1D95" }}>Quick Actions</p>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <QuickAction
                 icon={<Stethoscope className="w-4 h-4" />}
                 label={adaCase.physicianCertSentAt ? "Resend Physician Cert" : "Send Physician Cert"}
@@ -832,9 +843,7 @@ export default function AdaCase() {
                 icon={<CheckCircle className="w-4 h-4" />}
                 label="Draft Approval Letter"
                 sublabel="Generate approval letter via Ada"
-                onClick={() => {
-                  /* Ada can draft this via agent panel */
-                }}
+                onClick={() => { /* Ada can draft this via agent panel */ }}
                 accent="#166534"
                 accentBg="#F0FDF4"
               />
@@ -842,15 +851,33 @@ export default function AdaCase() {
                 icon={<XCircle className="w-4 h-4" />}
                 label="Draft Denial Letter"
                 sublabel="Includes undue hardship + ADA leave notice"
-                onClick={() => {
-                  /* Ada can draft this via agent panel */
-                }}
+                onClick={() => { /* Ada can draft this via agent panel */ }}
                 accent="#991B1B"
                 accentBg="#FEF2F2"
               />
             </div>
           </div>
-        </div>
+
+          {/* Interactive process log */}
+          <AdaInteractiveLog entries={log} caseId={caseId} onRefresh={refresh} />
+
+          {/* Case messaging */}
+          <div className="bg-card border rounded-2xl overflow-hidden shadow-sm" style={{ borderColor: "#DDD6FE" }}>
+            <div className="px-5 py-4 border-b flex items-center gap-2" style={{ background: "#F5F3FF", borderColor: "#DDD6FE" }}>
+              <Mail className="w-4 h-4" style={{ color: "#7C3AED" }} />
+              <span className="font-semibold text-sm" style={{ color: "#4C1D95" }}>Employee Messaging</span>
+            </div>
+            <div className="p-4">
+              <CaseMessaging
+                fetchMessages={fetchMessages}
+                sendMessage={sendMessage}
+                viewerType="hr"
+                accentColor="#7C3AED"
+                borderColor="#DDD6FE"
+                cardBg="#FAFAFE"
+              />
+            </div>
+          </div>
       </div>
     </AppLayout>
   );

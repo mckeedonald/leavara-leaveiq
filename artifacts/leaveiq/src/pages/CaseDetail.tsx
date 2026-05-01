@@ -167,12 +167,17 @@ export default function CaseDetail() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-1">
               <h2 className="text-3xl font-display font-bold text-foreground">{caseData.caseNumber}</h2>
               <DisplayStatusBadge displayStatus={(caseData as any).displayStatus} state={caseData.state} />
             </div>
+            {(caseData.employeeFirstName || caseData.employeeLastName) && (
+              <p className="text-lg font-semibold text-foreground mb-1">
+                {[caseData.employeeFirstName, caseData.employeeLastName].filter(Boolean).join(" ")}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5"><User className="w-4 h-4" /> EMP-{caseData.employeeNumber}</div>
+              <div className="flex items-center gap-1.5"><User className="w-4 h-4" /> {caseData.employeeNumber}</div>
               {/* Editable employee email */}
               {editingEmail ? (
                 <div className="flex items-center gap-1.5">
@@ -587,7 +592,17 @@ export default function CaseDetail() {
       </div>
 
       {/* Modals */}
-      <AnalyzeCaseModal isOpen={activeModal === "ANALYZE"} onClose={() => setActiveModal(null)} caseId={caseId} />
+      <AnalyzeCaseModal
+        isOpen={activeModal === "ANALYZE"}
+        onClose={() => setActiveModal(null)}
+        caseId={caseId}
+        caseData={{
+          caseNumber: caseData.caseNumber,
+          employeeNumber: caseData.employeeNumber,
+          employeeFirstName: caseData.employeeFirstName,
+          employeeLastName: caseData.employeeLastName,
+        }}
+      />
       {transitionEvent && (
         <TransitionCaseModal
           isOpen={activeModal === "TRANSITION"}

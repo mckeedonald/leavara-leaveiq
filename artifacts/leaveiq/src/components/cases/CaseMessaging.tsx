@@ -64,7 +64,7 @@ export function CaseMessaging({
   }
 
   function handleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -140,7 +140,7 @@ export function CaseMessaging({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Type a message… (⌘↵ to send)"
+          placeholder="Type a message… (Shift+Enter for new line)"
           rows={2}
           className="flex-1 px-3 py-2 text-sm rounded-xl border outline-none resize-none"
           style={{ borderColor, color: "#3D2010", background: "#FAFAF8" }}

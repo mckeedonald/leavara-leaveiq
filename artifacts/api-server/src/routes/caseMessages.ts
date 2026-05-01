@@ -4,6 +4,7 @@ import {
   db,
   caseMessagesTable,
   leaveCasesTable,
+  adaCasesTable,
   caseAccessTokensTable,
 } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../lib/jwtAuth";
@@ -20,7 +21,7 @@ router.get("/cases/:caseId/messages", requireAuth, async (req: Request, res: Res
     const authed = req as AuthenticatedRequest;
     const { caseId } = req.params;
 
-    // Verify the case belongs to this org
+    // Verify the case belongs to this org (check leave cases first, then ADA cases)
     const [leaveCase] = await db
       .select({ id: leaveCasesTable.id })
       .from(leaveCasesTable)
@@ -28,8 +29,15 @@ router.get("/cases/:caseId/messages", requireAuth, async (req: Request, res: Res
       .limit(1);
 
     if (!leaveCase) {
-      res.status(404).json({ error: "Case not found" });
-      return;
+      const [adaCase] = await db
+        .select({ id: adaCasesTable.id })
+        .from(adaCasesTable)
+        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+        .limit(1);
+      if (!adaCase) {
+        res.status(404).json({ error: "Case not found" });
+        return;
+      }
     }
 
     const msgs = await db
@@ -57,7 +65,7 @@ router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Re
       return;
     }
 
-    // Verify case belongs to this org
+    // Verify case belongs to this org (check leave cases first, then ADA cases)
     const [leaveCase] = await db
       .select({ id: leaveCasesTable.id })
       .from(leaveCasesTable)
@@ -65,8 +73,15 @@ router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Re
       .limit(1);
 
     if (!leaveCase) {
-      res.status(404).json({ error: "Case not found" });
-      return;
+      const [adaCase] = await db
+        .select({ id: adaCasesTable.id })
+        .from(adaCasesTable)
+        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+        .limit(1);
+      if (!adaCase) {
+        res.status(404).json({ error: "Case not found" });
+        return;
+      }
     }
 
     const [msg] = await db

@@ -675,7 +675,7 @@ export default function EmployeePortal() {
     if (currentInputType === "date") return "e.g. 2026-08-01 or August 1, 2026";
     if (currentInputType === "textarea") return "Type your answer… (Enter to submit)";
     switch (step) {
-      case "employee_number": return "e.g. 1023 or EMP-1023";
+      case "employee_number": return "e.g. 1023";
       case "email": return "your.email@company.com";
       case "leave_name":
       case "ada_name": return "Your full name";

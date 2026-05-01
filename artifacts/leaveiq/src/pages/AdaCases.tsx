@@ -136,7 +136,7 @@ function CreateAdaCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
             <div className="space-y-1">
               <label className={labelCls}>Employee Number <span className="text-destructive">*</span></label>
-              <input required name="employeeNumber" type="text" className={inputCls} placeholder="e.g. EMP-10042" />
+              <input required name="employeeNumber" type="text" className={inputCls} placeholder="e.g. 10042" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

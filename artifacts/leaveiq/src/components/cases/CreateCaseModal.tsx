@@ -198,7 +198,7 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 value={empNumber}
                 onChange={(e) => setEmpNumber(e.target.value)}
                 className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
-                placeholder="e.g. EMP-10042"
+                placeholder="e.g. 10042"
               />
             </div>
 

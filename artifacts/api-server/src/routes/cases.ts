@@ -908,42 +908,8 @@ router.post(
         authed.user.email,
       );
 
-      // Generate the medical certification PDF and cache it in the DB.
-      // Storing the pre-rendered base64 means download and email attachment
-      // never need to re-run PDF generation — they just decode what's here.
-      const medCertNotice = result.notices.find((n: { noticeType: string }) => n.noticeType === "MEDICAL_CERTIFICATION");
-      if (medCertNotice) {
-        try {
-          const medCertText = (medCertNotice as { content: string }).content;
-          const medCertPdfBuffer = buildMedCertPdf(medCertText);
-          const medCertBase64 = medCertPdfBuffer.toString("base64");
-
-          const noticeDate = new Date().toISOString().split("T")[0];
-          const medFileName = `MEDICAL_CERTIFICATION_${leaveCase.caseNumber}_${noticeDate}.pdf`;
-
-          // Replace any previously cached med cert so only the latest version exists
-          await db
-            .delete(caseDocumentsTable)
-            .where(
-              and(
-                eq(caseDocumentsTable.caseId, leaveCase.id),
-                like(caseDocumentsTable.fileName, "MEDICAL_CERTIFICATION%"),
-              ),
-            );
-          await db.insert(caseDocumentsTable).values({
-            caseId: leaveCase.id,
-            uploadedBy: "hr", // system-generated; "hr" is the closest valid enum value
-            fileName: medFileName,
-            storageKey: null,
-            contentInline: medCertBase64, // base64-encoded PDF binary
-            mimeType: "application/pdf",
-            sizeBytes: medCertPdfBuffer.length,
-          });
-          logger.info({ caseId: leaveCase.id, fileName: medFileName }, "Medical certification PDF cached");
-        } catch (cacheErr) {
-          logger.warn({ cacheErr, caseId: leaveCase.id }, "Failed to cache medical certification PDF — continuing");
-        }
-      }
+      // Note: Medical certification is NOT stored in caseDocuments at recommendation time.
+      // It is only archived when HR sends it via send-notices, keeping the case docs panel clean.
 
       res.json(result);
     } catch (err) {

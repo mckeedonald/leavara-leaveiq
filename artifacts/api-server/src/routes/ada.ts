@@ -142,6 +142,36 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
       content: `Accommodation request submitted via employee portal.\n\nFunctional Limitations: ${functionalLimitations ?? "Not specified"}\n\nAccommodation Requested: ${accommodationRequested ?? "Not specified"}`,
     });
 
+    // Send acknowledgment email to employee if email provided
+    if (employeeEmail && typeof employeeEmail === "string" && employeeEmail.trim()) {
+      const employeeName = [employeeFirstName, employeeLastName].filter(Boolean).join(" ") || "Employee";
+      try {
+        await sendNoticeEmail({
+          to: employeeEmail.trim(),
+          subject: `Your Accommodation Request Has Been Received — Case ${caseNumber}`,
+          noticeType: "ADA_ACKNOWLEDGMENT",
+          content: `Dear ${employeeName},
+
+Thank you for submitting your accommodation request. We have received your request and assigned it case number ${caseNumber}.
+
+What happens next:
+• An HR representative will review your request and initiate the interactive accommodation process
+• We may reach out to gather additional information or to schedule a meeting
+• You may be asked to provide supporting documentation from your healthcare provider
+
+You can check the status of your request by visiting your employee portal. If you have any immediate questions, please contact HR directly.
+
+Case Number: ${caseNumber}
+Submitted: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+
+This is an automated notification. Please do not reply to this email.`,
+        });
+      } catch {
+        // Non-fatal — log but don't fail the request
+        logger.warn({ caseId: adaCase.id }, "Failed to send ADA acknowledgment email");
+      }
+    }
+
     res.status(201).json({ caseNumber, id: adaCase.id, accessToken });
   } catch (err) {
     logger.error({ err }, "ADA case create error");

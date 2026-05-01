@@ -65,6 +65,8 @@ const NOTICE_TITLES: Record<string, string> = {
 };
 
 // States with additional leave law requirements beyond federal FMLA
+// Each entry includes state disability/paid leave wage replacement details.
+// ALWAYS include the applicable state's disability/paid leave section in eligibility and designation notices.
 const STATE_NOTICE_REQUIREMENTS: Record<string, string> = {
   CA: `
 CALIFORNIA-SPECIFIC NOTICE REQUIREMENTS (apply in addition to federal FMLA):
@@ -80,13 +82,11 @@ PDL (Pregnancy Disability Leave, Gov. Code § 12945):
 - Up to 4 months (17⅓ weeks) for disability related to pregnancy/childbirth
 - No minimum tenure or hours-worked requirement
 - Runs concurrently with federal FMLA (FMLA portion capped at 12 weeks); CFRA bonding runs separately after
-- Notify employee of right to California State Disability Insurance (SDI) via EDD for wage replacement during PDL
 
-California Paid Family Leave (PFL, UI Code § 3300):
-- Up to 8 weeks of partial wage replacement (~60–70% of wages) via EDD
-- Available during CFRA bonding, family care leave
-- Employer may require up to 2 weeks of accrued vacation before PFL for bonding
-- Notify employee of PFL availability in the designation notice
+STATE DISABILITY / WAGE REPLACEMENT — CALIFORNIA (ALWAYS include in notices):
+- California SDI (State Disability Insurance): wage replacement of 60–70% of wages (up to state weekly benefit amount) for up to 52 weeks for own serious health condition or pregnancy disability. Employee applies at edd.ca.gov.
+- California PFL (Paid Family Leave): up to 8 weeks of partial wage replacement (~60–70% of wages) via EDD for bonding with a new child or caring for a seriously ill family member. Employee applies at edd.ca.gov.
+- In the designation notice, ALWAYS inform the employee of their right to apply for SDI (for own health/pregnancy) or PFL (for bonding/family care) through the EDD. Include the URL: edd.ca.gov.
 
 CALIFORNIA NOTICE TIMING:
 - Notice of Eligibility: within 5 business days of knowing leave may be needed
@@ -109,32 +109,87 @@ CALIFORNIA NOTICE CONTENT — DESIGNATION NOTICE must include:
 4. If denied: specific reason under each law
 5. Fitness-for-duty requirement (if any) upon return
 6. For intermittent leave: approved frequency and duration
-7. Notification of PFL/SDI benefit availability through EDD
+7. Notification of SDI/PFL benefit availability through EDD with application URL
 `,
   WA: `
 WASHINGTON STATE REQUIREMENTS (in addition to federal FMLA):
-- Washington PFML (Paid Family and Medical Leave): notify employees of up to 12 weeks (18 for pregnancy + bonding) of paid leave through WA ESD
-- Employee premium deductions fund the program; employer contributes if 50+ employees
-- Notify employee to apply at https://paidleave.wa.gov
+
+STATE DISABILITY / WAGE REPLACEMENT — WASHINGTON (ALWAYS include in notices):
+- Washington PFML (Paid Family and Medical Leave): up to 12 weeks paid leave (18 weeks for pregnancy + bonding combined), providing up to 90% of wages (higher earners receive lower percentage). Funded by employee/employer premiums.
+- Employee applies at paidleave.wa.gov. Application opens ~60 days before leave or as soon as possible.
+- ALWAYS include in designation notices: "You may be eligible for Washington Paid Family and Medical Leave (PFML) wage replacement benefits. Apply at paidleave.wa.gov."
 `,
   OR: `
 OREGON REQUIREMENTS (in addition to federal FMLA):
-- Oregon Paid Leave (Measure 112): up to 12 weeks paid leave (14 for pregnancy + bonding) through Frances Online
-- Covers own serious health condition, family care, bonding, safe leave
-- Notify employee to apply through Frances Online (oregon.gov/employ/PFMLI)
+
+STATE DISABILITY / WAGE REPLACEMENT — OREGON (ALWAYS include in notices):
+- Oregon Paid Leave (Paid Leave Oregon): up to 12 weeks paid leave (14 for pregnancy + bonding, 14 for pregnancy complications), providing 60%–100% of wages (higher for lower-wage workers). Funded by employee/employer premiums.
+- Employee applies through Frances Online (paidleave.oregon.gov). Applications open up to 30 days before leave.
+- ALWAYS include in designation notices: "You may be eligible for Oregon Paid Leave wage replacement benefits. Apply at paidleave.oregon.gov."
 `,
   NY: `
 NEW YORK REQUIREMENTS (in addition to federal FMLA):
-- NY Paid Family Leave (PFL): up to 12 weeks of job-protected, partially paid leave
-- Funded by employee payroll deductions
-- Covers bonding, family care, qualifying military exigency
-- Notify employee to submit PFL claim to employer's disability/PFL carrier
+
+STATE DISABILITY / WAGE REPLACEMENT — NEW YORK (ALWAYS include in notices):
+- New York DBL (Disability Benefits Law): up to 26 weeks of disability benefits at 50% of wages (up to $170/week cap) for own serious health condition or pregnancy. Funded by employee/employer contributions. Filed through employer's disability carrier.
+- New York PFL (Paid Family Leave): up to 12 weeks at 67% of the statewide average weekly wage for bonding, family care, or qualifying military exigency. Funded by employee payroll deductions. Filed through employer's PFL carrier.
+- ALWAYS include in designation notices: "You may be eligible for New York State Disability Benefits (DBL) and/or NY Paid Family Leave (PFL) wage replacement. Contact HR for your employer's carrier information, or visit paidfamilyleave.ny.gov."
+`,
+  NJ: `
+NEW JERSEY REQUIREMENTS (in addition to federal FMLA):
+
+STATE DISABILITY / WAGE REPLACEMENT — NEW JERSEY (ALWAYS include in notices):
+- New Jersey TDI (Temporary Disability Insurance): up to 26 weeks at 85% of wages (capped at state maximum) for own serious health condition or pregnancy disability. Employee applies at myleavebenefits.nj.gov.
+- New Jersey FLI (Family Leave Insurance): up to 12 weeks at 85% of wages for bonding or care for seriously ill family member. Employee applies at myleavebenefits.nj.gov.
+- ALWAYS include in designation notices: "You may be eligible for New Jersey TDI (own disability) or FLI (bonding/family care) wage replacement benefits. Apply at myleavebenefits.nj.gov."
+`,
+  MA: `
+MASSACHUSETTS REQUIREMENTS (in addition to federal FMLA):
+
+STATE DISABILITY / WAGE REPLACEMENT — MASSACHUSETTS (ALWAYS include in notices):
+- Massachusetts PFML (Paid Family and Medical Leave): up to 12 weeks for family leave, 20 weeks for own serious health condition, up to 26 weeks total combined. Provides up to 80% of wages (capped at state maximum). Funded by employee/employer contributions.
+- Employee applies at mass.gov/paidleave. Applications open up to 60 days before leave.
+- ALWAYS include in designation notices: "You may be eligible for Massachusetts PFML wage replacement benefits. Apply at mass.gov/paidleave."
 `,
   CO: `
 COLORADO REQUIREMENTS (in addition to federal FMLA):
-- FAMLI (Family and Medical Leave Insurance): up to 12 weeks paid leave (16 for pregnancy complications + bonding)
-- Employee and employer (50+ employees) contribute premiums
-- Notify employee to apply at famli.colorado.gov
+
+STATE DISABILITY / WAGE REPLACEMENT — COLORADO (ALWAYS include in notices):
+- Colorado FAMLI (Family and Medical Leave Insurance): up to 12 weeks (16 for pregnancy complications + bonding) at up to 90% of wages (higher for lower-wage workers, capped at state maximum). Funded by employee/employer premiums.
+- Employee applies at myfamli.colorado.gov. Applications open up to 30 days before leave.
+- ALWAYS include in designation notices: "You may be eligible for Colorado FAMLI paid leave wage replacement benefits. Apply at myfamli.colorado.gov."
+`,
+  CT: `
+CONNECTICUT REQUIREMENTS (in addition to federal FMLA):
+
+STATE DISABILITY / WAGE REPLACEMENT — CONNECTICUT (ALWAYS include in notices):
+- Connecticut PFMLI (Paid Family and Medical Leave Insurance): up to 12 weeks (14 for pregnancy complications) at 95% of wages up to 60x CT minimum wage, then 60% above that, capped at state maximum. Funded by employee payroll deductions.
+- Employee applies at ctpaidleave.org. Applications open up to 30 days before leave.
+- ALWAYS include in designation notices: "You may be eligible for Connecticut Paid FMLI wage replacement benefits. Apply at ctpaidleave.org."
+`,
+  RI: `
+RHODE ISLAND REQUIREMENTS (in addition to federal FMLA):
+
+STATE DISABILITY / WAGE REPLACEMENT — RHODE ISLAND (ALWAYS include in notices):
+- Rhode Island TDI (Temporary Disability Insurance): up to 30 weeks at approximately 4.62% of wages (60% of average weekly wage, capped at state maximum) for own serious health condition or pregnancy. Employee applies at dlt.ri.gov.
+- Rhode Island TCI (Temporary Caregiver Insurance): up to 6 weeks for bonding with a new child or caring for a seriously ill family member, same benefit rate as TDI. Employee applies at dlt.ri.gov.
+- ALWAYS include in designation notices: "You may be eligible for Rhode Island TDI (own disability) or TCI (bonding/family care) wage replacement benefits. Apply at dlt.ri.gov."
+`,
+  HI: `
+HAWAII REQUIREMENTS (in addition to federal FMLA):
+
+STATE DISABILITY / WAGE REPLACEMENT — HAWAII (ALWAYS include in notices):
+- Hawaii TDI (Temporary Disability Insurance): up to 26 weeks at 58% of wages (capped at state maximum) for own serious health condition or pregnancy disability. Funded by employee/employer contributions; administered through employer's TDI carrier (state plan or private plan).
+- Employee files through their employer's TDI carrier.
+- ALWAYS include in designation notices: "You may be eligible for Hawaii Temporary Disability Insurance (TDI) wage replacement benefits. Contact HR to file a claim with the employer's TDI carrier."
+`,
+  DC: `
+DISTRICT OF COLUMBIA REQUIREMENTS:
+
+STATE DISABILITY / WAGE REPLACEMENT — DC (ALWAYS include in notices):
+- DC PFML (Paid Family and Medical Leave): up to 12 weeks for family leave/medical leave (plus 2 weeks prenatal leave), providing up to 90% of wages for lower earners, scaled down for higher earners, capped at state maximum. Funded by employer-paid premiums.
+- Employee applies at dcpaidfamilyleave.dc.gov. Applications open up to 60 days before leave.
+- ALWAYS include in designation notices: "You may be eligible for DC Paid Family and Medical Leave wage replacement benefits. Apply at dcpaidfamilyleave.dc.gov."
 `,
 };
 
@@ -188,11 +243,12 @@ The Designation Notice replaces any separate approval or denial letter — it is
 
 When drafting notices:
 1. ${hasRagContext ? "Ground your language in the REGULATORY CONTEXT provided — cite specific provisions" : "Apply current knowledge of FMLA, CFRA, PDL, and applicable state leave laws"}
-2. ${hasStateRequirements ? "Include all applicable state-specific disclosures per the STATE REQUIREMENTS section" : "Apply federal FMLA requirements"}
+2. ${hasStateRequirements ? "Include all applicable state-specific disclosures per the STATE REQUIREMENTS section. ALWAYS include the 'State Disability / Wage Replacement' section for the employee's state in both the eligibility and designation notices." : "Apply federal FMLA requirements"}
 3. Be specific about entitlement amounts, timelines, certification deadlines, and benefit rights
 4. Use professional, clear language suitable for direct delivery to the employee
 5. Include all legally required elements — a missing element can create employer liability
 6. Use the actual employer name, employee name, HR representative name/title/email, and date provided in the CASE INFORMATION section — do NOT use generic placeholders like [EMPLOYER NAME] or [HR REPRESENTATIVE NAME]
+7. In every designation notice for states with disability/paid leave programs, include a dedicated "State Wage Replacement Benefits" section informing the employee of their right to apply for state benefits, the approximate benefit amount, and the application URL
 
 Respond ONLY with a valid JSON object. Do not include markdown, code blocks, or any text outside the JSON.`;
 }
