@@ -83,7 +83,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       ]
     : [
         { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", show: true },
-        { icon: Files, label: "All Cases", href: "/leaveiq/cases", show: true },
+        { icon: Files, label: "Leave Cases", href: "/leaveiq/cases", show: true },
         { icon: ShieldCheck, label: "ADA Cases", href: "/leaveiq/ada-cases", show: true },
         { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
@@ -152,6 +152,18 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               );
             })}
+            {/* App switcher — shown when org has PerformIQ */}
+            {hasPerformIq && (
+              <Link
+                href="/hub"
+                onClick={() => setMobileNavOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium text-sm hover:opacity-90 mt-2 border-t"
+                style={{ color: S.textMutedDark, borderColor: S.sidebarBorder, paddingLeft: "calc(0.75rem + 3px)" }}
+              >
+                <TrendingUp className="w-5 h-5" style={{ color: S.textMutedDark }} />
+                Switch to PerformIQ
+              </Link>
+            )}
           </nav>
           <div className="p-4">
             <button
