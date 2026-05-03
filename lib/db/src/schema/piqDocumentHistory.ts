@@ -2,7 +2,7 @@ import { pgTable, text, uuid, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { organizationsTable } from "./organizations";
 import { piqDocumentsTable } from "./piqDocuments";
 import { piqCasesTable } from "./piqCases";
-import { piqUsersTable } from "./piqUsers";
+import { usersTable } from "./users";
 
 export const PIQ_DOC_ACTIONS = [
   "created",
@@ -25,7 +25,7 @@ export const piqDocumentHistoryTable = pgTable("piq_document_history", {
   caseId: uuid("case_id").notNull().references(() => piqCasesTable.id, { onDelete: "cascade" }),
   organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id, { onDelete: "cascade" }),
   action: text("action").$type<PiqDocAction>().notNull(),
-  performedBy: uuid("performed_by").notNull().references(() => piqUsersTable.id),
+  performedBy: uuid("performed_by").references(() => usersTable.id),
   performedByRole: text("performed_by_role").notNull(),
   notes: text("notes"),
   diff: jsonb("diff"),

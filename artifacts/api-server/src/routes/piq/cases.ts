@@ -267,23 +267,29 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       .returning();
 
     if (initialDraft) {
-      await db.insert(piqDocumentsTable).values({
+      const [insertedDoc] = await db.insert(piqDocumentsTable).values({
         caseId: newCase.id,
         organizationId: authed.piqUser.organizationId,
         version: 1,
         content: initialDraft,
         createdBy: authed.piqUser.sub,
         isCurrent: true,
-      });
+      }).returning();
 
-      await db.insert(piqDocumentHistoryTable).values({
-        documentId: (await db.select({ id: piqDocumentsTable.id }).from(piqDocumentsTable).where(eq(piqDocumentsTable.caseId, newCase.id)).limit(1))[0].id,
-        caseId: newCase.id,
-        organizationId: authed.piqUser.organizationId,
-        action: "created",
-        performedBy: authed.piqUser.sub,
-        performedByRole: authed.piqUser.role,
-      });
+      // History insert is non-fatal — the FK was previously on piqUsersTable (old auth);
+      // after schema push it will reference usersTable. Skip silently if it fails.
+      try {
+        await db.insert(piqDocumentHistoryTable).values({
+          documentId: insertedDoc.id,
+          caseId: newCase.id,
+          organizationId: authed.piqUser.organizationId,
+          action: "created",
+          performedBy: authed.piqUser.sub,
+          performedByRole: authed.piqUser.role,
+        });
+      } catch (histErr) {
+        logger.warn({ histErr, caseId: newCase.id }, "Could not insert document history — FK may need schema push");
+      }
     }
 
     const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId, docType, authed.piqUser.sub, authed.piqUser.role);
