@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Search, Users, CheckCircle2, XCircle, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Search, Users, CheckCircle2, XCircle, ToggleLeft, ToggleRight, Loader2, ChevronRight } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch, usePiqRole } from "@/lib/piqAuth";
+import { useLocation } from "wouter";
 import { format } from "date-fns";
 
 const C = {
@@ -24,10 +25,12 @@ interface Employee {
 
 export default function PiqEmployees() {
   const { isHrAdmin } = usePiqRole();
+  const [, navigate] = useLocation();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showActive, setShowActive] = useState(true);
+  const [deptFilter, setDeptFilter] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,13 +64,16 @@ export default function PiqEmployees() {
     }
   }
 
+  const departments = [...new Set(employees.map((e) => e.department).filter(Boolean))].sort() as string[];
+
   const filtered = employees.filter((e) => {
     const matchesSearch =
       !search ||
       e.fullName.toLowerCase().includes(search.toLowerCase()) ||
       (e.department ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (e.workEmail ?? "").toLowerCase().includes(search.toLowerCase());
-    return matchesSearch && e.isActive === showActive;
+    const matchesDept = !deptFilter || e.department === deptFilter;
+    return matchesSearch && matchesDept && e.isActive === showActive;
   });
 
   return (
@@ -83,18 +89,31 @@ export default function PiqEmployees() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-3 mb-5">
+        <div className="flex flex-wrap gap-3 mb-5">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.textMuted }} />
             <input
               type="text"
-              placeholder="Search name, department…"
+              placeholder="Search name, department, email…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl outline-none border"
               style={{ background: C.card, borderColor: C.border, color: C.textDark }}
             />
           </div>
+          {departments.length > 0 && (
+            <select
+              value={deptFilter}
+              onChange={(e) => setDeptFilter(e.target.value)}
+              className="text-sm border rounded-xl px-3 py-2.5 outline-none"
+              style={{ borderColor: C.border, color: deptFilter ? C.textDark : C.textMuted, background: C.card }}
+            >
+              <option value="">All Departments</option>
+              {departments.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          )}
           <div className="flex rounded-xl border overflow-hidden" style={{ borderColor: C.border }}>
             {[{ label: "Active", value: true }, { label: "Inactive", value: false }].map(({ label, value }) => (
               <button
@@ -130,18 +149,24 @@ export default function PiqEmployees() {
             <div className="divide-y" style={{ borderColor: C.border }}>
               {filtered.map((e) => (
                 <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-teal-50/40 transition-colors">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-                    style={{ background: e.isActive ? C.perf : "#9CA3AF" }}
+                  {/* Clickable area — navigates to employee profile */}
+                  <button
+                    onClick={() => navigate(`/performiq/employees/${e.id}`)}
+                    className="flex items-center gap-4 flex-1 min-w-0 text-left"
                   >
-                    {e.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm" style={{ color: C.textDark }}>{e.fullName}</p>
-                    <p className="text-xs" style={{ color: C.textMuted }}>
-                      {[e.position, e.department, e.workEmail].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                      style={{ background: e.isActive ? C.perf : "#9CA3AF" }}
+                    >
+                      {e.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm" style={{ color: C.textDark }}>{e.fullName}</p>
+                      <p className="text-xs" style={{ color: C.textMuted }}>
+                        {[e.position, e.department, e.workEmail].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  </button>
                   <div className="flex items-center gap-4 shrink-0">
                     {e.startDate && (
                       <p className="text-xs hidden md:block" style={{ color: C.textMuted }}>
@@ -160,7 +185,7 @@ export default function PiqEmployees() {
                     </div>
                     {isHrAdmin && (
                       <button
-                        onClick={() => toggleActive(e)}
+                        onClick={(ev) => { ev.stopPropagation(); toggleActive(e); }}
                         disabled={togglingId === e.id}
                         title={e.isActive ? "Set Inactive" : "Set Active"}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:opacity-80 disabled:opacity-50"
@@ -180,6 +205,7 @@ export default function PiqEmployees() {
                         {e.isActive ? "Deactivate" : "Activate"}
                       </button>
                     )}
+                    <ChevronRight className="w-4 h-4" style={{ color: C.textMuted }} />
                   </div>
                 </div>
               ))}

@@ -37,6 +37,7 @@ import PiqCaseList from "@/pages/performiq/CaseList";
 import PiqCaseDetail from "@/pages/performiq/CaseDetail";
 import NewCase from "@/pages/performiq/NewCase";
 import PiqEmployees from "@/pages/performiq/Employees";
+import PiqEmployeeProfile from "@/pages/performiq/EmployeeProfile";
 import PiqAdminSettings from "@/pages/performiq/AdminSettings";
 import PiqAnalytics from "@/pages/performiq/Analytics";
 import SignDocument from "@/pages/performiq/SignDocument";
@@ -149,6 +150,7 @@ function Router() {
       <Route path="/performiq/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
       <Route path="/performiq/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />
       <Route path="/performiq/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
+      <Route path="/performiq/employees/:employeeId" component={() => <PiqProtectedRoute component={PiqEmployeeProfile} />} />
       <Route path="/performiq/employees" component={() => <PiqProtectedRoute component={PiqEmployees} />} />
       <Route path="/performiq/admin/policies" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
       <Route path="/performiq/admin/document-types" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />

@@ -153,6 +153,20 @@ Once the manager confirms the intake summary is accurate, generate the document.
 
 Do not generate the document until the manager has confirmed the summary.
 
+### CRITICAL RULE: docBaseType MUST match document content
+
+The `docBaseType` field in the JSON output MUST accurately reflect what the document actually recommends. This field controls how the case is categorized and routed in PerformIQ. Getting this wrong creates serious compliance problems.
+
+**Mapping rules — do not deviate:**
+- If the document recommends termination or documents grounds for termination → `"termination_request"` (NEVER `"coaching"` or `"written_warning"`)
+- If the document is a final warning before termination → `"final_warning"` (NEVER `"coaching"`)
+- If the document is a formal written warning for a repeated or significant issue → `"written_warning"` (NEVER `"coaching"`)
+- If the document is a performance review → `"performance_review"`
+- If the document is goal/OKR documentation → `"goal_setting"`
+- If the document is a first-time, informal coaching note → `"coaching"` (ONLY if the content truly reflects a coaching-level intervention)
+
+**Self-check before outputting JSON:** Read back the `documentTypePurpose` and `failureConsequences` you just wrote. If those fields mention termination, separation, or immediate serious consequences, the `docBaseType` MUST be `"termination_request"`. If they describe a final chance before termination, it MUST be `"final_warning"`. The `docBaseType` must be consistent with every other field in the document.
+
 When generating, produce the document content as JSON wrapped in <document> tags:
 
 <document>

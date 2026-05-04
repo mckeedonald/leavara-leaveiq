@@ -79,10 +79,16 @@ export default function PiqCaseDetail() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
+  // Document type change state
+  const [changingDocType, setChangingDocType] = useState(false);
+  const [docTypeChanging, setDocTypeChanging] = useState(false);
+
   // E-signature state
   const [sigRecord, setSigRecord] = useState<any>(null);
   const [sigLoading, setSigLoading] = useState(false);
   const [sendingSig, setSendingSig] = useState(false);
+  const [sigError, setSigError] = useState<string | null>(null);
+  const [sigSent, setSigSent] = useState(false);
   const [managerSigInput, setManagerSigInput] = useState("");
   const [managerSigning, setManagerSigning] = useState(false);
   const [sigResult, setSigResult] = useState<"completed" | null>(null);
@@ -116,11 +122,14 @@ export default function PiqCaseDetail() {
 
   async function requestSignature() {
     setSendingSig(true);
+    setSigError(null);
+    setSigSent(false);
     try {
       await piqApiFetch(`/api/performiq/cases/${caseId}/signatures/request`, { method: "POST" });
+      setSigSent(true);
       await loadSignature();
-    } catch {
-      // handle
+    } catch (err: any) {
+      setSigError(err?.message ?? "Failed to send signature request. Please try again.");
     } finally {
       setSendingSig(false);
     }
@@ -182,6 +191,23 @@ export default function PiqCaseDetail() {
       // handle
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  async function changeDocumentType(docBaseType: string) {
+    setDocTypeChanging(true);
+    try {
+      await piqApiFetch(`/api/performiq/cases/${caseId}/document-type`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ docBaseType }),
+      });
+      setChangingDocType(false);
+      await loadCase();
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to change document type");
+    } finally {
+      setDocTypeChanging(false);
     }
   }
 
@@ -330,21 +356,57 @@ export default function PiqCaseDetail() {
 
             <div className="rounded-2xl border overflow-hidden" style={{ background: C.card, borderColor: C.border }}>
               {/* Employee info header */}
-              {docContent?.employeeInfo && (
+              {(docContent || employee) && (
                 <div className="px-6 py-4 grid grid-cols-2 gap-3 text-sm" style={{ background: C.agentBg, borderBottom: `1px solid ${C.border}` }}>
                   {[
-                    ["Employee", docContent.employeeInfo.fullName],
-                    ["Job Title", docContent.employeeInfo.jobTitle],
-                    ["Department", docContent.employeeInfo.department],
-                    ["Hire Date", docContent.employeeInfo.hireDate],
-                    ["Manager", docContent.employeeInfo.managerName],
-                    ["Document Type", docType?.displayLabel],
+                    ["Employee", employee?.fullName ?? docContent?.employeeInfo?.fullName],
+                    ["Job Title", employee?.position ?? docContent?.employeeInfo?.jobTitle],
+                    ["Department", employee?.department ?? docContent?.employeeInfo?.department],
+                    ["Hire Date", employee?.startDate ?? docContent?.employeeInfo?.hireDate],
+                    ["Manager", employee?.managerName ?? docContent?.employeeInfo?.managerName],
                   ].map(([label, val]) => (
                     <div key={label}>
                       <p className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.textMuted }}>{label}</p>
                       <p style={{ color: C.textDark }}>{val || "—"}</p>
                     </div>
                   ))}
+                  {/* Document Type — editable for HR and managers */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.textMuted }}>Document Type</p>
+                    {(isHr || isManager) && changingDocType ? (
+                      <div className="flex gap-1.5 items-center">
+                        <select
+                          defaultValue={docType?.baseType ?? ""}
+                          onChange={(e) => { if (e.target.value) changeDocumentType(e.target.value); }}
+                          disabled={docTypeChanging}
+                          className="text-xs border rounded-lg px-2 py-1 outline-none"
+                          style={{ borderColor: C.border, color: C.textDark, background: "#fff" }}
+                        >
+                          <option value="" disabled>Select type…</option>
+                          <option value="coaching">Verbal Coaching</option>
+                          <option value="written_warning">Written Warning</option>
+                          <option value="final_warning">Final Warning</option>
+                          <option value="performance_review">Performance Review</option>
+                          <option value="goal_setting">Goal Setting</option>
+                          <option value="termination_request">Termination Documentation</option>
+                        </select>
+                        <button onClick={() => setChangingDocType(false)} className="text-xs" style={{ color: C.textMuted }}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <p style={{ color: C.textDark }}>{docType?.displayLabel || "—"}</p>
+                        {(isHr || isManager) && c.status !== "closed" && (
+                          <button
+                            onClick={() => setChangingDocType(true)}
+                            className="text-[10px] underline hover:no-underline"
+                            style={{ color: C.textMuted }}
+                          >
+                            change
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -496,10 +558,13 @@ export default function PiqCaseDetail() {
                           {sendingSig ? "Sending…" : "Send for E-Signature"}
                         </button>
                       )}
+                      {sigError && (
+                        <p className="text-xs text-red-600 text-center">{sigError}</p>
+                      )}
                       {/* Show status if sig is active */}
-                      {sigRecord && sigRecord.status === "sent" && (
-                        <div className="rounded-xl px-4 py-2.5 text-xs text-center" style={{ background: "#FEF3C7", color: "#92400E" }}>
-                          Awaiting employee — link sent
+                      {(sigRecord?.status === "sent" || sigSent) && !sigError && (
+                        <div className="rounded-xl px-4 py-2.5 text-xs text-center" style={{ background: "#D1FAE5", color: "#065F46" }}>
+                          ✓ Signature link sent — awaiting employee
                         </div>
                       )}
                       {sigRecord && sigRecord.status === "viewed" && (

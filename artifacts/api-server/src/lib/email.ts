@@ -19,7 +19,7 @@ export function getAppUrl(): string {
   return "http://localhost:3000";
 }
 
-async function sendEmail(
+export async function sendEmail(
   to: string,
   subject: string,
   html: string,

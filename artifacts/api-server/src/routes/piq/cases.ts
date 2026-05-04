@@ -370,4 +370,119 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
   }
 });
 
+// PATCH /performiq/cases/:caseId/document-type — change the document type (HR admin, HR user, manager)
+router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (req: Request, res: Response) => {
+  try {
+    const authed = req as PiqAuthenticatedRequest;
+    const { caseId } = req.params;
+    const { docBaseType, documentTypeId } = req.body as { docBaseType?: string; documentTypeId?: string };
+
+    if (!docBaseType && !documentTypeId) {
+      res.status(400).json({ error: "docBaseType or documentTypeId is required" });
+      return;
+    }
+
+    // Only HR and managers can change document type
+    const { role } = authed.piqUser;
+    if (!["hr_admin", "hr_user", "manager"].includes(role)) {
+      res.status(403).json({ error: "Insufficient permissions" });
+      return;
+    }
+
+    const [c] = await db
+      .select()
+      .from(piqCasesTable)
+      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, authed.piqUser.organizationId)))
+      .limit(1);
+
+    if (!c) {
+      res.status(404).json({ error: "Case not found" });
+      return;
+    }
+
+    // Resolve the target document type ID
+    let resolvedDocTypeId = documentTypeId;
+    if (!resolvedDocTypeId && docBaseType) {
+      const [existing] = await db
+        .select()
+        .from(piqDocumentTypesTable)
+        .where(and(
+          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqDocumentTypesTable.baseType, docBaseType as any),
+          eq(piqDocumentTypesTable.isActive, true),
+        ))
+        .limit(1);
+
+      if (existing) {
+        resolvedDocTypeId = existing.id;
+      } else {
+        // Auto-create the doc type
+        const defaults = DOC_TYPE_DEFAULTS[docBaseType] ?? { label: docBaseType, supervisorReview: true, hrApproval: true };
+        const [created] = await db
+          .insert(piqDocumentTypesTable)
+          .values({
+            organizationId: authed.piqUser.organizationId,
+            baseType: docBaseType as any,
+            displayLabel: defaults.label,
+            requiresSupervisorReview: defaults.supervisorReview,
+            supervisorReviewRequired: defaults.supervisorReview,
+            requiresHrApproval: defaults.hrApproval,
+            isActive: true,
+          })
+          .returning();
+        resolvedDocTypeId = created.id;
+      }
+    }
+
+    if (!resolvedDocTypeId) {
+      res.status(400).json({ error: "Could not resolve document type" });
+      return;
+    }
+
+    const [newDocType] = await db
+      .select()
+      .from(piqDocumentTypesTable)
+      .where(eq(piqDocumentTypesTable.id, resolvedDocTypeId))
+      .limit(1);
+
+    if (!newDocType) {
+      res.status(400).json({ error: "Document type not found" });
+      return;
+    }
+
+    // Update the case's document type
+    await db
+      .update(piqCasesTable)
+      .set({ documentTypeId: resolvedDocTypeId, updatedAt: new Date() })
+      .where(eq(piqCasesTable.id, caseId));
+
+    // Rebuild workflow steps if the doc type changed
+    if (c.documentTypeId !== resolvedDocTypeId) {
+      // Delete existing pending/in-progress steps and rebuild
+      const existingSteps = await db
+        .select()
+        .from(piqWorkflowStepsTable)
+        .where(eq(piqWorkflowStepsTable.caseId, caseId))
+        .orderBy(piqWorkflowStepsTable.stepOrder);
+
+      const hasCompletedSteps = existingSteps.some((s) => s.status === "completed");
+
+      if (!hasCompletedSteps) {
+        // Safe to rebuild all steps
+        await db.delete(piqWorkflowStepsTable).where(eq(piqWorkflowStepsTable.caseId, caseId));
+        const newSteps = buildWorkflowSteps(caseId, authed.piqUser.organizationId, newDocType, authed.piqUser.sub, role);
+        if (newSteps.length > 0) {
+          await db.insert(piqWorkflowStepsTable).values(newSteps);
+        }
+      }
+    }
+
+    logger.info({ caseId, resolvedDocTypeId, docBaseType }, "PIQ case document type changed");
+    res.json({ ok: true, documentTypeId: resolvedDocTypeId, displayLabel: newDocType.displayLabel });
+  } catch (err) {
+    logger.error({ err }, "PIQ document type change error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

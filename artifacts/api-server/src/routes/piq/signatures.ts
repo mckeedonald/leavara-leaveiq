@@ -20,7 +20,7 @@ import {
   organizationsTable,
 } from "@workspace/db";
 import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
-import { getAppUrl, sendNoticeEmail } from "../../lib/email.js";
+import { getAppUrl, sendEmail } from "../../lib/email.js";
 import { logger } from "../../lib/logger.js";
 import crypto from "node:crypto";
 
@@ -263,25 +263,44 @@ router.post(
         employeeAccessToken,
       }).returning();
       try {
-        await sendNoticeEmail({
-          to: employeeEmail,
-          subject: `Action Required: Review and Sign — ${docLabel}`,
-          noticeType: "PIQ_ESIGNATURE_REQUEST",
-          content: `Dear ${employee.fullName},
+        const formattedContent = [
+          `Dear ${employee.fullName},`,
+          "",
+          `A <strong>${docLabel}</strong> has been prepared for your review and signature.`,
+          "",
+          `Please click the link below to review the document and provide your electronic signature:`,
+          "",
+          `<a href="${signUrl}" style="display:inline-block;background:#2E7B7B;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Review &amp; Sign Document</a>`,
+          "",
+          `Or copy this link: <a href="${signUrl}" style="color:#2E7B7B">${signUrl}</a>`,
+          "",
+          `This link is unique to you — please do not share it.`,
+          "",
+          `If you have questions about this document, please contact your HR department.`,
+          "",
+          `Case: ${caseRow.caseNumber}`,
+        ].join("\n");
 
-A ${docLabel} has been prepared for your review and signature.
+        const html = `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <div style="background:#2E7B7B;padding:20px 24px;border-radius:8px 8px 0 0">
+              <h2 style="color:#fff;margin:0;font-size:18px">Action Required: Document Signature</h2>
+              <p style="color:#A8D9D9;margin:4px 0 0;font-size:13px">PerformIQ &bull; Case ${caseRow.caseNumber}</p>
+            </div>
+            <div style="border:1px solid #C4D9D9;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#1A3333">
+              ${formattedContent.split("\n").map((l) => l.trim() === "" ? "<br/>" : `<p style="margin:0 0 12px;line-height:1.6">${l}</p>`).join("")}
+            </div>
+            <p style="color:#6B9090;font-size:12px;margin-top:16px;text-align:center">
+              This document was generated via Leavara PerformIQ.<br/>
+              If you have questions, please contact your HR department directly.
+            </p>
+          </div>`;
 
-Please review the document and provide your electronic signature by clicking the link below:
-
-${signUrl}
-
-This link is unique to you. Please do not share it.
-
-If you have questions about this document, please contact HR.
-
-Case: ${caseRow.caseNumber}
-Document: ${docLabel}`,
-        });
+        await sendEmail(
+          employeeEmail,
+          `Action Required: Review and Sign — ${docLabel} (Case ${caseRow.caseNumber})`,
+          html,
+        );
       } catch (emailErr) {
         logger.warn({ emailErr, caseId }, "Failed to send e-signature email");
       }
