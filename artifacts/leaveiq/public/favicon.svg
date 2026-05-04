@@ -1,10 +1,19 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Bottom ellipse rim (visible between the two arms) -->
-  <ellipse cx="90" cy="150" rx="68" ry="17" fill="#B8A992"/>
+  <!-- Beige ellipse rim at the base (drawn first, shows through the transparent interior) -->
+  <ellipse cx="90" cy="152" rx="84" ry="18" fill="#B8A992"/>
 
-  <!-- Left arm (salmon/pink) — narrow strip from outer-left base to apex to inner-left base -->
-  <path d="M 20 152 C 15 128 22 98 90 16 L 48 148 C 38 115 38 100 90 16 Z" fill="#EAA292"/>
+  <!-- Left arm (salmon/pink) — wide curved band from apex down-left -->
+  <!-- Outer edge bows left, inner edge runs along the interior of the V -->
+  <path d="M 90 15
+           C 65 65 22 108 6 152
+           L 42 151
+           C 56 108 68 65 90 15 Z"
+        fill="#EAA292"/>
 
-  <!-- Right arm (mocha/brown) — narrow strip from apex to outer-right base back to inner-right base -->
-  <path d="M 90 16 C 158 98 165 128 160 152 L 132 148 C 142 115 142 98 90 16 Z" fill="#A07860"/>
+  <!-- Right arm (mocha/brown) — wide curved band from apex down-right -->
+  <path d="M 90 15
+           C 112 65 158 108 174 152
+           L 138 151
+           C 124 108 114 65 90 15 Z"
+        fill="#A07860"/>
 </svg>

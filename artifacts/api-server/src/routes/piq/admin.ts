@@ -240,13 +240,21 @@ router.post(
           });
           parser.parseBuffer(file.buffer);
         });
-        text = parser.getRawTextContent()
+        const raw = parser.getRawTextContent();
+        // pdf2json URL-encodes special characters (%27 for apostrophe, etc.) — decode first
+        let decoded = raw;
+        try { decoded = decodeURIComponent(raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25")); } catch { decoded = raw; }
+        text = decoded
           // getRawTextContent uses form-feed chars as page breaks — convert to newlines
           .replace(/\f/g, "\n\n")
           // Strip other control characters that break JSON serialization
           .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
           .replace(/\s{4,}/g, "\n\n")
           .trim();
+        // Truncate very large documents to avoid DB limits (keep first ~50k chars)
+        if (text.length > 50000) {
+          text = text.slice(0, 50000) + "\n\n[Document truncated — paste remaining content manually if needed]";
+        }
       } else {
         // DOC/DOCX — return a message asking to use copy/paste
         res.json({ text: "", message: "Word documents cannot be parsed automatically. Please copy and paste the policy text into the content field." });
