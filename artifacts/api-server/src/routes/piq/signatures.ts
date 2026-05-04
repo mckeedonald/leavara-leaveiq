@@ -227,7 +227,7 @@ router.post(
       if (!employee) { res.status(404).json({ error: "Employee not found" }); return; }
 
       // Use override email if provided, otherwise fall back to employee record
-      const employeeEmail = overrideEmail?.trim() || employee.workEmail ?? employee.personalEmail;
+      const employeeEmail = overrideEmail?.trim() || (employee.workEmail ?? employee.personalEmail);
       if (!employeeEmail) { res.status(400).json({ error: "Employee has no email on file" }); return; }
 
       // Load latest document
