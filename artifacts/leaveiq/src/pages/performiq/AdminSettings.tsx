@@ -52,7 +52,9 @@ export default function PiqAdminSettings() {
   const [policyFileLoading, setPolicyFileLoading] = useState(false);
   const [policyFileMessage, setPolicyFileMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
   const [policySaveError, setPolicySaveError] = useState<string | null>(null);
+  const [policyValidation, setPolicyValidation] = useState<{ title?: boolean; category?: boolean }>({});
   const policyFileInputRef = useRef<HTMLInputElement>(null);
+  const policyTitleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadAll();
@@ -90,7 +92,20 @@ export default function PiqAdminSettings() {
   }
 
   async function createPolicy() {
-    if (!newPolicy.title || !newPolicy.category || !newPolicy.content) return;
+    // Validate required fields and show inline errors instead of silently blocking
+    const missingTitle = !newPolicy.title.trim();
+    const missingCategory = !newPolicy.category.trim();
+    if (missingTitle || missingCategory || !newPolicy.content.trim()) {
+      setPolicyValidation({ title: missingTitle, category: missingCategory });
+      setPolicySaveError(
+        !newPolicy.content.trim()
+          ? "Policy content is required. Upload a file or paste the policy text above."
+          : `Please fill in the required field${missingTitle && missingCategory ? "s" : ""}: ${[missingTitle && "Title", missingCategory && "Category"].filter(Boolean).join(" and ")}.`
+      );
+      if (missingTitle) policyTitleRef.current?.focus();
+      return;
+    }
+    setPolicyValidation({});
     setSavingPolicy(true);
     setPolicySaveError(null);
     try {
@@ -109,6 +124,7 @@ export default function PiqAdminSettings() {
       setNewPolicy({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
       setPolicyFileMessage(null);
       setPolicySaveError(null);
+      setPolicyValidation({});
       setShowPolicyForm(false);
     } catch (err: any) {
       setPolicySaveError(err?.message ?? "Failed to save policy. Please try again.");
@@ -332,17 +348,28 @@ export default function PiqAdminSettings() {
                     <h3 className="font-semibold mb-4" style={{ color: C.textDark }}>New Policy</h3>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Title *</label>
-                        <input type="text" value={newPolicy.title} onChange={(e) => setNewPolicy((p) => ({ ...p, title: e.target.value }))}
+                        <label className="block text-xs font-medium mb-1" style={{ color: policyValidation.title ? "#B91C1C" : C.textMuted }}>
+                          Title * {policyValidation.title && <span className="font-normal">(required)</span>}
+                        </label>
+                        <input
+                          ref={policyTitleRef}
+                          type="text"
+                          value={newPolicy.title}
+                          onChange={(e) => { setNewPolicy((p) => ({ ...p, title: e.target.value })); setPolicyValidation((v) => ({ ...v, title: false })); setPolicySaveError(null); }}
                           className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                          style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
+                          style={{ background: C.agentBg, borderColor: policyValidation.title ? "#FCA5A5" : C.border, color: C.textDark, boxShadow: policyValidation.title ? "0 0 0 2px #FEE2E2" : undefined }} />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Category *</label>
-                        <input type="text" value={newPolicy.category} placeholder="e.g. attendance, conduct"
-                          onChange={(e) => setNewPolicy((p) => ({ ...p, category: e.target.value }))}
+                        <label className="block text-xs font-medium mb-1" style={{ color: policyValidation.category ? "#B91C1C" : C.textMuted }}>
+                          Category * {policyValidation.category && <span className="font-normal">(required)</span>}
+                        </label>
+                        <input
+                          type="text"
+                          value={newPolicy.category}
+                          placeholder="e.g. attendance, conduct"
+                          onChange={(e) => { setNewPolicy((p) => ({ ...p, category: e.target.value })); setPolicyValidation((v) => ({ ...v, category: false })); setPolicySaveError(null); }}
                           className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                          style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
+                          style={{ background: C.agentBg, borderColor: policyValidation.category ? "#FCA5A5" : C.border, color: C.textDark, boxShadow: policyValidation.category ? "0 0 0 2px #FEE2E2" : undefined }} />
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Policy Number</label>
@@ -432,10 +459,19 @@ export default function PiqAdminSettings() {
                       </div>
                     )}
                     <div className="flex gap-2">
-                      <button onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); }} className="px-4 py-2 rounded-xl text-sm border" style={{ borderColor: C.border, color: C.textMuted }}>Cancel</button>
-                      <button onClick={createPolicy} disabled={savingPolicy || !newPolicy.title || !newPolicy.category || !newPolicy.content}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
-                        style={{ background: C.perf }}>
+                      <button
+                        onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); setPolicyValidation({}); }}
+                        className="px-4 py-2 rounded-xl text-sm border"
+                        style={{ borderColor: C.border, color: C.textMuted }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createPolicy}
+                        disabled={savingPolicy}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                        style={{ background: C.perf, opacity: savingPolicy ? 0.6 : 1 }}
+                      >
                         {savingPolicy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Policy
                       </button>
                     </div>
