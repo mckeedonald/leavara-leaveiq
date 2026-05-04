@@ -89,6 +89,8 @@ export default function PiqCaseDetail() {
   const [sendingSig, setSendingSig] = useState(false);
   const [sigError, setSigError] = useState<string | null>(null);
   const [sigSent, setSigSent] = useState(false);
+  const [sigEmailOverride, setSigEmailOverride] = useState("");
+  const [showEmailOverride, setShowEmailOverride] = useState(false);
   const [managerSigInput, setManagerSigInput] = useState("");
   const [managerSigning, setManagerSigning] = useState(false);
   const [sigResult, setSigResult] = useState<"completed" | null>(null);
@@ -120,16 +122,27 @@ export default function PiqCaseDetail() {
     }
   }
 
-  async function requestSignature() {
+  async function requestSignature(emailOverride?: string) {
     setSendingSig(true);
     setSigError(null);
     setSigSent(false);
     try {
-      await piqApiFetch(`/api/performiq/cases/${caseId}/signatures/request`, { method: "POST" });
+      await piqApiFetch(`/api/performiq/cases/${caseId}/signatures/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailOverride ? { overrideEmail: emailOverride } : {}),
+      });
       setSigSent(true);
+      setShowEmailOverride(false);
+      setSigEmailOverride("");
       await loadSignature();
     } catch (err: any) {
-      setSigError(err?.message ?? "Failed to send signature request. Please try again.");
+      const msg: string = err?.message ?? "Failed to send signature request. Please try again.";
+      setSigError(msg);
+      // Auto-show the email input when no email is on file
+      if (msg.toLowerCase().includes("no email")) {
+        setShowEmailOverride(true);
+      }
     } finally {
       setSendingSig(false);
     }
@@ -548,15 +561,66 @@ export default function PiqCaseDetail() {
                     <>
                       {/* Send for e-signature (only if no active sig or sig was declined) */}
                       {(!sigRecord || sigRecord.status === "declined") && (
-                        <button
-                          onClick={requestSignature}
-                          disabled={sendingSig}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 hover:opacity-90"
-                          style={{ background: C.perf }}
-                        >
-                          {sendingSig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                          {sendingSig ? "Sending…" : "Send for E-Signature"}
-                        </button>
+                        <>
+                          {/* Email override input — shown when no email on file or manually triggered */}
+                          {showEmailOverride && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-semibold block" style={{ color: C.textMuted }}>
+                                Employee Email Address
+                              </label>
+                              <input
+                                type="email"
+                                value={sigEmailOverride}
+                                onChange={(e) => setSigEmailOverride(e.target.value)}
+                                placeholder="employee@company.com"
+                                className="w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2"
+                                style={{ borderColor: C.border, color: C.textDark }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && sigEmailOverride.includes("@")) {
+                                    requestSignature(sigEmailOverride);
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                          <button
+                            onClick={() => {
+                              if (showEmailOverride && sigEmailOverride.includes("@")) {
+                                requestSignature(sigEmailOverride);
+                              } else if (showEmailOverride) {
+                                // Need a valid email
+                                setSigError("Please enter a valid email address.");
+                              } else {
+                                requestSignature();
+                              }
+                            }}
+                            disabled={sendingSig || (showEmailOverride && !sigEmailOverride.includes("@"))}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 hover:opacity-90"
+                            style={{ background: C.perf }}
+                          >
+                            {sendingSig ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                            {sendingSig ? "Sending…" : "Send for E-Signature"}
+                          </button>
+                          {/* Toggle to manually enter email */}
+                          {!showEmailOverride && (
+                            <button
+                              onClick={() => { setShowEmailOverride(true); setSigError(null); }}
+                              className="w-full text-xs text-center hover:underline"
+                              style={{ color: C.textMuted }}
+                            >
+                              Enter a different email address
+                            </button>
+                          )}
+                          {showEmailOverride && (
+                            <button
+                              onClick={() => { setShowEmailOverride(false); setSigEmailOverride(""); setSigError(null); }}
+                              className="w-full text-xs text-center hover:underline"
+                              style={{ color: C.textMuted }}
+                            >
+                              Use email on file
+                            </button>
+                          )}
+                        </>
                       )}
                       {sigError && (
                         <p className="text-xs text-red-600 text-center">{sigError}</p>

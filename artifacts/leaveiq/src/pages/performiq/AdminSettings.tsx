@@ -51,6 +51,7 @@ export default function PiqAdminSettings() {
   const [policyFileDragging, setPolicyFileDragging] = useState(false);
   const [policyFileLoading, setPolicyFileLoading] = useState(false);
   const [policyFileMessage, setPolicyFileMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const [policySaveError, setPolicySaveError] = useState<string | null>(null);
   const policyFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -91,18 +92,29 @@ export default function PiqAdminSettings() {
   async function createPolicy() {
     if (!newPolicy.title || !newPolicy.category || !newPolicy.content) return;
     setSavingPolicy(true);
+    setPolicySaveError(null);
     try {
+      // Strip control characters that can appear in PDF-extracted text and break JSON
+      const cleanContent = newPolicy.content
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+        .replace(/\s{3,}/g, "\n\n")
+        .trim();
+
       const created = await piqApiFetch<Policy>("/api/performiq/admin/policies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPolicy),
+        body: JSON.stringify({ ...newPolicy, content: cleanContent }),
       });
       setPolicies((prev) => [...prev, created]);
       setNewPolicy({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
       setPolicyFileMessage(null);
+      setPolicySaveError(null);
       setShowPolicyForm(false);
-    } catch {}
-    setSavingPolicy(false);
+    } catch (err: any) {
+      setPolicySaveError(err?.message ?? "Failed to save policy. Please try again.");
+    } finally {
+      setSavingPolicy(false);
+    }
   }
 
   async function deletePolicy(policyId: string) {
@@ -413,8 +425,14 @@ export default function PiqAdminSettings() {
                         className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-y"
                         style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
                     </div>
+                    {policySaveError && (
+                      <div className="flex items-center gap-2 text-xs rounded-xl px-3 py-2 mb-3 border" style={{ background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }}>
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        {policySaveError}
+                      </div>
+                    )}
                     <div className="flex gap-2">
-                      <button onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); }} className="px-4 py-2 rounded-xl text-sm border" style={{ borderColor: C.border, color: C.textMuted }}>Cancel</button>
+                      <button onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); }} className="px-4 py-2 rounded-xl text-sm border" style={{ borderColor: C.border, color: C.textMuted }}>Cancel</button>
                       <button onClick={createPolicy} disabled={savingPolicy || !newPolicy.title || !newPolicy.category || !newPolicy.content}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
                         style={{ background: C.perf }}>

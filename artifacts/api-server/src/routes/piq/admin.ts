@@ -243,6 +243,9 @@ router.post(
         text = parser.getRawTextContent()
           // getRawTextContent uses form-feed chars as page breaks — convert to newlines
           .replace(/\f/g, "\n\n")
+          // Strip other control characters that break JSON serialization
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+          .replace(/\s{4,}/g, "\n\n")
           .trim();
       } else {
         // DOC/DOCX — return a message asking to use copy/paste
