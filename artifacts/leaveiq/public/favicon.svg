@@ -1,13 +1,10 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Bottom elliptical base -->
-  <ellipse cx="90" cy="148" rx="68" ry="18" fill="#B8A992"/>
+  <!-- Bottom ellipse rim (visible between the two arms) -->
+  <ellipse cx="90" cy="150" rx="68" ry="17" fill="#B8A992"/>
 
-  <!-- Left face — rose/salmon -->
-  <path d="M22 148 C22 148 18 130 30 100 L90 18 L90 148 Z" fill="#EAA292"/>
+  <!-- Left arm (salmon/pink) — narrow strip from outer-left base to apex to inner-left base -->
+  <path d="M 20 152 C 15 128 22 98 90 16 L 48 148 C 38 115 38 100 90 16 Z" fill="#EAA292"/>
 
-  <!-- Right face — mocha/brown -->
-  <path d="M158 148 C158 148 162 130 150 100 L90 18 L90 148 Z" fill="#A07860"/>
-
-  <!-- Top highlight edge -->
-  <path d="M90 18 C90 18 85 30 80 50 C75 70 78 100 90 148 C102 100 105 70 100 50 C95 30 90 18 90 18 Z" fill="#C97E59" opacity="0.35"/>
+  <!-- Right arm (mocha/brown) — narrow strip from apex to outer-right base back to inner-right base -->
+  <path d="M 90 16 C 158 98 165 128 160 152 L 132 148 C 142 115 142 98 90 16 Z" fill="#A07860"/>
 </svg>
