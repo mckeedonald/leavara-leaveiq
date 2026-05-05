@@ -166,6 +166,27 @@ export default function PiqCaseDetail() {
     }
   }
 
+  async function downloadSignedPdf() {
+    const token = localStorage.getItem("leavara_token") ?? "";
+    try {
+      const res = await fetch(`/api/performiq/cases/${caseId}/signatures/download-pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("PDF not available");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${caseData?.case?.caseNumber ?? caseId}_signed.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Failed to download signed PDF. Please try again.");
+    }
+  }
+
   useEffect(() => { loadCase(); }, [caseId]);
   useEffect(() => { if (caseId) loadSignature(); }, [caseId]);
 
@@ -705,14 +726,13 @@ export default function PiqCaseDetail() {
                   <h3 className="font-semibold text-sm" style={{ color: "#166534" }}>Document Fully Signed</h3>
                 </div>
                 <p className="text-xs mb-3" style={{ color: C.textMuted }}>Both parties have signed. Download the final signed PDF below.</p>
-                <a
-                  href={`/api/performiq/cases/${caseId}/signatures/download-pdf`}
-                  className="flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-white"
+                <button
+                  onClick={downloadSignedPdf}
+                  className="flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold text-white w-full"
                   style={{ background: C.perf }}
-                  download
                 >
                   <Download className="w-4 h-4" /> Download Signed PDF
-                </a>
+                </button>
               </div>
             )}
 
