@@ -95,8 +95,9 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+// 75 MB to accommodate base64-encoded PDFs (50 MB PDF ≈ 67 MB base64)
+app.use(express.json({ limit: "75mb" }));
+app.use(express.urlencoded({ extended: true, limit: "75mb" }));
 
 // General rate limit + routes
 app.use("/api", generalLimiter);

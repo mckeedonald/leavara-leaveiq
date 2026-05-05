@@ -182,9 +182,9 @@ router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request,
       .returning();
 
     res.status(201).json(policy);
-  } catch (err) {
-    logger.error({ err }, "PIQ policy create error");
-    res.status(500).json({ error: "Internal server error" });
+  } catch (err: any) {
+    logger.error({ err, message: err?.message }, "PIQ policy create error");
+    res.status(500).json({ error: err?.message ?? "Internal server error" });
   }
 });
 
