@@ -9,6 +9,7 @@ export const piqPoliciesTable = pgTable("piq_policy", {
   content: text("content").notNull(),
   policyNumber: text("policy_number"),
   effectiveDate: date("effective_date"),
+  pdfStorageKey: text("pdf_storage_key"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

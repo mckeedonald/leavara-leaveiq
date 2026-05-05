@@ -22,7 +22,7 @@ interface DocType {
   requiresSupervisorReview: boolean; supervisorReviewRequired: boolean;
   requiresHrApproval: boolean; isActive: boolean;
 }
-interface Policy { id: string; title: string; category: string; content: string; policyNumber: string | null; effectiveDate: string | null; isActive: boolean; }
+interface Policy { id: string; title: string; category: string; content: string; policyNumber: string | null; effectiveDate: string | null; isActive: boolean; pdfStorageKey: string | null; }
 interface PiqUser { id: string; fullName: string; email: string; role: string; isActive: boolean; }
 
 const BASE_TYPE_OPTIONS = [
@@ -38,6 +38,13 @@ export default function PiqAdminSettings() {
   const [users, setUsers] = useState<PiqUser[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // New user form
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [newUser, setNewUser] = useState({ fullName: "", email: "", role: "manager" });
+  const [savingUser, setSavingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState<string | null>(null);
+  const [createdUserTempPassword, setCreatedUserTempPassword] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+
   // New doc type form
   const [newDT, setNewDT] = useState({ baseType: "coaching", displayLabel: "", requiresSupervisorReview: false, supervisorReviewRequired: false, requiresHrApproval: false });
   const [savingDT, setSavingDT] = useState(false);
@@ -45,6 +52,8 @@ export default function PiqAdminSettings() {
 
   // New policy form
   const [newPolicy, setNewPolicy] = useState({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
+  const [policyPdfStorageKey, setPolicyPdfStorageKey] = useState<string | null>(null);
+  const [policyPdfFileName, setPolicyPdfFileName] = useState<string | null>(null);
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [showPolicyForm, setShowPolicyForm] = useState(false);
   const [expandedPolicy, setExpandedPolicy] = useState<string | null>(null);
@@ -92,14 +101,14 @@ export default function PiqAdminSettings() {
   }
 
   async function createPolicy() {
-    // Validate required fields and show inline errors instead of silently blocking
     const missingTitle = !newPolicy.title.trim();
     const missingCategory = !newPolicy.category.trim();
-    if (missingTitle || missingCategory || !newPolicy.content.trim()) {
+    const missingContent = !policyPdfStorageKey && !newPolicy.content.trim();
+    if (missingTitle || missingCategory || missingContent) {
       setPolicyValidation({ title: missingTitle, category: missingCategory });
       setPolicySaveError(
-        !newPolicy.content.trim()
-          ? "Policy content is required. Upload a file or paste the policy text above."
+        missingContent
+          ? "Policy content is required. Upload a PDF or paste the policy text below."
           : `Please fill in the required field${missingTitle && missingCategory ? "s" : ""}: ${[missingTitle && "Title", missingCategory && "Category"].filter(Boolean).join(" and ")}.`
       );
       if (missingTitle) policyTitleRef.current?.focus();
@@ -109,19 +118,32 @@ export default function PiqAdminSettings() {
     setSavingPolicy(true);
     setPolicySaveError(null);
     try {
-      // Strip control characters that can appear in PDF-extracted text and break JSON
-      const cleanContent = newPolicy.content
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
-        .replace(/\s{3,}/g, "\n\n")
-        .trim();
+      const body: Record<string, any> = {
+        title: newPolicy.title,
+        category: newPolicy.category,
+        policyNumber: newPolicy.policyNumber,
+        effectiveDate: newPolicy.effectiveDate,
+      };
+      if (policyPdfStorageKey) {
+        body.pdfStorageKey = policyPdfStorageKey;
+        body.content = "";
+      } else {
+        // Strip control characters from pasted text
+        body.content = newPolicy.content
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
+          .replace(/\s{3,}/g, "\n\n")
+          .trim();
+      }
 
       const created = await piqApiFetch<Policy>("/api/performiq/admin/policies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newPolicy, content: cleanContent }),
+        body: JSON.stringify(body),
       });
       setPolicies((prev) => [...prev, created]);
       setNewPolicy({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
+      setPolicyPdfStorageKey(null);
+      setPolicyPdfFileName(null);
       setPolicyFileMessage(null);
       setPolicySaveError(null);
       setPolicyValidation({});
@@ -139,35 +161,63 @@ export default function PiqAdminSettings() {
   }
 
   async function handlePolicyFile(file: File) {
-    const allowed = [".pdf", ".txt", ".doc", ".docx"];
     const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
-    if (!allowed.includes(ext)) {
-      setPolicyFileMessage({ type: "error", text: "Only PDF, TXT, DOC, and DOCX files are supported." });
+    if (ext !== ".pdf") {
+      setPolicyFileMessage({ type: "error", text: "Only PDF files are supported for upload. For other formats, paste the text below." });
       return;
     }
     setPolicyFileLoading(true);
     setPolicyFileMessage(null);
+    setPolicyPdfStorageKey(null);
+    setPolicyPdfFileName(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const token = localStorage.getItem("leavara_token") ?? localStorage.getItem("performiq_token") ?? "";
-      const res = await fetch("/api/performiq/admin/policies/extract-text", {
+      const res = await fetch("/api/performiq/admin/policies/upload-pdf", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      if (!res.ok) throw new Error("Extraction failed");
-      const data = await res.json() as { text?: string; message?: string };
-      if (data.text) {
-        setNewPolicy((p) => ({ ...p, content: data.text! }));
-        setPolicyFileMessage({ type: "success", text: `Text extracted from "${file.name}". Review and edit below, then save.` });
-      } else if (data.message) {
-        setPolicyFileMessage({ type: "info", text: data.message });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "Upload failed");
       }
-    } catch {
-      setPolicyFileMessage({ type: "error", text: "Could not extract text. Please paste the policy content directly." });
+      const data = await res.json() as { storageKey: string; fileName: string };
+      setPolicyPdfStorageKey(data.storageKey);
+      setPolicyPdfFileName(file.name);
+      setPolicyFileMessage({ type: "success", text: `"${file.name}" uploaded successfully. Fill in the title and category, then save.` });
+    } catch (err: any) {
+      setPolicyFileMessage({ type: "error", text: err?.message ?? "Upload failed. Please try again." });
     } finally {
       setPolicyFileLoading(false);
+    }
+  }
+
+  async function createUser() {
+    if (!newUser.fullName.trim() || !newUser.email.trim()) {
+      setAddUserError("Full name and email are required.");
+      return;
+    }
+    setSavingUser(true);
+    setAddUserError(null);
+    try {
+      const result = await piqApiFetch<{ id: string; fullName: string; email: string; role: string; isActive: boolean; createdAt: string; tempPassword: string }>(
+        "/api/performiq/auth/users",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newUser),
+        }
+      );
+      setUsers((prev) => [...prev, { id: result.id, fullName: result.fullName, email: result.email, role: result.role, isActive: result.isActive }]);
+      setCreatedUserTempPassword({ name: result.fullName, email: result.email, tempPassword: result.tempPassword });
+      setNewUser({ fullName: "", email: "", role: "manager" });
+      setShowAddUserForm(false);
+    } catch (err: any) {
+      setAddUserError(err?.message ?? "Failed to create user.");
+    } finally {
+      setSavingUser(false);
     }
   }
 
@@ -387,70 +437,89 @@ export default function PiqAdminSettings() {
                     <div className="mb-4">
                       <label className="block text-xs font-medium mb-2" style={{ color: C.textMuted }}>Policy Content *</label>
 
-                      {/* Drag-and-drop upload zone */}
-                      <div
-                        className="relative border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer mb-3 transition-colors"
-                        style={{
-                          borderColor: policyFileDragging ? C.perf : C.border,
-                          background: policyFileDragging ? "#EBF5F5" : C.agentBg,
-                        }}
-                        onDragOver={(e) => { e.preventDefault(); setPolicyFileDragging(true); }}
-                        onDragLeave={() => setPolicyFileDragging(false)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setPolicyFileDragging(false);
-                          const file = e.dataTransfer.files[0];
-                          if (file) handlePolicyFile(file);
-                        }}
-                        onClick={() => policyFileInputRef.current?.click()}
-                      >
-                        <input
-                          ref={policyFileInputRef}
-                          type="file"
-                          accept=".pdf,.txt,.doc,.docx"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handlePolicyFile(file);
-                            e.target.value = "";
-                          }}
-                        />
-                        {policyFileLoading ? (
-                          <Loader2 className="w-6 h-6 animate-spin" style={{ color: C.perf }} />
-                        ) : (
-                          <FileUp className="w-6 h-6" style={{ color: C.textMuted }} />
-                        )}
-                        <p className="text-xs font-medium" style={{ color: C.textDark }}>
-                          {policyFileLoading ? "Extracting text…" : "Drop a policy file here, or click to browse"}
-                        </p>
-                        <p className="text-xs" style={{ color: C.textMuted }}>PDF, TXT, DOC, DOCX · Text will be extracted automatically</p>
-                      </div>
-
-                      {/* File message banner */}
-                      {policyFileMessage && (
-                        <div
-                          className="flex items-start gap-2 text-xs rounded-xl px-3 py-2 mb-3 border"
-                          style={
-                            policyFileMessage.type === "success"
-                              ? { background: "#F0FDF4", borderColor: "#86EFAC", color: "#166534" }
-                              : policyFileMessage.type === "error"
-                              ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
-                              : { background: "#EFF6FF", borderColor: "#93C5FD", color: "#1E40AF" }
-                          }
-                        >
-                          {policyFileMessage.type === "success" ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          )}
-                          {policyFileMessage.text}
+                      {/* PDF already uploaded — show confirmation badge */}
+                      {policyPdfStorageKey ? (
+                        <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-3 border" style={{ background: "#F0FDF4", borderColor: "#86EFAC" }}>
+                          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium" style={{ color: "#14532D" }}>PDF ready: {policyPdfFileName}</p>
+                            <p className="text-xs" style={{ color: "#166534" }}>The agent will read this PDF directly — no text extraction needed.</p>
+                          </div>
+                          <button
+                            onClick={() => { setPolicyPdfStorageKey(null); setPolicyPdfFileName(null); setPolicyFileMessage(null); }}
+                            className="p-1 rounded-lg hover:bg-green-200 transition-colors shrink-0"
+                          >
+                            <X className="w-3.5 h-3.5" style={{ color: "#166534" }} />
+                          </button>
                         </div>
-                      )}
+                      ) : (
+                        <>
+                          {/* Drag-and-drop PDF upload zone */}
+                          <div
+                            className="relative border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer mb-3 transition-colors"
+                            style={{
+                              borderColor: policyFileDragging ? C.perf : C.border,
+                              background: policyFileDragging ? "#EBF5F5" : C.agentBg,
+                            }}
+                            onDragOver={(e) => { e.preventDefault(); setPolicyFileDragging(true); }}
+                            onDragLeave={() => setPolicyFileDragging(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setPolicyFileDragging(false);
+                              const file = e.dataTransfer.files[0];
+                              if (file) handlePolicyFile(file);
+                            }}
+                            onClick={() => policyFileInputRef.current?.click()}
+                          >
+                            <input
+                              ref={policyFileInputRef}
+                              type="file"
+                              accept=".pdf"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handlePolicyFile(file);
+                                e.target.value = "";
+                              }}
+                            />
+                            {policyFileLoading ? (
+                              <Loader2 className="w-6 h-6 animate-spin" style={{ color: C.perf }} />
+                            ) : (
+                              <FileUp className="w-6 h-6" style={{ color: C.textMuted }} />
+                            )}
+                            <p className="text-xs font-medium" style={{ color: C.textDark }}>
+                              {policyFileLoading ? "Uploading PDF…" : "Drop a PDF here, or click to browse"}
+                            </p>
+                            <p className="text-xs" style={{ color: C.textMuted }}>PDF · The agent reads the document directly</p>
+                          </div>
 
-                      <textarea value={newPolicy.content} onChange={(e) => setNewPolicy((p) => ({ ...p, content: e.target.value }))}
-                        rows={6} placeholder="Or paste the full policy text here. The AI agent will reference this when documenting violations."
-                        className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-y"
-                        style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
+                          {/* File message banner */}
+                          {policyFileMessage && (
+                            <div
+                              className="flex items-start gap-2 text-xs rounded-xl px-3 py-2 mb-3 border"
+                              style={
+                                policyFileMessage.type === "error"
+                                  ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+                                  : { background: "#EFF6FF", borderColor: "#93C5FD", color: "#1E40AF" }
+                              }
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                              {policyFileMessage.text}
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="flex-1 border-t" style={{ borderColor: C.border }} />
+                            <span className="text-xs" style={{ color: C.textMuted }}>or paste text</span>
+                            <div className="flex-1 border-t" style={{ borderColor: C.border }} />
+                          </div>
+
+                          <textarea value={newPolicy.content} onChange={(e) => setNewPolicy((p) => ({ ...p, content: e.target.value }))}
+                            rows={6} placeholder="Paste the full policy text here. The AI agent will reference this when documenting violations."
+                            className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-y"
+                            style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }} />
+                        </>
+                      )}
                     </div>
                     {policySaveError && (
                       <div className="flex items-center gap-2 text-xs rounded-xl px-3 py-2 mb-3 border" style={{ background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }}>
@@ -460,7 +529,7 @@ export default function PiqAdminSettings() {
                     )}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); setPolicyValidation({}); }}
+                        onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); setPolicyValidation({}); setPolicyPdfStorageKey(null); setPolicyPdfFileName(null); }}
                         className="px-4 py-2 rounded-xl text-sm border"
                         style={{ borderColor: C.border, color: C.textMuted }}
                       >
@@ -483,11 +552,16 @@ export default function PiqAdminSettings() {
                     <div key={p.id} className="rounded-2xl border overflow-hidden" style={{ background: C.card, borderColor: C.border }}>
                       <button
                         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-blue-50 transition-colors"
-                        onClick={() => setExpandedPolicy((prev) => (prev === p.id ? null : p.id))}
+                        onClick={() => !p.pdfStorageKey && setExpandedPolicy((prev) => (prev === p.id ? null : p.id))}
                       >
                         <div>
-                          <p className="font-medium text-sm" style={{ color: C.textDark }}>{p.title}</p>
-                          <p className="text-xs mt-0.5 capitalize" style={{ color: C.textMuted }}>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-medium text-sm" style={{ color: C.textDark }}>{p.title}</p>
+                            {p.pdfStorageKey && (
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#EEF2FF", color: "#4F46E5" }}>PDF</span>
+                            )}
+                          </div>
+                          <p className="text-xs capitalize" style={{ color: C.textMuted }}>
                             {p.category}{p.policyNumber ? ` · #${p.policyNumber}` : ""}{p.effectiveDate ? ` · Effective ${p.effectiveDate}` : ""}
                           </p>
                         </div>
@@ -499,10 +573,12 @@ export default function PiqAdminSettings() {
                           >
                             <Trash2 className="w-3.5 h-3.5" style={{ color: "#9CA3AF" }} />
                           </button>
-                          {expandedPolicy === p.id ? <ChevronUp className="w-4 h-4" style={{ color: C.textMuted }} /> : <ChevronDown className="w-4 h-4" style={{ color: C.textMuted }} />}
+                          {!p.pdfStorageKey && (
+                            expandedPolicy === p.id ? <ChevronUp className="w-4 h-4" style={{ color: C.textMuted }} /> : <ChevronDown className="w-4 h-4" style={{ color: C.textMuted }} />
+                          )}
                         </div>
                       </button>
-                      {expandedPolicy === p.id && (
+                      {!p.pdfStorageKey && expandedPolicy === p.id && (
                         <div className="px-5 pb-5">
                           <div className="rounded-xl p-4 text-sm leading-relaxed whitespace-pre-wrap" style={{ background: C.agentBg, color: C.textDark }}>
                             {p.content}
@@ -520,34 +596,141 @@ export default function PiqAdminSettings() {
               </div>
             )}
 
-            {/* Users */}
+            {/* Users / Team Settings */}
             {tab === "users" && (
-              <div className="rounded-2xl border overflow-hidden" style={{ background: C.card, borderColor: C.border }}>
-                <div className="divide-y" style={{ borderColor: C.border }}>
-                  {users.map((u) => (
-                    <div key={u.id} className="flex items-center gap-4 px-6 py-4">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0" style={{ background: C.perf }}>
-                        {u.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+              <div className="space-y-4">
+                {/* Temp password reveal after creation */}
+                {createdUserTempPassword && (
+                  <div className="rounded-2xl border p-5" style={{ background: "#F0FDF4", borderColor: "#86EFAC" }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-sm mb-1" style={{ color: "#065F46" }}>
+                          ✓ User created — share these credentials with {createdUserTempPassword.name}
+                        </p>
+                        <p className="text-xs mb-2" style={{ color: "#166534" }}>Email: <strong>{createdUserTempPassword.email}</strong></p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs" style={{ color: "#166534" }}>Temporary password:</span>
+                          <code className="text-sm font-mono font-bold px-2 py-0.5 rounded-lg" style={{ background: "#DCFCE7", color: "#14532D" }}>
+                            {createdUserTempPassword.tempPassword}
+                          </code>
+                        </div>
+                        <p className="text-xs mt-2" style={{ color: "#4ADE80" }}>This password is shown once. The user should change it after first login.</p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm" style={{ color: C.textDark }}>{u.fullName}</p>
-                        <p className="text-xs" style={{ color: C.textMuted }}>{u.email} · {roleLabels[u.role] ?? u.role}</p>
-                      </div>
-                      <button
-                        onClick={() => toggleUserActive(u.id, !u.isActive)}
-                        className="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors"
-                        style={u.isActive
-                          ? { borderColor: "#FCA5A5", color: "#B91C1C", background: "#FFF" }
-                          : { borderColor: "#6EE7B7", color: "#065F46", background: "#FFF" }
-                        }
-                      >
-                        {u.isActive ? "Deactivate" : "Activate"}
+                      <button onClick={() => setCreatedUserTempPassword(null)} className="p-1 rounded-lg hover:bg-green-200 transition-colors">
+                        <X className="w-4 h-4" style={{ color: "#166534" }} />
                       </button>
                     </div>
-                  ))}
-                  {users.length === 0 && (
-                    <div className="p-10 text-center text-sm" style={{ color: C.textMuted }}>No team members yet.</div>
-                  )}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => { setShowAddUserForm((v) => !v); setAddUserError(null); }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                    style={{ background: C.perf }}
+                  >
+                    <Plus className="w-4 h-4" /> Add User
+                  </button>
+                </div>
+
+                {showAddUserForm && (
+                  <div className="rounded-2xl border p-5" style={{ background: C.card, borderColor: C.border }}>
+                    <h3 className="font-semibold mb-4" style={{ color: C.textDark }}>Add Team Member</h3>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Full Name *</label>
+                        <input
+                          type="text"
+                          value={newUser.fullName}
+                          onChange={(e) => setNewUser((p) => ({ ...p, fullName: e.target.value }))}
+                          placeholder="Jane Smith"
+                          className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
+                          style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Email *</label>
+                        <input
+                          type="email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
+                          placeholder="jane@company.com"
+                          className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
+                          style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Role *</label>
+                        <select
+                          value={newUser.role}
+                          onChange={(e) => setNewUser((p) => ({ ...p, role: e.target.value }))}
+                          className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
+                          style={{ background: C.agentBg, borderColor: C.border, color: C.textDark }}
+                        >
+                          <option value="manager">Manager</option>
+                          <option value="supervisor">Supervisor</option>
+                          <option value="hr_user">HR Specialist</option>
+                          <option value="hr_admin">HR Admin</option>
+                        </select>
+                      </div>
+                    </div>
+                    {addUserError && (
+                      <div className="flex items-center gap-2 text-xs rounded-xl px-3 py-2 mb-3 border" style={{ background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }}>
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        {addUserError}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setShowAddUserForm(false); setAddUserError(null); setNewUser({ fullName: "", email: "", role: "manager" }); }}
+                        className="px-4 py-2 rounded-xl text-sm border"
+                        style={{ borderColor: C.border, color: C.textMuted }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createUser}
+                        disabled={savingUser}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                        style={{ background: C.perf, opacity: savingUser ? 0.6 : 1 }}
+                      >
+                        {savingUser ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        Create User
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-2xl border overflow-hidden" style={{ background: C.card, borderColor: C.border }}>
+                  <div className="divide-y" style={{ borderColor: C.border }}>
+                    {users.map((u) => (
+                      <div key={u.id} className="flex items-center gap-4 px-6 py-4">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0" style={{ background: C.perf }}>
+                          {u.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm" style={{ color: C.textDark }}>{u.fullName}</p>
+                          <p className="text-xs" style={{ color: C.textMuted }}>{u.email} · {roleLabels[u.role] ?? u.role}</p>
+                          {!u.isActive && (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#F3F4F6", color: "#6B7280" }}>Inactive</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => toggleUserActive(u.id, !u.isActive)}
+                          className="text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors"
+                          style={u.isActive
+                            ? { borderColor: "#FCA5A5", color: "#B91C1C", background: "#FFF" }
+                            : { borderColor: "#6EE7B7", color: "#065F46", background: "#FFF" }
+                          }
+                        >
+                          {u.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                      </div>
+                    ))}
+                    {users.length === 0 && (
+                      <div className="p-10 text-center text-sm" style={{ color: C.textMuted }}>No team members yet.</div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

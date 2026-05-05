@@ -152,9 +152,10 @@ function Router() {
       <Route path="/performiq/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
       <Route path="/performiq/employees/:employeeId" component={() => <PiqProtectedRoute component={PiqEmployeeProfile} />} />
       <Route path="/performiq/employees" component={() => <PiqProtectedRoute component={PiqEmployees} />} />
-      <Route path="/performiq/admin/policies" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
-      <Route path="/performiq/admin/document-types" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
-      <Route path="/performiq/admin/users" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
+      <Route path="/performiq/admin/settings" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
+      <Route path="/performiq/admin/policies" component={() => <Redirect to="/performiq/admin/settings" />} />
+      <Route path="/performiq/admin/document-types" component={() => <Redirect to="/performiq/admin/settings" />} />
+      <Route path="/performiq/admin/users" component={() => <Redirect to="/performiq/admin/settings" />} />
 
       {/* Backward-compat redirects — keep old paths alive */}
       <Route path="/request" component={() => <NavRedirect to="/leaveiq/request" />} />

@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { db, piqAgentSessionsTable, piqAgentMessagesTable, piqPoliciesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { logger } from "./logger.js";
+import { downloadFile, isR2Configured } from "./storage.js";
 import type { PiqDocumentContent } from "@workspace/db";
 
 const anthropic = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
@@ -266,16 +267,26 @@ export async function runAgentTurn({
     .where(eq(piqAgentMessagesTable.sessionId, sessionId))
     .orderBy(piqAgentMessagesTable.createdAt);
 
-  // Load org policies for context
+  // Load org policies for context — split into text policies and PDF-backed policies
   const policies = await db
-    .select({ title: piqPoliciesTable.title, category: piqPoliciesTable.category, content: piqPoliciesTable.content })
+    .select({
+      title: piqPoliciesTable.title,
+      category: piqPoliciesTable.category,
+      content: piqPoliciesTable.content,
+      pdfStorageKey: piqPoliciesTable.pdfStorageKey,
+    })
     .from(piqPoliciesTable)
     .where(and(eq(piqPoliciesTable.organizationId, organizationId), eq(piqPoliciesTable.isActive, true)));
 
+  const textPolicies = policies.filter((p) => !p.pdfStorageKey && p.content?.trim());
+  const pdfPolicies = policies.filter((p) => !!p.pdfStorageKey);
+
   const policyContext =
-    policies.length > 0
-      ? `\n\n[POLICY CONTEXT]\n${policies.map((p) => `### ${p.title} (${p.category})\n${p.content}`).join("\n\n")}`
-      : "\n\n[POLICY CONTEXT]\nNo policies have been configured for this organization yet. Generate documentation using HR best practices and note the gap as described in your instructions.";
+    textPolicies.length > 0
+      ? `\n\n[POLICY CONTEXT]\n${textPolicies.map((p) => `### ${p.title} (${p.category})\n${p.content}`).join("\n\n")}`
+      : pdfPolicies.length === 0
+        ? "\n\n[POLICY CONTEXT]\nNo policies have been configured for this organization yet. Generate documentation using HR best practices and note the gap as described in your instructions."
+        : "\n\n[POLICY CONTEXT]\nOrganizational policies are provided as PDF documents alongside this message. Reference them when applicable.";
 
   const employeeContext = employeeInfo
     ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}`
@@ -297,9 +308,35 @@ export async function runAgentTurn({
     });
   }
 
+  // Build the last user message — prepend PDF policy documents if available
+  const lastMessageContent: Anthropic.ContentBlockParam[] = [];
+
+  if (pdfPolicies.length > 0 && isR2Configured()) {
+    for (const policy of pdfPolicies) {
+      try {
+        const pdfBuffer = await downloadFile(policy.pdfStorageKey!);
+        lastMessageContent.push({
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBuffer.toString("base64"),
+          },
+          title: policy.title,
+          context: `Organizational policy: "${policy.title}" (category: ${policy.category}). Use this when creating relevant documentation.`,
+          citations: { enabled: true },
+        } as any);
+      } catch (err) {
+        logger.warn({ err, policyTitle: policy.title }, "Failed to load PDF policy for agent context — skipping");
+      }
+    }
+  }
+
+  lastMessageContent.push({ type: "text", text: userMessage });
+
   const messages: Anthropic.MessageParam[] = [
     ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-    { role: "user", content: userMessage },
+    { role: "user", content: lastMessageContent },
   ];
 
   let fullText = "";

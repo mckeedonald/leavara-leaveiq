@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import multer from "multer";
+import crypto from "node:crypto";
 import {
   db,
   piqDocumentTypesTable,
@@ -10,18 +11,16 @@ import {
 import { eq, and } from "drizzle-orm";
 import { requirePiqHrAdmin, requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
+import { uploadFile } from "../../lib/storage.js";
 
 const policyUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter(_req, file, cb) {
-    const allowed = [
-      "application/pdf",
-      "text/plain",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    cb(null, allowed.includes(file.mimetype));
+    // PDF only for policy upload
+    const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
+    const isPdf = file.mimetype === "application/pdf" || ext === "pdf";
+    cb(null, isPdf);
   },
 });
 
@@ -118,7 +117,17 @@ router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res
   try {
     const authed = req as PiqAuthenticatedRequest;
     const policies = await db
-      .select()
+      .select({
+        id: piqPoliciesTable.id,
+        title: piqPoliciesTable.title,
+        category: piqPoliciesTable.category,
+        content: piqPoliciesTable.content,
+        policyNumber: piqPoliciesTable.policyNumber,
+        effectiveDate: piqPoliciesTable.effectiveDate,
+        isActive: piqPoliciesTable.isActive,
+        pdfStorageKey: piqPoliciesTable.pdfStorageKey,
+        createdAt: piqPoliciesTable.createdAt,
+      })
       .from(piqPoliciesTable)
       .where(eq(piqPoliciesTable.organizationId, authed.piqUser.organizationId));
     res.json(policies);
@@ -132,16 +141,22 @@ router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res
 router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { title, category, content, policyNumber, effectiveDate } = req.body as {
+    const { title, category, content, policyNumber, effectiveDate, pdfStorageKey } = req.body as {
       title?: string;
       category?: string;
       content?: string;
       policyNumber?: string;
       effectiveDate?: string;
+      pdfStorageKey?: string;
     };
 
-    if (!title || !category || !content) {
-      res.status(400).json({ error: "title, category, and content are required" });
+    if (!title || !category) {
+      res.status(400).json({ error: "title and category are required" });
+      return;
+    }
+    // Must have either a PDF storage key or text content
+    if (!pdfStorageKey && !content?.trim()) {
+      res.status(400).json({ error: "Either upload a PDF or provide policy content text" });
       return;
     }
 
@@ -151,9 +166,10 @@ router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request,
         organizationId: authed.piqUser.organizationId,
         title,
         category,
-        content,
+        content: content ?? "",
         policyNumber,
         effectiveDate,
+        pdfStorageKey: pdfStorageKey ?? null,
       })
       .returning();
 
@@ -180,7 +196,7 @@ router.patch("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (re
       return;
     }
 
-    const allowed = ["title", "category", "content", "policyNumber", "effectiveDate", "isActive"];
+    const allowed = ["title", "category", "content", "policyNumber", "effectiveDate", "isActive", "pdfStorageKey"];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
@@ -212,63 +228,29 @@ router.delete("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (r
   }
 });
 
-// POST /performiq/admin/policies/extract-text — extract text from uploaded policy document
+// POST /performiq/admin/policies/upload-pdf — upload a policy PDF to R2 and return a storage key
 router.post(
-  "/performiq/admin/policies/extract-text",
+  "/performiq/admin/policies/upload-pdf",
   requirePiqHrAdmin,
   policyUpload.single("file"),
   async (req: Request, res: Response) => {
+    const authed = req as PiqAuthenticatedRequest;
     const file = req.file;
     if (!file) { res.status(400).json({ error: "No file provided." }); return; }
 
+    const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
+    if (ext !== "pdf" && file.mimetype !== "application/pdf") {
+      res.status(400).json({ error: "Only PDF files are accepted." });
+      return;
+    }
+
     try {
-      let text = "";
-      // Use file extension as fallback since some browsers send application/octet-stream
-      const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
-      const isPdf = file.mimetype === "application/pdf" || ext === "pdf";
-      const isTxt = file.mimetype === "text/plain" || ext === "txt";
-
-      if (isTxt) {
-        text = file.buffer.toString("utf-8");
-      } else if (isPdf) {
-        const PDFParser = (await import("pdf2json")).default;
-        const parser = new PDFParser(null, 1);
-        await new Promise<void>((resolve, reject) => {
-          parser.on("pdfParser_dataReady", () => resolve());
-          parser.on("pdfParser_dataError", (errData: any) => {
-            reject(new Error(errData?.parserError ?? "PDF parse error"));
-          });
-          parser.parseBuffer(file.buffer);
-        });
-        const raw = parser.getRawTextContent();
-        // pdf2json URL-encodes special characters (%27 for apostrophe, etc.) — decode first
-        let decoded = raw;
-        try { decoded = decodeURIComponent(raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25")); } catch { decoded = raw; }
-        text = decoded
-          // getRawTextContent uses form-feed chars as page breaks — convert to newlines
-          .replace(/\f/g, "\n\n")
-          // Strip other control characters that break JSON serialization
-          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, " ")
-          .replace(/\s{4,}/g, "\n\n")
-          .trim();
-        // Truncate very large documents to avoid DB limits (keep first ~50k chars)
-        if (text.length > 50000) {
-          text = text.slice(0, 50000) + "\n\n[Document truncated — paste remaining content manually if needed]";
-        }
-      } else {
-        // DOC/DOCX — return a message asking to use copy/paste
-        res.json({ text: "", message: "Word documents cannot be parsed automatically. Please copy and paste the policy text into the content field." });
-        return;
-      }
-
-      if (!text) {
-        res.json({ text: "", message: "No text could be extracted from this file. Please paste the policy content directly." });
-        return;
-      }
-      res.json({ text: text.trim() });
+      const storageKey = `piq-policies/${authed.piqUser.organizationId}/${crypto.randomUUID()}.pdf`;
+      await uploadFile(storageKey, file.buffer, "application/pdf");
+      res.json({ storageKey, fileName: file.originalname });
     } catch (err) {
-      logger.error({ err }, "Policy text extraction error");
-      res.status(500).json({ error: "Failed to extract text from file. Please paste the policy content directly." });
+      logger.error({ err }, "Policy PDF upload error");
+      res.status(500).json({ error: "Failed to upload PDF. Please try again." });
     }
   }
 );

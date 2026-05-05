@@ -8,8 +8,6 @@ import {
   LogOut,
   CalendarDays,
   TrendingUp,
-  BookOpen,
-  FileText,
   Menu,
   X,
 } from "lucide-react";
@@ -48,9 +46,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
     { icon: FolderOpen, label: "Cases", href: "/performiq/cases", show: true },
     { icon: TrendingUp, label: "Analytics", href: "/performiq/analytics", show: true },
     { icon: Users, label: "Employees", href: "/performiq/employees", show: isHr },
-    { icon: BookOpen, label: "Policies", href: "/performiq/admin/policies", show: isHrAdmin },
-    { icon: FileText, label: "Document Types", href: "/performiq/admin/document-types", show: isHrAdmin },
-    { icon: Settings, label: "Team Settings", href: "/performiq/admin/users", show: isHrAdmin },
+    { icon: Settings, label: "Admin Settings", href: "/performiq/admin/settings", show: isHrAdmin },
   ].filter((i) => i.show);
 
   const initials = user
@@ -100,7 +96,8 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         >
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location === item.href || location.startsWith(item.href + "/");
+              const isActive = location === item.href || location.startsWith(item.href + "/") ||
+                (item.href === "/performiq/admin/settings" && location.startsWith("/performiq/admin/"));
               return (
                 <Link
                   key={item.href}
@@ -171,7 +168,8 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         {/* Nav */}
         <nav className="flex-1 px-4 space-y-1 mt-4 pb-4">
           {navItems.map((item) => {
-            const isActive = location === item.href || location.startsWith(item.href + "/");
+            const isActive = location === item.href || location.startsWith(item.href + "/") ||
+              (item.href === "/performiq/admin/settings" && location.startsWith("/performiq/admin/"));
             return (
               <Link
                 key={item.href}
