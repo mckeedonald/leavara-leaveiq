@@ -1,6 +1,5 @@
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
-import crypto from "node:crypto";
 import {
   db,
   piqDocumentTypesTable,
@@ -11,18 +10,21 @@ import {
 import { eq, and } from "drizzle-orm";
 import { requirePiqHrAdmin, requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
-import { uploadFile, isR2Configured } from "../../lib/storage.js";
 
+// Accept all files; validate extension manually inside handler
 const policyUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter(_req, file, cb) {
-    // PDF only for policy upload
-    const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
-    const isPdf = file.mimetype === "application/pdf" || ext === "pdf";
-    cb(null, isPdf);
-  },
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
 });
+
+// Convert multer errors (e.g. file too large) into clean JSON 400s
+function handleMulterError(err: any, _req: Request, res: Response, next: NextFunction) {
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    res.status(400).json({ error: "File exceeds the 50 MB limit. Please use a smaller PDF." });
+    return;
+  }
+  next(err);
+}
 
 const router = Router();
 
@@ -234,36 +236,33 @@ router.delete("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (r
   }
 });
 
-// POST /performiq/admin/policies/upload-pdf — upload a policy PDF to R2 and return a storage key
+// POST /performiq/admin/policies/upload-pdf — receive PDF and return it as base64 for inline storage
 router.post(
   "/performiq/admin/policies/upload-pdf",
   requirePiqHrAdmin,
   policyUpload.single("file"),
+  handleMulterError,
   async (req: Request, res: Response) => {
-    const authed = req as PiqAuthenticatedRequest;
     const file = req.file;
-    if (!file) { res.status(400).json({ error: "No file provided." }); return; }
+    if (!file) {
+      res.status(400).json({ error: "No file provided." });
+      return;
+    }
 
     const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
-    if (ext !== "pdf" && file.mimetype !== "application/pdf") {
+    const isPdf = ext === "pdf" || file.mimetype === "application/pdf" || file.mimetype === "application/octet-stream";
+    if (!isPdf) {
       res.status(400).json({ error: "Only PDF files are accepted." });
       return;
     }
 
     try {
-      if (isR2Configured()) {
-        // Upload to R2 and return a storage key
-        const storageKey = `piq-policies/${authed.piqUser.organizationId}/${crypto.randomUUID()}.pdf`;
-        await uploadFile(storageKey, file.buffer, "application/pdf");
-        res.json({ storageKey, fileName: file.originalname });
-      } else {
-        // R2 not configured — return the PDF as base64 for inline DB storage
-        const base64Pdf = file.buffer.toString("base64");
-        res.json({ base64Pdf, fileName: file.originalname });
-      }
+      const base64Pdf = file.buffer.toString("base64");
+      logger.info({ fileName: file.originalname, sizeKb: Math.round(file.size / 1024) }, "Policy PDF buffered for inline storage");
+      res.json({ base64Pdf, fileName: file.originalname });
     } catch (err) {
-      logger.error({ err }, "Policy PDF upload error");
-      res.status(500).json({ error: "Failed to upload PDF. Please try again." });
+      logger.error({ err }, "Policy PDF base64 encode error");
+      res.status(500).json({ error: "Failed to process PDF. Please try again." });
     }
   }
 );

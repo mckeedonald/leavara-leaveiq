@@ -2,7 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { db, piqAgentSessionsTable, piqAgentMessagesTable, piqPoliciesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { logger } from "./logger.js";
-import { downloadFile, isR2Configured } from "./storage.js";
 import type { PiqDocumentContent } from "@workspace/db";
 
 const anthropic = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
@@ -322,10 +321,12 @@ export async function runAgentTurn({
       try {
         let base64Data: string;
         if (policy.content?.startsWith(PDF_INLINE_PREFIX)) {
-          // Inline base64 PDF stored directly in DB
+          // Inline base64 PDF stored directly in DB (no R2 needed)
           base64Data = policy.content.slice(PDF_INLINE_PREFIX.length);
-        } else if (policy.pdfStorageKey && isR2Configured()) {
-          // R2-stored PDF
+        } else if (policy.pdfStorageKey) {
+          // R2-stored PDF (future: when R2 is configured)
+          const { downloadFile, isR2Configured } = await import("./storage.js");
+          if (!isR2Configured()) { continue; }
           const pdfBuffer = await downloadFile(policy.pdfStorageKey);
           base64Data = pdfBuffer.toString("base64");
         } else {
