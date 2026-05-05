@@ -278,8 +278,13 @@ export async function runAgentTurn({
     .from(piqPoliciesTable)
     .where(and(eq(piqPoliciesTable.organizationId, organizationId), eq(piqPoliciesTable.isActive, true)));
 
-  const textPolicies = policies.filter((p) => !p.pdfStorageKey && p.content?.trim());
-  const pdfPolicies = policies.filter((p) => !!p.pdfStorageKey);
+  const PDF_INLINE_PREFIX = "data:application/pdf;base64,";
+  const textPolicies = policies.filter(
+    (p) => !p.pdfStorageKey && p.content?.trim() && !p.content.startsWith(PDF_INLINE_PREFIX)
+  );
+  const pdfPolicies = policies.filter(
+    (p) => !!p.pdfStorageKey || p.content?.startsWith(PDF_INLINE_PREFIX)
+  );
 
   const policyContext =
     textPolicies.length > 0
@@ -311,16 +316,27 @@ export async function runAgentTurn({
   // Build the last user message — prepend PDF policy documents if available
   const lastMessageContent: Anthropic.ContentBlockParam[] = [];
 
-  if (pdfPolicies.length > 0 && isR2Configured()) {
+  if (pdfPolicies.length > 0) {
+    const PDF_INLINE_PREFIX = "data:application/pdf;base64,";
     for (const policy of pdfPolicies) {
       try {
-        const pdfBuffer = await downloadFile(policy.pdfStorageKey!);
+        let base64Data: string;
+        if (policy.content?.startsWith(PDF_INLINE_PREFIX)) {
+          // Inline base64 PDF stored directly in DB
+          base64Data = policy.content.slice(PDF_INLINE_PREFIX.length);
+        } else if (policy.pdfStorageKey && isR2Configured()) {
+          // R2-stored PDF
+          const pdfBuffer = await downloadFile(policy.pdfStorageKey);
+          base64Data = pdfBuffer.toString("base64");
+        } else {
+          continue; // No usable PDF source
+        }
         lastMessageContent.push({
           type: "document",
           source: {
             type: "base64",
             media_type: "application/pdf",
-            data: pdfBuffer.toString("base64"),
+            data: base64Data,
           },
           title: policy.title,
           context: `Organizational policy: "${policy.title}" (category: ${policy.category}). Use this when creating relevant documentation.`,

@@ -11,7 +11,7 @@ import {
 import { eq, and } from "drizzle-orm";
 import { requirePiqHrAdmin, requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
-import { uploadFile } from "../../lib/storage.js";
+import { uploadFile, isR2Configured } from "../../lib/storage.js";
 
 const policyUpload = multer({
   storage: multer.memoryStorage(),
@@ -141,24 +141,30 @@ router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res
 router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { title, category, content, policyNumber, effectiveDate, pdfStorageKey } = req.body as {
+    const { title, category, content, policyNumber, effectiveDate, pdfStorageKey, pdfBase64 } = req.body as {
       title?: string;
       category?: string;
       content?: string;
       policyNumber?: string;
       effectiveDate?: string;
       pdfStorageKey?: string;
+      pdfBase64?: string;
     };
 
     if (!title || !category) {
       res.status(400).json({ error: "title and category are required" });
       return;
     }
-    // Must have either a PDF storage key or text content
-    if (!pdfStorageKey && !content?.trim()) {
+    // Must have either a PDF (storage key or inline base64) or text content
+    if (!pdfStorageKey && !pdfBase64 && !content?.trim()) {
       res.status(400).json({ error: "Either upload a PDF or provide policy content text" });
       return;
     }
+
+    // Inline PDF: store as base64 data URI in content field (no R2 needed)
+    const storedContent = pdfBase64
+      ? `data:application/pdf;base64,${pdfBase64}`
+      : (content ?? "");
 
     const [policy] = await db
       .insert(piqPoliciesTable)
@@ -166,7 +172,7 @@ router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request,
         organizationId: authed.piqUser.organizationId,
         title,
         category,
-        content: content ?? "",
+        content: storedContent,
         policyNumber,
         effectiveDate,
         pdfStorageKey: pdfStorageKey ?? null,
@@ -245,9 +251,16 @@ router.post(
     }
 
     try {
-      const storageKey = `piq-policies/${authed.piqUser.organizationId}/${crypto.randomUUID()}.pdf`;
-      await uploadFile(storageKey, file.buffer, "application/pdf");
-      res.json({ storageKey, fileName: file.originalname });
+      if (isR2Configured()) {
+        // Upload to R2 and return a storage key
+        const storageKey = `piq-policies/${authed.piqUser.organizationId}/${crypto.randomUUID()}.pdf`;
+        await uploadFile(storageKey, file.buffer, "application/pdf");
+        res.json({ storageKey, fileName: file.originalname });
+      } else {
+        // R2 not configured — return the PDF as base64 for inline DB storage
+        const base64Pdf = file.buffer.toString("base64");
+        res.json({ base64Pdf, fileName: file.originalname });
+      }
     } catch (err) {
       logger.error({ err }, "Policy PDF upload error");
       res.status(500).json({ error: "Failed to upload PDF. Please try again." });

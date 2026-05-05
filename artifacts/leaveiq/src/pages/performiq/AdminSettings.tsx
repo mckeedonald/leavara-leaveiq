@@ -53,6 +53,7 @@ export default function PiqAdminSettings() {
   // New policy form
   const [newPolicy, setNewPolicy] = useState({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
   const [policyPdfStorageKey, setPolicyPdfStorageKey] = useState<string | null>(null);
+  const [policyPdfBase64, setPolicyPdfBase64] = useState<string | null>(null);
   const [policyPdfFileName, setPolicyPdfFileName] = useState<string | null>(null);
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [showPolicyForm, setShowPolicyForm] = useState(false);
@@ -103,7 +104,7 @@ export default function PiqAdminSettings() {
   async function createPolicy() {
     const missingTitle = !newPolicy.title.trim();
     const missingCategory = !newPolicy.category.trim();
-    const missingContent = !policyPdfStorageKey && !newPolicy.content.trim();
+    const missingContent = !policyPdfStorageKey && !policyPdfBase64 && !newPolicy.content.trim();
     if (missingTitle || missingCategory || missingContent) {
       setPolicyValidation({ title: missingTitle, category: missingCategory });
       setPolicySaveError(
@@ -127,6 +128,9 @@ export default function PiqAdminSettings() {
       if (policyPdfStorageKey) {
         body.pdfStorageKey = policyPdfStorageKey;
         body.content = "";
+      } else if (policyPdfBase64) {
+        body.pdfBase64 = policyPdfBase64;
+        body.content = "";
       } else {
         // Strip control characters from pasted text
         body.content = newPolicy.content
@@ -143,6 +147,7 @@ export default function PiqAdminSettings() {
       setPolicies((prev) => [...prev, created]);
       setNewPolicy({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
       setPolicyPdfStorageKey(null);
+      setPolicyPdfBase64(null);
       setPolicyPdfFileName(null);
       setPolicyFileMessage(null);
       setPolicySaveError(null);
@@ -183,8 +188,14 @@ export default function PiqAdminSettings() {
         const err = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(err.error ?? "Upload failed");
       }
-      const data = await res.json() as { storageKey: string; fileName: string };
-      setPolicyPdfStorageKey(data.storageKey);
+      const data = await res.json() as { storageKey?: string; base64Pdf?: string; fileName: string };
+      if (data.storageKey) {
+        setPolicyPdfStorageKey(data.storageKey);
+        setPolicyPdfBase64(null);
+      } else if (data.base64Pdf) {
+        setPolicyPdfBase64(data.base64Pdf);
+        setPolicyPdfStorageKey(null);
+      }
       setPolicyPdfFileName(file.name);
       setPolicyFileMessage({ type: "success", text: `"${file.name}" uploaded successfully. Fill in the title and category, then save.` });
     } catch (err: any) {
@@ -446,7 +457,7 @@ export default function PiqAdminSettings() {
                             <p className="text-xs" style={{ color: "#166534" }}>The agent will read this PDF directly — no text extraction needed.</p>
                           </div>
                           <button
-                            onClick={() => { setPolicyPdfStorageKey(null); setPolicyPdfFileName(null); setPolicyFileMessage(null); }}
+                            onClick={() => { setPolicyPdfStorageKey(null); setPolicyPdfBase64(null); setPolicyPdfFileName(null); setPolicyFileMessage(null); }}
                             className="p-1 rounded-lg hover:bg-green-200 transition-colors shrink-0"
                           >
                             <X className="w-3.5 h-3.5" style={{ color: "#166534" }} />
@@ -529,7 +540,7 @@ export default function PiqAdminSettings() {
                     )}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); setPolicyValidation({}); setPolicyPdfStorageKey(null); setPolicyPdfFileName(null); }}
+                        onClick={() => { setShowPolicyForm(false); setPolicyFileMessage(null); setPolicySaveError(null); setPolicyValidation({}); setPolicyPdfStorageKey(null); setPolicyPdfBase64(null); setPolicyPdfFileName(null); }}
                         className="px-4 py-2 rounded-xl text-sm border"
                         style={{ borderColor: C.border, color: C.textMuted }}
                       >

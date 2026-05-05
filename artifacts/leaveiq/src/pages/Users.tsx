@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { UserPlus, Mail, Shield, User, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Shield, User, ToggleLeft, ToggleRight, Loader2, Plus, AlertTriangle, CheckCircle2, X } from "lucide-react";
 import { useAuth, apiFetch } from "@/lib/auth";
 
 const API_BASE = "";
@@ -43,6 +43,13 @@ export default function Users() {
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Direct add user
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ fullName: "", email: "", role: "manager" });
+  const [addUserLoading, setAddUserLoading] = useState(false);
+  const [addUserError, setAddUserError] = useState<string | null>(null);
+  const [createdUser, setCreatedUser] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["hr-users"],
@@ -88,6 +95,30 @@ export default function Users() {
     }
   }
 
+  async function handleAddUser(e: React.FormEvent) {
+    e.preventDefault();
+    setAddUserError(null);
+    setAddUserLoading(true);
+    try {
+      const result = await apiFetch<{ id: string; fullName: string; email: string; role: string; isActive: boolean; createdAt: string; tempPassword: string }>(
+        "/api/auth/users",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newUser),
+        }
+      );
+      setCreatedUser({ name: result.fullName, email: result.email, tempPassword: result.tempPassword });
+      setNewUser({ fullName: "", email: "", role: "manager" });
+      setShowAddUser(false);
+      qc.invalidateQueries({ queryKey: ["hr-users"] });
+    } catch (err) {
+      setAddUserError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setAddUserLoading(false);
+    }
+  }
+
   if (me?.role !== "hr_admin" && me?.role !== "admin") {
     return (
       <AppLayout>
@@ -100,19 +131,120 @@ export default function Users() {
 
   return (
     <AppLayout>
-      <div className="space-y-8 max-w-4xl">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">User Management</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Invite new users and manage existing accounts.
-          </p>
+      <div className="space-y-6 max-w-4xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Team Members</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage team members and access.</p>
+          </div>
+          <button
+            onClick={() => { setShowAddUser((v) => !v); setAddUserError(null); }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-colors"
+            style={{ background: "#C97E59" }}
+          >
+            <Plus className="w-4 h-4" /> Add User
+          </button>
         </div>
 
-        {/* Invite form */}
+        {/* Temp password reveal after creation */}
+        {createdUser && (
+          <div className="rounded-2xl border p-5 bg-green-50 border-green-200">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-sm mb-1 text-green-800">
+                  ✓ User created — share these credentials with {createdUser.name}
+                </p>
+                <p className="text-xs text-green-700 mb-2">Email: <strong>{createdUser.email}</strong></p>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-green-700">Temporary password:</span>
+                  <code className="text-sm font-mono font-bold px-2 py-0.5 rounded-lg bg-green-100 text-green-900">
+                    {createdUser.tempPassword}
+                  </code>
+                </div>
+                <p className="text-xs mt-2 text-green-600">This password is shown once. The user should change it after first login.</p>
+              </div>
+              <button onClick={() => setCreatedUser(null)} className="p-1 rounded-lg hover:bg-green-200 transition-colors">
+                <X className="w-4 h-4 text-green-700" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Add User form */}
+        {showAddUser && (
+          <div className="bg-white border border-border rounded-2xl p-6 shadow-sm">
+            <h2 className="text-base font-semibold mb-4">Add Team Member</h2>
+            <form onSubmit={handleAddUser} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.fullName}
+                    onChange={(e) => setNewUser((p) => ({ ...p, fullName: e.target.value }))}
+                    placeholder="Jane Smith"
+                    className="w-full px-3 py-2 rounded-xl border border-input bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newUser.email}
+                    onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
+                    placeholder="jane@company.com"
+                    className="w-full px-3 py-2 rounded-xl border border-input bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Role *</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser((p) => ({ ...p, role: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border border-input bg-muted/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  >
+                    <option value="manager">Manager</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="hr_user">HR Specialist</option>
+                    <option value="hr_admin">HR Admin</option>
+                  </select>
+                </div>
+              </div>
+              {addUserError && (
+                <div className="flex items-center gap-2 text-xs rounded-xl px-3 py-2 border bg-red-50 border-red-200 text-red-700">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  {addUserError}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddUser(false); setAddUserError(null); }}
+                  className="px-4 py-2 rounded-xl text-sm border border-input text-muted-foreground hover:bg-muted/30 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addUserLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-60 transition-colors"
+                  style={{ background: "#C97E59" }}
+                >
+                  {addUserLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                  Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Invite by email form */}
         <div className="bg-white border border-border rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <UserPlus className="w-5 h-5 text-primary" />
-            <h2 className="text-base font-semibold">Invite a New User</h2>
+            <Mail className="w-5 h-5 text-primary" />
+            <h2 className="text-base font-semibold">Invite via Email Link</h2>
           </div>
           <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-start">
             <div className="flex-1 min-w-0">
@@ -145,9 +277,7 @@ export default function Users() {
           </form>
           {inviteSuccess && (
             <p className="mt-3 text-sm flex items-center gap-1.5" style={{ color: "#9E5D38" }}>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckCircle2 className="w-4 h-4" />
               Invitation sent to {inviteEmail || "the user"}
             </p>
           )}

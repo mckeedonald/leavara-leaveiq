@@ -492,6 +492,72 @@ router.get(
   },
 );
 
+// POST /auth/users  (admin only) — create a user directly with a temp password
+router.post(
+  "/auth/users",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { fullName, email, role } = req.body as { fullName?: string; email?: string; role?: string };
+
+    if (!fullName || !email || !role) {
+      res.status(400).json({ error: "fullName, email, and role are required" });
+      return;
+    }
+    const allowedRoles = ["manager", "supervisor", "hr_user", "hr_admin"];
+    if (!allowedRoles.includes(role)) {
+      res.status(400).json({ error: "Invalid role" });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const [existing] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(
+        authed.user.organizationId
+          ? and(eq(usersTable.email, normalizedEmail), eq(usersTable.organizationId, authed.user.organizationId))
+          : eq(usersTable.email, normalizedEmail)
+      )
+      .limit(1);
+    if (existing) {
+      res.status(409).json({ error: "A user with this email already exists in your organization" });
+      return;
+    }
+
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    const tempPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+
+    const nameParts = fullName.trim().split(" ");
+    const firstName = nameParts[0] ?? fullName;
+    const lastName = nameParts.slice(1).join(" ") || firstName;
+
+    const [user] = await db
+      .insert(usersTable)
+      .values({
+        organizationId: authed.user.organizationId ?? undefined,
+        fullName: fullName.trim(),
+        firstName,
+        lastName,
+        email: normalizedEmail,
+        passwordHash,
+        role: role as UnifiedRole,
+        isActive: true,
+      })
+      .returning({
+        id: usersTable.id,
+        fullName: usersTable.fullName,
+        email: usersTable.email,
+        role: usersTable.role,
+        isActive: usersTable.isActive,
+        createdAt: usersTable.createdAt,
+      });
+
+    res.status(201).json({ ...user, tempPassword });
+  },
+);
+
 // PATCH /auth/users/:userId  (admin only)
 router.patch(
   "/auth/users/:userId",

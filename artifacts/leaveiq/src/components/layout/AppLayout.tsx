@@ -8,6 +8,7 @@ import {
   Search,
   MessageSquare,
   Users,
+  UserPlus,
   ShieldAlert,
   CalendarDays,
   Building2,
@@ -72,6 +73,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isSuperAdmin = user?.isSuperAdmin ?? false;
   const isManager = user?.role === "manager";
   const isHrAdmin = user?.role === "hr_admin";
+  const isHrUser = user?.role === "hr_user";
 
   const navItems = isSuperAdmin
     ? [
@@ -88,7 +90,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
         { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
-        { icon: Users, label: "Users", href: "/leaveiq/users", show: isHrAdmin },
+        { icon: Users, label: "Employees", href: "/performiq/employees", show: isHrAdmin || isHrUser },
+        { icon: UserPlus, label: "Team Members", href: "/leaveiq/users", show: isHrAdmin },
         { icon: Building2, label: "HRIS Integration", href: "/leaveiq/hris-settings", show: isHrAdmin },
       ];
 
