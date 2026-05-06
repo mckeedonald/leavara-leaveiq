@@ -557,12 +557,12 @@ router.get(
       }
 
       const [caseRow] = await db.select({ caseNumber: piqCasesTable.caseNumber }).from(piqCasesTable).where(eq(piqCasesTable.id, caseId)).limit(1);
-      const pdfBuffer = Buffer.from(sig.signedPdfContent, "base64");
       const filename = `${caseRow?.caseNumber ?? caseId}_signed.pdf`;
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.send(pdfBuffer);
+      // Return base64 JSON so the frontend can build a Blob and trigger
+      // a client-side download — avoids all browser auth-header limitations
+      // when downloading binary files from protected endpoints.
+      res.json({ pdfBase64: sig.signedPdfContent, filename });
     } catch (err) {
       logger.error({ err }, "download signed pdf error");
       res.status(500).json({ error: "Internal server error" });

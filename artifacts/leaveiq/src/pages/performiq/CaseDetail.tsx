@@ -172,18 +172,26 @@ export default function PiqCaseDetail() {
       const res = await fetch(`/api/performiq/cases/${caseId}/signatures/download-pdf`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("PDF not available");
-      const blob = await res.blob();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "PDF not available");
+      }
+      const { pdfBase64, filename } = await res.json() as { pdfBase64: string; filename: string };
+      // Decode base64 → binary → Blob — no binary streaming needed
+      const binary = atob(pdfBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${caseData?.case?.caseNumber ?? caseId}_signed.pdf`;
+      a.download = filename ?? `${caseData?.case?.caseNumber ?? caseId}_signed.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      alert("Failed to download signed PDF. Please try again.");
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to download signed PDF. Please try again.");
     }
   }
 
