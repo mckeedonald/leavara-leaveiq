@@ -6,8 +6,10 @@ import {
   employeesTable,
   usersTable,
   piqCasesTable,
+  organizationsTable,
+  piqDocumentTypesTable,
 } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { runAgentTurn } from "../../lib/piqAgent.js";
 import { logger } from "../../lib/logger.js";
@@ -18,7 +20,7 @@ const router = Router();
 router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { employeeId } = req.body as { employeeId?: string };
+    const { employeeId, documentTypeId } = req.body as { employeeId?: string; documentTypeId?: string };
 
     let employeeInfo: {
       fullName: string;
@@ -60,6 +62,54 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
       }
     }
 
+    // Load org name
+    let orgName: string | undefined;
+    const [orgRow] = await db
+      .select({ name: organizationsTable.name })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, authed.piqUser.organizationId))
+      .limit(1);
+    if (orgRow) orgName = orgRow.name;
+
+    // Load prior PerformIQ cases for the employee
+    let priorCases: string | undefined;
+    if (employeeId) {
+      const priorCaseRows = await db
+        .select({
+          caseNumber: piqCasesTable.caseNumber,
+          status: piqCasesTable.status,
+          createdAt: piqCasesTable.createdAt,
+        })
+        .from(piqCasesTable)
+        .where(and(
+          eq(piqCasesTable.employeeId, employeeId),
+          eq(piqCasesTable.organizationId, authed.piqUser.organizationId),
+        ))
+        .orderBy(desc(piqCasesTable.createdAt))
+        .limit(10);
+      if (priorCaseRows.length > 0) {
+        priorCases = priorCaseRows
+          .map((c) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
+          .join("\n");
+      }
+    }
+
+    // Load example PDF for the document type if provided
+    let examplePdfContent: string | undefined;
+    let documentTypeLabel: string | undefined;
+    if (documentTypeId) {
+      const [docType] = await db
+        .select({ examplePdfContent: piqDocumentTypesTable.examplePdfContent, displayLabel: piqDocumentTypesTable.displayLabel })
+        .from(piqDocumentTypesTable)
+        .where(and(
+          eq(piqDocumentTypesTable.id, documentTypeId),
+          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+        ))
+        .limit(1);
+      if (docType?.examplePdfContent) examplePdfContent = docType.examplePdfContent;
+      if (docType?.displayLabel) documentTypeLabel = docType.displayLabel;
+    }
+
     const [session] = await db
       .insert(piqAgentSessionsTable)
       .values({
@@ -77,6 +127,10 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
       isInit: true,
       userRole: authed.piqUser.role,
       employeeInfo,
+      orgName,
+      priorCases,
+      examplePdfContent,
+      documentTypeLabel,
     });
 
     res.status(201).json({ sessionId: session.id, employeeInfo, greeting });
@@ -161,6 +215,49 @@ router.post(
       return;
     }
 
+    // Load org name
+    let orgName: string | undefined;
+    const [orgRow] = await db
+      .select({ name: organizationsTable.name })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, authed.piqUser.organizationId))
+      .limit(1);
+    if (orgRow) orgName = orgRow.name;
+
+    // Load prior cases for employee if we have employeeInfo
+    let priorCases: string | undefined;
+    if (employeeInfo) {
+      // Look up employee by name within the org to get ID for prior case lookup
+      const [empRow] = await db
+        .select({ id: employeesTable.id })
+        .from(employeesTable)
+        .where(and(
+          eq(employeesTable.fullName, employeeInfo.fullName),
+          eq(employeesTable.organizationId, authed.piqUser.organizationId),
+        ))
+        .limit(1);
+      if (empRow) {
+        const priorCaseRows = await db
+          .select({
+            caseNumber: piqCasesTable.caseNumber,
+            status: piqCasesTable.status,
+            createdAt: piqCasesTable.createdAt,
+          })
+          .from(piqCasesTable)
+          .where(and(
+            eq(piqCasesTable.employeeId, empRow.id),
+            eq(piqCasesTable.organizationId, authed.piqUser.organizationId),
+          ))
+          .orderBy(desc(piqCasesTable.createdAt))
+          .limit(10);
+        if (priorCaseRows.length > 0) {
+          priorCases = priorCaseRows
+            .map((c) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
+            .join("\n");
+        }
+      }
+    }
+
     // Stream SSE
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -174,6 +271,8 @@ router.post(
         userMessage: message.trim(),
         userRole: authed.piqUser.role,
         employeeInfo: employeeInfo ?? undefined,
+        orgName,
+        priorCases,
         onChunk: (chunk) => {
           res.write(`data: ${JSON.stringify({ type: "chunk", text: chunk })}\n\n`);
         },

@@ -401,11 +401,13 @@ export default function PiqCaseDetail() {
               {(docContent || employee) && (
                 <div className="px-6 py-4 grid grid-cols-2 gap-3 text-sm" style={{ background: C.agentBg, borderBottom: `1px solid ${C.border}` }}>
                   {[
+                    ["Company", (docContent as any)?.companyName ?? "—"],
                     ["Employee", employee?.fullName ?? docContent?.employeeInfo?.fullName],
                     ["Job Title", employee?.position ?? docContent?.employeeInfo?.jobTitle],
                     ["Department", employee?.department ?? docContent?.employeeInfo?.department],
                     ["Hire Date", employee?.startDate ?? docContent?.employeeInfo?.hireDate],
-                    ["Manager", employee?.managerName ?? docContent?.employeeInfo?.managerName],
+                    ["Manager", (docContent as any)?.managerName ?? employee?.managerName ?? docContent?.employeeInfo?.managerName],
+                    ["Delivery Date", (docContent as any)?.deliveryDate ?? "—"],
                   ].map(([label, val]) => (
                     <div key={label}>
                       <p className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.textMuted }}>{label}</p>
@@ -770,7 +772,7 @@ export default function PiqCaseDetail() {
                         {h.action.replace(/_/g, " ")}
                       </span>
                       <span className="text-[10px]" style={{ color: C.textMuted }}>
-                        {format(new Date(h.createdAt), "MMM d, h:mm a")}
+                        {format(new Date(h.createdAt), "MM/dd, h:mm a")}
                       </span>
                     </div>
                     <p className="text-xs" style={{ color: C.textMuted }}>

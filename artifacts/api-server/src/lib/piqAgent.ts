@@ -172,16 +172,29 @@ When generating, produce the document content as JSON wrapped in <document> tags
 <document>
 {
   "docBaseType": "one of: coaching | written_warning | final_warning | performance_review | goal_setting | termination_request",
+  "companyName": "Organization name from [EMPLOYEE CONTEXT]",
+  "employeeName": "Employee's full name from [EMPLOYEE CONTEXT]",
+  "managerName": "Manager's name from [EMPLOYEE CONTEXT]",
+  "deliveryDate": "Today's date as MM/DD/YYYY from [TODAY'S DATE]",
   "documentTypePurpose": "One to two sentences stating the purpose of this document clearly.",
   "incidentDescription": "Factual, chronological, specific description. Observable behavior only — no characterizations. Include dates, times, locations, observations. If a pattern, describe chronologically with specific examples.",
   "policyViolations": "Name the specific policy and section. State how the employee's conduct failed to meet that standard. If no specific policy, reference the general performance or conduct standard.",
   "impactConsequences": "Documented impact of the behavior or performance issue. Include impact on team, customers, operations, safety, quality, or morale as applicable.",
-  "priorDisciplineHistory": "List relevant prior cases from the system (date, document type, issue). If no prior history: 'This represents the first formal documentation of a performance concern for [Employee Name].'",
+  "priorDisciplineHistory": "Prior PerformIQ documentation history from [EMPLOYEE CONTEXT] → Prior PerformIQ Documentation. If none: 'This represents the first formal documentation of a performance concern for [Employee Name].'",
   "expectationsGoingForward": "Specific, observable, measurable, time-bound expectations. Use clear language: 'Effective immediately, [Employee Name] is expected to...'",
   "failureConsequences": "Clear, factual statement of what further discipline may result if expectations are not met. Align with org's progressive discipline policy.",
   "additionalNotes": "Any sensitive flags for HR review, policy gaps, workflow notes, or other case notes. Leave empty string if none."
 }
 </document>
+
+MANDATORY DOCUMENT HEADER: Every document MUST begin with these fields populated from [EMPLOYEE CONTEXT]:
+- companyName: the organization name from context
+- employeeName: the employee's full name
+- managerName: the employee's manager name
+- deliveryDate: today's date formatted as MM/DD/YYYY (use the date from [TODAY'S DATE] context)
+- priorDisciplineHistory: populated from Prior PerformIQ Documentation in context, or "No prior documentation on record."
+
+These fields must be present in every generated document regardless of document type.
 
 After presenting the draft, ask: "Would you like to adjust anything in this draft before I finalize it?"
 
@@ -247,6 +260,10 @@ interface AgentTurnOptions {
     hireDate: string | null;
     managerName: string;
   };
+  orgName?: string;
+  priorCases?: string;
+  examplePdfContent?: string;
+  documentTypeLabel?: string;
   onChunk?: (text: string) => void;
 }
 
@@ -257,6 +274,10 @@ export async function runAgentTurn({
   isInit = false,
   userRole,
   employeeInfo,
+  orgName,
+  priorCases,
+  examplePdfContent,
+  documentTypeLabel,
   onChunk,
 }: AgentTurnOptions): Promise<{ text: string; draft: PiqDocumentContent | null }> {
   // Load conversation history (excluding __INIT__ markers)
@@ -293,14 +314,16 @@ export async function runAgentTurn({
         : "\n\n[POLICY CONTEXT]\nOrganizational policies are provided as PDF documents alongside this message. Reference them when applicable.";
 
   const employeeContext = employeeInfo
-    ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}`
+    ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}\n- Company: ${orgName ?? "Unknown"}\n${priorCases ? `- Prior PerformIQ Documentation:\n${priorCases}` : "- Prior Documentation: None on record in PerformIQ"}`
     : "";
 
   const roleContext = userRole
     ? `\n\n[USER ROLE]\n${userRole === "hr_admin" || userRole === "hr_user" ? "The person creating this document is an HR team member (hr). They are the approvers — no additional review or HR approval step is needed for their cases. Tell them the document will be ready for delivery once confirmed." : "The person creating this document is a manager. Applicable review and approval workflow steps apply based on the document type."}`
     : "";
 
-  const systemPrompt = SYSTEM_PROMPT + policyContext + employeeContext + roleContext;
+  const todayContext = `\n\n[TODAY'S DATE]\n${new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}`;
+
+  const systemPrompt = SYSTEM_PROMPT + todayContext + policyContext + employeeContext + roleContext;
 
   // For __INIT__, store a note but don't add to conversation history as a user message
   if (!isInit) {
@@ -312,8 +335,19 @@ export async function runAgentTurn({
     });
   }
 
-  // Build the last user message — prepend PDF policy documents if available
+  // Build the last user message — prepend example template PDF if available, then policy documents
   const lastMessageContent: Anthropic.ContentBlockParam[] = [];
+
+  if (examplePdfContent?.startsWith("data:application/pdf;base64,")) {
+    const base64 = examplePdfContent.slice("data:application/pdf;base64,".length);
+    lastMessageContent.push({
+      type: "document",
+      source: { type: "base64", media_type: "application/pdf", data: base64 },
+      title: `Example Template: ${documentTypeLabel ?? "Document"}`,
+      context: `This is the organization's example template for ${documentTypeLabel ?? "this document type"}. Use it as a format guide when drafting the document.`,
+      citations: { enabled: false },
+    } as any);
+  }
 
   if (pdfPolicies.length > 0) {
     const PDF_INLINE_PREFIX = "data:application/pdf;base64,";

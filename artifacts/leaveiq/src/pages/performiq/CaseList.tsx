@@ -195,7 +195,7 @@ export default function PiqCaseList() {
                       </div>
                       <div className="col-span-1">
                         <p className="text-xs" style={{ color: C.textMuted }}>
-                          {format(new Date(c.updatedAt), "MMM d")}
+                          {format(new Date(c.updatedAt), "MM/dd")}
                         </p>
                       </div>
                       <div className="col-span-1 flex justify-end">

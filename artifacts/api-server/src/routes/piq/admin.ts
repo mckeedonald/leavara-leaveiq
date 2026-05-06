@@ -30,6 +30,57 @@ const router = Router();
 
 // ── Document Types ──────────────────────────────────────────────────────────
 
+// POST /performiq/admin/document-types/:typeId/upload-example
+router.post(
+  "/performiq/admin/document-types/:typeId/upload-example",
+  requirePiqHrAdmin,
+  policyUpload.single("file"),
+  handleMulterError,
+  async (req: Request, res: Response) => {
+    const authed = req as PiqAuthenticatedRequest;
+    const { typeId } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      res.status(400).json({ error: "No file provided." });
+      return;
+    }
+
+    const ext = (file.originalname.split(".").pop() ?? "").toLowerCase();
+    const isPdf = ext === "pdf" || file.mimetype === "application/pdf" || file.mimetype === "application/octet-stream";
+    if (!isPdf) {
+      res.status(400).json({ error: "Only PDF files are accepted." });
+      return;
+    }
+
+    try {
+      const [existing] = await db
+        .select({ id: piqDocumentTypesTable.id })
+        .from(piqDocumentTypesTable)
+        .where(and(eq(piqDocumentTypesTable.id, typeId), eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId)))
+        .limit(1);
+      if (!existing) {
+        res.status(404).json({ error: "Document type not found" });
+        return;
+      }
+
+      const base64Pdf = file.buffer.toString("base64");
+      const examplePdfContent = `data:application/pdf;base64,${base64Pdf}`;
+
+      await db
+        .update(piqDocumentTypesTable)
+        .set({ examplePdfContent, exampleFileName: file.originalname, updatedAt: new Date() })
+        .where(eq(piqDocumentTypesTable.id, typeId));
+
+      logger.info({ typeId, fileName: file.originalname }, "Document type example PDF uploaded");
+      res.json({ ok: true, exampleFileName: file.originalname });
+    } catch (err) {
+      logger.error({ err }, "Doc type example upload error");
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
 // GET /performiq/admin/document-types
 router.get("/performiq/admin/document-types", requirePiqAuth, async (req: Request, res: Response) => {
   try {
@@ -98,7 +149,7 @@ router.patch("/performiq/admin/document-types/:typeId", requirePiqHrAdmin, async
       return;
     }
 
-    const allowed = ["displayLabel", "requiresSupervisorReview", "supervisorReviewRequired", "requiresHrApproval", "isActive"];
+    const allowed = ["displayLabel", "requiresSupervisorReview", "supervisorReviewRequired", "requiresHrApproval", "isActive", "examplePdfContent", "exampleFileName"];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];

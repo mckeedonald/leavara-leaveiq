@@ -21,6 +21,8 @@ interface DocType {
   id: string; baseType: string; displayLabel: string;
   requiresSupervisorReview: boolean; supervisorReviewRequired: boolean;
   requiresHrApproval: boolean; isActive: boolean;
+  examplePdfContent?: string | null;
+  exampleFileName?: string | null;
 }
 interface Policy { id: string; title: string; category: string; content: string; policyNumber: string | null; effectiveDate: string | null; isActive: boolean; pdfStorageKey: string | null; }
 interface PiqUser { id: string; fullName: string; email: string; role: string; isActive: boolean; }
@@ -49,6 +51,7 @@ export default function PiqAdminSettings() {
   const [newDT, setNewDT] = useState({ baseType: "coaching", displayLabel: "", requiresSupervisorReview: false, supervisorReviewRequired: false, requiresHrApproval: false });
   const [savingDT, setSavingDT] = useState(false);
   const [showDTForm, setShowDTForm] = useState(false);
+  const [uploadingExampleFor, setUploadingExampleFor] = useState<string | null>(null);
 
   // New policy form
   const [newPolicy, setNewPolicy] = useState({ title: "", category: "", content: "", policyNumber: "", effectiveDate: "" });
@@ -99,6 +102,29 @@ export default function PiqAdminSettings() {
       setShowDTForm(false);
     } catch {}
     setSavingDT(false);
+  }
+
+  async function handleDocTypeExample(typeId: string, file: File) {
+    setUploadingExampleFor(typeId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("leavara_token") ?? "";
+      const res = await fetch(`/api/performiq/admin/document-types/${typeId}/upload-example`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json() as { ok: boolean; exampleFileName: string };
+      setDocTypes((prev) => prev.map((dt) => dt.id === typeId
+        ? { ...dt, exampleFileName: data.exampleFileName }
+        : dt));
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to upload example");
+    } finally {
+      setUploadingExampleFor(null);
+    }
   }
 
   async function createPolicy() {
@@ -366,23 +392,41 @@ export default function PiqAdminSettings() {
                   ) : (
                     <div className="divide-y" style={{ borderColor: C.border }}>
                       {docTypes.map((dt) => (
-                        <div key={dt.id} className="px-6 py-4 flex items-center gap-4">
-                          <div className="flex-1">
-                            <p className="font-medium text-sm" style={{ color: C.textDark }}>{dt.displayLabel}</p>
-                            <p className="text-xs mt-0.5 capitalize" style={{ color: C.textMuted }}>
-                              {dt.baseType.replace(/_/g, " ")} ·{" "}
-                              {[
-                                dt.requiresSupervisorReview && "Supervisor review",
-                                dt.requiresHrApproval && "HR approval",
-                              ].filter(Boolean).join(", ") || "No approval required"}
-                            </p>
+                        <div key={dt.id} className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm" style={{ color: C.textDark }}>{dt.displayLabel}</p>
+                              <p className="text-xs mt-0.5 capitalize" style={{ color: C.textMuted }}>
+                                {dt.baseType.replace(/_/g, " ")} ·{" "}
+                                {[
+                                  dt.requiresSupervisorReview && "Supervisor review",
+                                  dt.requiresHrApproval && "HR approval",
+                                ].filter(Boolean).join(", ") || "No approval required"}
+                              </p>
+                            </div>
+                            <span
+                              className="text-xs font-medium px-2 py-0.5 rounded-full"
+                              style={dt.isActive ? { background: "#D1FAE5", color: "#065F46" } : { background: "#F3F4F6", color: "#6B7280" }}
+                            >
+                              {dt.isActive ? "Active" : "Inactive"}
+                            </span>
                           </div>
-                          <span
-                            className="text-xs font-medium px-2 py-0.5 rounded-full"
-                            style={dt.isActive ? { background: "#D1FAE5", color: "#065F46" } : { background: "#F3F4F6", color: "#6B7280" }}
-                          >
-                            {dt.isActive ? "Active" : "Inactive"}
-                          </span>
+                          <div className="flex items-center gap-2 mt-2">
+                            {dt.exampleFileName ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">
+                                <FileText className="w-3 h-3" /> {dt.exampleFileName}
+                              </span>
+                            ) : (
+                              <span className="text-xs" style={{ color: C.textMuted }}>No example template — agent uses best practices</span>
+                            )}
+                            <label className="cursor-pointer inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border transition-colors hover:opacity-80"
+                              style={{ borderColor: C.border, color: C.perf }}>
+                              {uploadingExampleFor === dt.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                              {dt.exampleFileName ? "Replace" : "Upload Example"}
+                              <input type="file" accept=".pdf" className="hidden" disabled={!!uploadingExampleFor}
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleDocTypeExample(dt.id, f); e.target.value = ""; }} />
+                            </label>
+                          </div>
                         </div>
                       ))}
                     </div>

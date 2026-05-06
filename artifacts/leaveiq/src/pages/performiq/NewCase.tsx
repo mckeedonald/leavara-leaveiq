@@ -8,6 +8,8 @@ import {
   AlertCircle,
   ChevronRight,
   Loader2,
+  FileText,
+  Info,
 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch, usePiqAuth } from "@/lib/piqAuth";
@@ -406,6 +408,33 @@ export default function NewCase() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              {/* Banner: draft generated */}
+              {draft && (
+                <div className="flex items-start gap-2 px-4 py-3 rounded-xl text-sm border"
+                  style={{ background: "#F0FDF4", borderColor: "#86EFAC", color: "#065F46" }}>
+                  <FileText className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Draft Generated</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#166534" }}>
+                      Your document draft is ready. Review it above or provide feedback below before finalizing.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {/* Banner: recommendation/summary phase hint */}
+              {!draft && messages.length > 0 && (() => {
+                const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+                const content = lastAssistant?.content ?? "";
+                const isRecommendationPhase =
+                  /does that (sound|look|seem) right|would you like me to|shall i (go ahead|draft|proceed)|ready to draft|before (i|we) draft|is there anything (you'?d? like to add|i('ve)? missed)|does this accurately/i.test(content);
+                return isRecommendationPhase ? (
+                  <div className="flex items-start gap-2 px-4 py-2.5 rounded-xl text-xs border"
+                    style={{ background: "#EFF6FF", borderColor: "#93C5FD", color: "#1E40AF" }}>
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>You're reviewing the agent's recommendation summary. Confirm or request changes before the document is drafted.</span>
+                  </div>
+                ) : null;
+              })()}
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -526,6 +555,22 @@ export default function NewCase() {
             </div>
 
             <div className="p-6 space-y-5">
+              {/* Document header fields */}
+              {((draft as any).companyName || (draft as any).deliveryDate) && (
+                <div className="grid grid-cols-2 gap-3 text-sm rounded-xl px-4 py-3" style={{ background: C.agentBg }}>
+                  {[
+                    ["Company", (draft as any).companyName],
+                    ["Employee", (draft as any).employeeName ?? draft.employeeInfo?.fullName],
+                    ["Manager", (draft as any).managerName ?? draft.employeeInfo?.managerName],
+                    ["Delivery Date", (draft as any).deliveryDate],
+                  ].filter(([, v]) => v).map(([label, val]) => (
+                    <div key={label as string}>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: C.textMuted }}>{label}</p>
+                      <p style={{ color: C.textDark }}>{val}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               {(
                 [
                   ["Document Purpose", draft.documentTypePurpose],

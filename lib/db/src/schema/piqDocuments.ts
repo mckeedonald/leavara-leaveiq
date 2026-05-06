@@ -14,6 +14,11 @@ export interface PiqDocumentContent {
     hireDate: string;
     managerName: string;
   };
+  // Header fields populated by agent from [EMPLOYEE CONTEXT] and [TODAY'S DATE]
+  companyName?: string;
+  employeeName?: string;
+  managerName?: string;
+  deliveryDate?: string;
   documentTypePurpose: string;
   incidentDescription: string;
   policyViolations: string;

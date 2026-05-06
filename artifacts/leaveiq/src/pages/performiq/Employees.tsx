@@ -170,7 +170,7 @@ export default function PiqEmployees() {
                   <div className="flex items-center gap-4 shrink-0">
                     {e.startDate && (
                       <p className="text-xs hidden md:block" style={{ color: C.textMuted }}>
-                        Hired {format(new Date(e.startDate), "MMM yyyy")}
+                        Hired {format(new Date(e.startDate), "MM/yyyy")}
                       </p>
                     )}
                     <div className="flex items-center gap-1">

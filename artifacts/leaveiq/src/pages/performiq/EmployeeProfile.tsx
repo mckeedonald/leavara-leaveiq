@@ -224,7 +224,7 @@ export default function PiqEmployeeProfile() {
                 {employee.startDate && (
                   <div className="flex items-center gap-2 text-sm" style={{ color: C.textMuted }}>
                     <Calendar className="w-4 h-4 shrink-0" />
-                    <span>Hired {format(new Date(employee.startDate), "MMMM d, yyyy")}</span>
+                    <span>Hired {format(new Date(employee.startDate), "MM/dd/yyyy")}</span>
                   </div>
                 )}
                 {employee.managerName && (
@@ -333,10 +333,10 @@ export default function PiqEmployeeProfile() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-xs" style={{ color: C.textMuted }}>
-                          {format(new Date(c.createdAt), "MMM d, yyyy")}
+                          {format(new Date(c.createdAt), "MM/dd/yyyy")}
                         </p>
                         <p className="text-xs mt-0.5" style={{ color: C.textMuted }}>
-                          Updated {format(new Date(c.updatedAt), "MMM d")}
+                          Updated {format(new Date(c.updatedAt), "MM/dd")}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 shrink-0" style={{ color: C.textMuted }} />

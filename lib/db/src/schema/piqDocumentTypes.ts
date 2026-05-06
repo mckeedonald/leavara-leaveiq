@@ -13,6 +13,8 @@ export const piqDocumentTypesTable = pgTable("piq_document_type", {
   supervisorReviewRequired: boolean("supervisor_review_required").notNull().default(false),
   requiresHrApproval: boolean("requires_hr_approval").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
+  examplePdfContent: text("example_pdf_content"),
+  exampleFileName: text("example_file_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

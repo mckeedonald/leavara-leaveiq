@@ -250,10 +250,10 @@ export default function ManagerDashboard() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-xs" style={{ color: S.textMid }}>
-                      {c.startDate ? format(parseISO(c.startDate), "MMM d, yyyy") : "—"}
+                      {c.startDate ? format(parseISO(c.startDate), "MM/dd/yyyy") : "—"}
                     </td>
                     <td className="px-5 py-3 text-xs" style={{ color: S.textMid }}>
-                      {c.endDate ? format(parseISO(c.endDate), "MMM d, yyyy") : "Ongoing"}
+                      {c.endDate ? format(parseISO(c.endDate), "MM/dd/yyyy") : "Ongoing"}
                     </td>
                     <td className="px-5 py-3">
                       <span className="text-xs font-medium" style={{ color: S.textMid }}>

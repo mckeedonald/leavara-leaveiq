@@ -186,7 +186,7 @@ export default function PiqDashboard() {
                         {sc.label}
                       </span>
                       <span className="text-xs" style={{ color: C.textMuted }}>
-                        {format(new Date(c.updatedAt), "MMM d")}
+                        {format(new Date(c.updatedAt), "MM/dd")}
                       </span>
                       <ArrowRight className="w-4 h-4" style={{ color: C.textMuted }} />
                     </div>
