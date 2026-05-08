@@ -4,14 +4,9 @@ import {
   ArrowRight,
   Menu,
   X,
-  CheckCircle2,
   ShieldCheck,
   BadgeCheck,
   Users,
-  BarChart3,
-  Target,
-  Star,
-  TrendingUp,
   ClipboardList,
   MessageSquare,
   Zap,
@@ -172,126 +167,125 @@ function LeaveIQIllustration() {
 /* ─── PerformIQ Illustration ────────────────────────────────────── */
 function PerformIQIllustration() {
   const [visible, setVisible] = useState(false);
-  const [bars, setBars] = useState([0, 0, 0, 0]);
+  const [typedLen, setTypedLen] = useState(0);
+  const [step, setStep] = useState(0);
+  const agentText = "Based on the pattern you've described, I'll draft a Written Warning. Here's a summary before I generate the document:";
   useEffect(() => {
     const ts: ReturnType<typeof setTimeout>[] = [];
     const t = (fn: () => void, ms: number) => ts.push(setTimeout(fn, ms));
     t(() => setVisible(true), 200);
-    t(() => setBars([82, 0, 0, 0]), 700);
-    t(() => setBars([82, 67, 0, 0]), 950);
-    t(() => setBars([82, 67, 91, 0]), 1200);
-    t(() => setBars([82, 67, 91, 74]), 1450);
+    t(() => {
+      let i = 0;
+      const iv = setInterval(() => {
+        i++;
+        setTypedLen(i);
+        if (i >= agentText.length) clearInterval(iv);
+      }, 18);
+      ts.push(iv as any);
+    }, 600);
+    t(() => setStep(1), 2600);
+    t(() => setStep(2), 3400);
+    t(() => setStep(3), 4100);
     return () => ts.forEach(clearTimeout);
   }, []);
 
-  const people = [
-    { name: "A. Rivera", role: "Sales Lead", score: 82, color: C.perf },
-    { name: "J. Chen", role: "Engineer", score: 67, color: C.perfLight },
-    { name: "M. Patel", role: "Designer", score: 91, color: C.perf },
-    { name: "S. Kim", role: "Operations", score: 74, color: C.perfLight },
+  const workflowSteps = [
+    { label: "Draft", done: true },
+    { label: "Supervisor", done: step >= 1 },
+    { label: "HR Approval", done: step >= 2 },
+    { label: "Delivery", done: step >= 3 },
   ];
 
   return (
-    <svg viewBox="0 0 420 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-md">
+    <svg viewBox="0 0 420 310" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-md">
       <defs>
         <filter id="ps1"><feDropShadow dx="0" dy="3" stdDeviation="5" floodColor={C.perf} floodOpacity="0.14" /></filter>
         <filter id="ps2"><feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={C.perfDark} floodOpacity="0.22" /></filter>
       </defs>
 
       {/* Glow orbs */}
-      <ellipse cx="360" cy="50" rx="80" ry="80" fill={C.perf} opacity="0.08" />
-      <ellipse cx="60" cy="250" rx="65" ry="65" fill={C.perfLight} opacity="0.10" />
+      <ellipse cx="370" cy="40" rx="90" ry="90" fill={C.perf} opacity="0.07" />
+      <ellipse cx="50" cy="260" rx="70" ry="70" fill={C.perfLight} opacity="0.09" />
 
-      {/* Main dashboard card */}
+      {/* Agent chat card */}
       <g style={{ opacity: visible ? 1 : 0, transition: "opacity 0.5s" }}>
-        <rect x="10" y="10" width="270" height="250" rx="14" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
-
+        <rect x="10" y="10" width="268" height="258" rx="14" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
         {/* Header */}
-        <rect x="10" y="10" width="270" height="44" rx="14" fill={C.perfDark} />
-        <rect x="10" y="38" width="270" height="16" fill={C.perfDark} />
-        <text x="145" y="35" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Roboto">Q2 Performance Review</text>
+        <rect x="10" y="10" width="268" height="44" rx="14" fill={C.perfDark} />
+        <rect x="10" y="38" width="268" height="16" fill={C.perfDark} />
+        <circle cx="34" cy="32" r="10" fill={C.perf} />
+        <text x="34" y="36" textAnchor="middle" fontSize="10">🤖</text>
+        <text x="50" y="29" fontSize="10" fontWeight="700" fill="white" fontFamily="Roboto">Performance Specialist</text>
+        <text x="50" y="40" fontSize="7.5" fill={C.bg + "aa"} fontFamily="Roboto">AI Documentation Partner</text>
 
-        {/* Score rings summary */}
-        <text x="22" y="74" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.5">TEAM OVERVIEW</text>
+        {/* Manager message bubble */}
+        <rect x="120" y="64" width="148" height="28" rx="10" fill={C.perf + "20"} />
+        <text x="194" y="75" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Roboto">Second attendance issue this</text>
+        <text x="194" y="85" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Roboto">month, prior coaching on file.</text>
 
-        {/* Circular score */}
-        <circle cx="62" cy="108" r="28" fill="none" stroke="#A8CFCF" strokeWidth="5" />
-        <circle cx="62" cy="108" r="28" fill="none" stroke={C.perf} strokeWidth="5"
-          strokeDasharray={`${visible ? 2 * Math.PI * 28 * 0.79 : 0} ${2 * Math.PI * 28}`}
-          strokeDashoffset={2 * Math.PI * 28 * 0.25}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dasharray 1.2s ease" }} />
-        <text x="62" y="105" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.perfDark} fontFamily="Roboto">79</text>
-        <text x="62" y="116" textAnchor="middle" fontSize="7" fill={C.textMuted} fontFamily="Roboto">avg score</text>
+        {/* Agent reply bubble */}
+        <rect x="18" y="102" width="232" height="60" rx="10" fill={C.perfBg} />
+        <text x="28" y="115" fontSize="7" fill={C.perfDark} fontFamily="Roboto" fontStyle="italic">Performance Specialist</text>
+        <foreignObject x="22" y="119" width="222" height="42">
+          <div style={{ fontSize: "7.5px", color: C.textDark, fontFamily: "Roboto", lineHeight: "1.45" }}>
+            {agentText.slice(0, typedLen)}
+          </div>
+        </foreignObject>
 
-        {/* Stats */}
-        <rect x="102" y="82" width="70" height="30" rx="8" fill={C.perfBg} />
-        <text x="137" y="95" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.perfDark} fontFamily="Roboto">12</text>
-        <text x="137" y="107" textAnchor="middle" fontSize="7" fill={C.textMuted} fontFamily="Roboto">on track</text>
+        {/* Draft summary card */}
+        <rect x="18" y="172" width="240" height="54" rx="10" fill={C.perfDark + "12"} stroke={C.perf + "40"} strokeWidth="1" />
+        <rect x="26" y="180" width="4" height="38" rx="2" fill={C.perf} />
+        <text x="38" y="190" fontSize="7.5" fontWeight="700" fill={C.perfDark} fontFamily="Roboto">Written Warning — Attendance</text>
+        <text x="38" y="201" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Employee: Marcus Webb</text>
+        <text x="38" y="211" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Manager: Dana Osei  ·  05/08/2026</text>
+        <text x="38" y="220" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Prior docs: 1 coaching note (04/12)</text>
 
-        <rect x="180" y="82" width="70" height="30" rx="8" fill={C.rose + "20"} />
-        <text x="215" y="95" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.roseDark} fontFamily="Roboto">3</text>
-        <text x="215" y="107" textAnchor="middle" fontSize="7" fill={C.textMuted} fontFamily="Roboto">need support</text>
-
-        {/* Divider */}
-        <line x1="18" y1="128" x2="272" y2="128" stroke="#A8CFCF" strokeWidth="0.8" />
-        <text x="22" y="144" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto" letterSpacing="0.5">INDIVIDUAL SCORES</text>
-
-        {/* People bars */}
-        {people.map(({ name, role, score, color }, i) => {
-          const y = 154 + i * 28;
-          const barW = (bars[i] / 100) * 150;
-          return (
-            <g key={name}>
-              {/* Avatar circle */}
-              <circle cx="30" cy={y} r="9" fill={color + "30"} />
-              <text x="30" y={y + 4} textAnchor="middle" fontSize="8" fontWeight="700" fill={color} fontFamily="Roboto">
-                {name[0]}
-              </text>
-              {/* Name / role */}
-              <text x="46" y={y - 2} fontSize="8.5" fontWeight="600" fill={C.textDark} fontFamily="Roboto">{name}</text>
-              <text x="46" y={y + 8} fontSize="7" fill={C.textMuted} fontFamily="Roboto">{role}</text>
-              {/* Score bar */}
-              <rect x="120" y={y - 7} width="150" height="10" rx="5" fill="#DCF0F0" />
-              <rect x="120" y={y - 7} width={barW} height="10" rx="5" fill={color}
-                style={{ transition: "width 0.6s ease" }} />
-              <text x="276" y={y + 2} fontSize="8.5" fontWeight="700" fill={color} fontFamily="Roboto">{bars[i] || "—"}</text>
-            </g>
-          );
-        })}
+        {/* Confirm button */}
+        <rect x="18" y="234" width="105" height="22" rx="7" fill={C.perf} />
+        <text x="70" y="249" textAnchor="middle" fontSize="8" fontWeight="700" fill="white" fontFamily="Roboto">✓  Confirm &amp; Draft</text>
+        <rect x="132" y="234" width="126" height="22" rx="7" fill={C.perf + "18"} stroke={C.perf + "50"} strokeWidth="1" />
+        <text x="195" y="249" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.perfDark} fontFamily="Roboto">Provide Feedback</text>
       </g>
 
-      {/* Goal card */}
-      <g style={{ opacity: visible ? 1 : 0, transform: visible ? "none" : "translateX(20px)", transition: "all 0.6s 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}>
-        <rect x="288" y="20" width="126" height="90" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
-        <rect x="296" y="30" width="28" height="28" rx="7" fill={C.perf + "20"} />
-        <text x="310" y="50" textAnchor="middle" fontSize="14">🎯</text>
-        <text x="332" y="38" fontSize="8.5" fontWeight="700" fill={C.textDark} fontFamily="Roboto">Goal Progress</text>
-        <text x="332" y="49" fontSize="7.5" fill={C.textMuted} fontFamily="Roboto">Q2 2026</text>
-        <rect x="296" y="65" width="110" height="6" rx="3" fill="#DCF0F0" />
-        <rect x="296" y="65" width={visible ? 88 : 0} height="6" rx="3" fill={C.perf}
-          style={{ transition: "width 1.4s ease" }} />
-        <text x="296" y="84" fontSize="7.5" fill={C.textMuted} fontFamily="Roboto">8 of 10 goals on track</text>
-        <text x="398" y="74" textAnchor="middle" fontSize="9" fontWeight="700" fill={C.perf} fontFamily="Roboto">80%</text>
+      {/* Right-side status cards */}
+      <g style={{ opacity: visible ? 1 : 0, transform: visible ? "none" : "translateX(20px)", transition: "all 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
 
-        {/* Review card */}
-        <rect x="288" y="122" width="126" height="78" rx="12" fill={C.perfDark} filter="url(#ps2)" />
-        <text x="314" y="142" fontSize="8" fontWeight="600" fill={C.bg + "bb"} fontFamily="Roboto" letterSpacing="0.4">REVIEW CYCLE</text>
-        <text x="350" y="163" textAnchor="middle" fontSize="22" fontWeight="800" fill="white" fontFamily="Roboto">94%</text>
-        <text x="350" y="177" textAnchor="middle" fontSize="7.5" fill={C.bg + "bb"} fontFamily="Roboto">complete</text>
-        <rect x="296" y="186" width="112" height="4" rx="2" fill="white" opacity="0.18" />
-
-        {/* Sentiment card */}
-        <rect x="288" y="212" width="126" height="62" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
-        <text x="300" y="232" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto">TEAM SENTIMENT</text>
-        {[C.perf, C.perfLight, C.perf, "#7EC8A4", C.perfLight].map((c, i) => (
-          <circle key={i} cx={302 + i * 22} cy={252} r={8} fill={c + "30"} stroke={c} strokeWidth={1.5} />
+        {/* Workflow tracker */}
+        <rect x="286" y="10" width="128" height="120" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
+        <text x="350" y="28" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={C.perfDark} fontFamily="Roboto">Approval Workflow</text>
+        <line x1="296" y1="34" x2="406" y2="34" stroke="#A8CFCF" strokeWidth="0.8" />
+        {workflowSteps.map(({ label, done }, i) => (
+          <g key={label}>
+            <circle cx="303" cy={50 + i * 22} r="7"
+              fill={done ? C.perf : "#DCF0F0"}
+              style={{ transition: "fill 0.4s" }} />
+            {done && <polyline points={`298,${50 + i * 22} 302,${54 + i * 22} 309,${46 + i * 22}`}
+              stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
+            <text x="317" y={54 + i * 22} fontSize="8" fontWeight={done ? "600" : "400"}
+              fill={done ? C.perfDark : C.textMuted} fontFamily="Roboto">{label}</text>
+            {done && <text x="400" y={54 + i * 22} textAnchor="end" fontSize="7" fill={C.perf} fontFamily="Roboto">✓</text>}
+            {i < 3 && <line x1="303" y1={57 + i * 22} x2="303" y2={43 + (i + 1) * 22}
+              stroke={done && step > i ? C.perf : "#DCF0F0"} strokeWidth="1.5"
+              style={{ transition: "stroke 0.4s" }} />}
+          </g>
         ))}
-        <text x="305" y="257" fontSize="10">😊</text>
-        <text x="327" y="257" fontSize="10">😐</text>
-        <text x="349" y="257" fontSize="10">😊</text>
-        <text x="371" y="257" fontSize="10">😀</text>
-        <text x="393" y="257" fontSize="10">😊</text>
+
+        {/* E-signature card */}
+        <rect x="286" y="140" width="128" height="80" rx="12" fill={C.perfDark} filter="url(#ps2)" />
+        <text x="350" y="158" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.bg + "bb"} fontFamily="Roboto" letterSpacing="0.4">E-SIGNATURE</text>
+        <circle cx="310" cy="180" r="12" fill="white" opacity="0.12" />
+        <text x="310" y="184" textAnchor="middle" fontSize="13">✍️</text>
+        <text x="330" y="174" fontSize="8" fontWeight="700" fill="white" fontFamily="Roboto">Employee Signed</text>
+        <text x="330" y="184" fontSize="7" fill={C.bg + "aa"} fontFamily="Roboto">05/08/2026</text>
+        <text x="330" y="196" fontSize="7" fill={C.bg + "aa"} fontFamily="Roboto">PDF generated &amp; filed</text>
+        <rect x="296" y="206" width="110" height="4" rx="2" fill="white" opacity="0.18" />
+
+        {/* Case closed card */}
+        <rect x="286" y="230" width="128" height="66" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
+        <text x="298" y="249" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto">CASE FILED</text>
+        <rect x="296" y="255" width="110" height="5" rx="2.5" fill={C.perf} opacity="0.7" />
+        <rect x="296" y="265" width="80" height="5" rx="2.5" fill={C.perf} opacity="0.35" />
+        <text x="350" y="286" textAnchor="middle" fontSize="7.5" fontWeight="700" fill={C.perf} fontFamily="Roboto">Closed &amp; Archived ✓</text>
       </g>
     </svg>
   );
@@ -443,7 +437,7 @@ export default function Landing() {
             <a href="#performiq"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:shadow-md"
               style={{ background: C.perf + "12", borderColor: C.perf + "50", color: C.perfDark }}>
-              📊 PerformIQ — Smart Performance Management
+              📋 PerformIQ — AI Performance Documentation
             </a>
           </div>
 
@@ -543,28 +537,28 @@ export default function Landing() {
               <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#A8CFCF" }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl"
-                    style={{ background: C.perf + "20" }}>📊</div>
+                    style={{ background: C.perf + "20" }}>📋</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-xl" style={{ color: C.textDark }}>PerformIQ</h3>
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold"
-                        style={{ background: C.perf + "20", color: C.perfDark }}>Coming Soon</span>
+                        style={{ background: C.perf + "20", color: C.perfDark }}>Now Available</span>
                     </div>
-                    <p className="text-sm font-medium" style={{ color: C.perfDark }}>Smart Performance Management</p>
+                    <p className="text-sm font-medium" style={{ color: C.perfDark }}>AI-Assisted Performance Documentation</p>
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: C.textBody }}>
-                  Set goals, run review cycles, track development, and build high-performing teams
-                  with intelligent insights that help managers lead with confidence.
+                  Guide managers through legally sound performance documentation with a conversational AI specialist —
+                  from coaching notes to termination requests — with configurable approval workflows and built-in e-signatures.
                 </p>
               </div>
               <div className="px-8 py-6 space-y-3">
                 {[
-                  { icon: <Target className="w-4 h-4" />, text: "Goal setting and OKR tracking" },
-                  { icon: <Star className="w-4 h-4" />, text: "360-degree performance reviews" },
-                  { icon: <BarChart3 className="w-4 h-4" />, text: "Real-time performance analytics" },
-                  { icon: <TrendingUp className="w-4 h-4" />, text: "Individual development planning" },
-                  { icon: <Zap className="w-4 h-4" />, text: "AI-powered coaching insights" },
+                  { icon: <MessageSquare className="w-4 h-4" />, text: "Conversational AI drafts coaching notes, warnings & termination docs" },
+                  { icon: <ClipboardList className="w-4 h-4" />, text: "Configurable approval workflow: supervisor → HR → delivery" },
+                  { icon: <BadgeCheck className="w-4 h-4" />, text: "Native e-signature — employee reviews, signs, and PDF is archived" },
+                  { icon: <Users className="w-4 h-4" />, text: "Employee profiles with full prior documentation history" },
+                  { icon: <Zap className="w-4 h-4" />, text: "Org policy & template upload — agent reads your docs directly" },
                 ].map((f, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -572,11 +566,16 @@ export default function Landing() {
                     <span className="text-sm font-medium" style={{ color: C.textDark }}>{f.text}</span>
                   </div>
                 ))}
-                <div className="pt-4">
-                  <Link href="/interest"
+                <div className="pt-4 flex gap-3 flex-wrap">
+                  <Link href="/leaveiq/login"
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                     style={{ background: C.perfDark }}>
-                    Request Early Access <ArrowRight className="w-4 h-4" />
+                    Sign In to PerformIQ <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link href="/interest"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold border hover:opacity-80 transition-opacity"
+                    style={{ borderColor: "#A8CFCF", color: C.perfDark }}>
+                    Request Access
                   </Link>
                 </div>
               </div>
@@ -605,7 +604,7 @@ export default function Landing() {
               {
                 icon: <Zap className="w-8 h-8" style={{ color: C.perfLight }} />,
                 title: "AI-Assisted, Human-Led",
-                desc: "Our AI surfaces insights and recommendations. Your HR team always makes the final call.",
+                desc: "Our AI drafts, recommends, and routes — but every notice, document, and decision is reviewed and confirmed by your HR team.",
                 bg: C.perf + "22", border: C.perfLight + "44",
               },
               {
@@ -641,6 +640,11 @@ export default function Landing() {
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
               style={{ background: C.terracotta }}>
               Sign In to LeaveIQ <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link href="/leaveiq/login"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
+              style={{ background: C.perfDark }}>
+              Sign In to PerformIQ <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/interest"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm border hover:opacity-80 transition-opacity"
