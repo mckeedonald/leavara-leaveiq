@@ -55,12 +55,18 @@ export function AnalyzeCaseModal({
     apiFetch<{ employees: Employee[] }>("/api/employees")
       .then(({ employees }) => {
         const empNum = caseData.employeeNumber!;
-        const match = employees.find(
-          (e) =>
-            e.employeeId === empNum ||
-            e.employeeId === `EMP-${empNum}` ||
-            e.employeeId?.replace(/^EMP-/i, "") === empNum,
-        );
+        // Normalize to the bare numeric/alphanumeric portion so we match
+        // regardless of whether the case or HRIS stores EMP-007, EMP007, or 007.
+        const empStripped = empNum.replace(/^EMP-?/i, "");
+        const match = employees.find((e) => {
+          const eStripped = e.employeeId?.replace(/^EMP-?/i, "") ?? "";
+          return (
+            e.employeeId === empNum ||                  // exact
+            e.employeeId === `EMP-${empStripped}` ||    // DB uses EMP-XXX format
+            e.employeeId === `EMP${empStripped}` ||     // DB uses EMPXXX format
+            (eStripped !== "" && eStripped === empStripped) // normalized match
+          );
+        });
 
         let anyFilled = false;
 
