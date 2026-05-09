@@ -8,7 +8,8 @@ export const caseAccessTokensTable = pgTable("case_access_token", {
     .references(() => leaveCasesTable.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
   employeeEmail: text("employee_email").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  // null = valid until the leave case is closed/cancelled (no fixed expiry date)
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

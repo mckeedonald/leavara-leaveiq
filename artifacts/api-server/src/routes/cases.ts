@@ -400,20 +400,13 @@ router.post("/cases", async (req, res): Promise<void> => {
     if (resolvedEmail) {
       try {
         const token = randomBytes(64).toString("hex");
-        // Token expiry: requestedEnd + 90 days if set, else today + 365 days; minimum 90 days from now
-        const ninetyDaysFromNow = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-        let expiresAt: Date;
-        if (data.requestedEnd) {
-          expiresAt = new Date(new Date(data.requestedEnd).getTime() + 90 * 24 * 60 * 60 * 1000);
-        } else {
-          expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-        }
-        if (expiresAt < ninetyDaysFromNow) expiresAt = ninetyDaysFromNow;
+        // expiresAt is null — the token stays valid until the case is CLOSED or CANCELLED.
+        // resolveToken() in portal.ts enforces this by checking case state.
         await db.insert(caseAccessTokensTable).values({
           caseId: newCase.id,
           token,
           employeeEmail: resolvedEmail,
-          expiresAt,
+          expiresAt: null,
         });
 
         const magicLinkUrl = `${getAppUrl()}/leaveiq/portal?token=${token}`;

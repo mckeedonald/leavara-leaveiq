@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import multer from "multer";
 import { randomBytes } from "node:crypto";
 import {
@@ -40,9 +40,9 @@ const upload = multer({
 async function resolveToken(token: string) {
   const now = new Date();
 
-  // First: check if the token exists at all (ignore expiry) for diagnostic logging
+  // Fetch token row (ignore expiry at this stage — needed for diagnostic logging)
   const [anyRow] = await db
-    .select({ id: caseAccessTokensTable.id, expiresAt: caseAccessTokensTable.expiresAt })
+    .select({ id: caseAccessTokensTable.id, caseId: caseAccessTokensTable.caseId, expiresAt: caseAccessTokensTable.expiresAt })
     .from(caseAccessTokensTable)
     .where(eq(caseAccessTokensTable.token, token))
     .limit(1);
@@ -52,19 +52,41 @@ async function resolveToken(token: string) {
     return null;
   }
 
-  if (anyRow.expiresAt <= now) {
+  // If a fixed expiry date is set, enforce it
+  if (anyRow.expiresAt !== null && anyRow.expiresAt <= now) {
     logger.warn({ tokenPrefix: token.slice(0, 16), expiresAt: anyRow.expiresAt, now }, "Portal token is expired");
     return null;
   }
 
-  // Valid and non-expired — fetch full row
+  // When expiresAt is null the token lives until the case is closed/cancelled.
+  // Check case state to enforce this.
+  const [leaveCase] = await db
+    .select({ state: leaveCasesTable.state })
+    .from(leaveCasesTable)
+    .where(eq(leaveCasesTable.id, anyRow.caseId))
+    .limit(1);
+
+  if (!leaveCase) {
+    logger.warn({ tokenPrefix: token.slice(0, 16) }, "Portal token references a deleted case");
+    return null;
+  }
+
+  if (leaveCase.state === "CLOSED" || leaveCase.state === "CANCELLED") {
+    logger.info({ tokenPrefix: token.slice(0, 16), state: leaveCase.state }, "Portal token rejected: case is closed");
+    return null;
+  }
+
+  // Valid — fetch the full token row
   const [row] = await db
     .select()
     .from(caseAccessTokensTable)
     .where(
       and(
         eq(caseAccessTokensTable.token, token),
-        gt(caseAccessTokensTable.expiresAt, now),
+        // For date-bound tokens, confirm expiry in the query too
+        anyRow.expiresAt !== null
+          ? gt(caseAccessTokensTable.expiresAt, now)
+          : isNull(caseAccessTokensTable.expiresAt),
       ),
     )
     .limit(1);
