@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db, organizationsTable, employeesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { lookupLimiter } from "../lib/rateLimiters.js";
 import { logger } from "../lib/logger.js";
 
@@ -44,14 +44,12 @@ router.get("/public/employees/lookup", lookupLimiter, async (req: Request, res: 
     ?? req.socket?.remoteAddress
     ?? "unknown";
 
-  // ── CAPTCHA verification (skipped gracefully if secret key not configured) ──
+  // ── CAPTCHA verification ──────────────────────────────────────────────────
+  // Fail-open: if no token is sent (e.g. reCAPTCHA script not yet loaded),
+  // the rate limiter is still the primary protection. We only reject when a
+  // token IS provided but scores below the threshold (i.e. confirmed bot).
   const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-  if (secretKey) {
-    if (!captchaToken) {
-      logger.warn({ ip, org }, "Portal lookup blocked: missing CAPTCHA token");
-      res.status(429).json({ found: false, error: "CAPTCHA verification required." });
-      return;
-    }
+  if (secretKey && captchaToken) {
     try {
       const verifyRes = await fetch(
         `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaToken}`,
@@ -64,7 +62,7 @@ router.get("/public/employees/lookup", lookupLimiter, async (req: Request, res: 
         return;
       }
     } catch (err) {
-      // CAPTCHA service unreachable — fail open in this case so employees aren't blocked
+      // CAPTCHA service unreachable — proceed so employees aren't blocked
       logger.warn({ err, ip }, "CAPTCHA verification request failed — proceeding without verification");
     }
   }
@@ -89,7 +87,17 @@ router.get("/public/employees/lookup", lookupLimiter, async (req: Request, res: 
       return;
     }
 
-    // Look up active employee by employeeId within that org
+    // Build flexible ID candidate list — handles various formats employees might enter:
+    //   "EMP007"  → tries "EMP007", "007", "EMP-007"
+    //   "EMP-007" → tries "EMP-007", "007", "EMP-007" (deduped)
+    //   "007"     → tries "007", "EMP-007"
+    const idRaw = employeeId.trim();
+    const idStripped = idRaw.replace(/^EMP-?/i, ""); // strip EMP- or EMP prefix
+    const idWithDash = `EMP-${idStripped}`;
+    const idWithoutDash = `EMP${idStripped}`;
+    const candidates = [...new Set([idRaw, idStripped, idWithDash, idWithoutDash])].filter(Boolean);
+
+    // Look up active employee — try all candidate ID formats in one query
     const [employee] = await db
       .select({
         fullName: employeesTable.fullName,
@@ -100,7 +108,7 @@ router.get("/public/employees/lookup", lookupLimiter, async (req: Request, res: 
       .where(
         and(
           eq(employeesTable.organizationId, organization.id),
-          eq(employeesTable.employeeId, employeeId.trim()),
+          inArray(employeesTable.employeeId, candidates),
           eq(employeesTable.isActive, true)
         )
       )
