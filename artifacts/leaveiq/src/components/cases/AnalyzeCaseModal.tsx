@@ -10,6 +10,7 @@ interface Employee {
   employeeId: string | null;
   startDate: string | null;
   avgHoursWorked: string | null;
+  location: string | null;
 }
 
 interface CaseDataProp {
@@ -37,6 +38,8 @@ export function AnalyzeCaseModal({
   // Auto-populated from HRIS
   const [hireDate, setHireDate] = useState("");
   const [avgHours, setAvgHours] = useState<number>(40);
+  const [headcount, setHeadcount] = useState<number>(500);
+  const [headcountNote, setHeadcountNote] = useState<string>("");
   const [autoFilled, setAutoFilled] = useState(false);
   const [loadingHris, setLoadingHris] = useState(false);
 
@@ -49,24 +52,57 @@ export function AnalyzeCaseModal({
   useEffect(() => {
     if (!isOpen || !caseData?.employeeNumber) return;
     setLoadingHris(true);
-    apiFetch<Employee[]>("/api/employees")
-      .then((employees) => {
+    apiFetch<{ employees: Employee[] }>("/api/employees")
+      .then(({ employees }) => {
+        const empNum = caseData.employeeNumber!;
         const match = employees.find(
           (e) =>
-            e.employeeId === caseData.employeeNumber ||
-            e.employeeId === `EMP-${caseData.employeeNumber}` ||
-            e.employeeId?.replace(/^EMP-/i, "") === caseData.employeeNumber,
+            e.employeeId === empNum ||
+            e.employeeId === `EMP-${empNum}` ||
+            e.employeeId?.replace(/^EMP-/i, "") === empNum,
         );
+
+        let anyFilled = false;
+
         if (match) {
-          if (match.startDate) setHireDate(match.startDate);
+          // Hire date
+          if (match.startDate) {
+            setHireDate(match.startDate);
+            anyFilled = true;
+          }
+          // Average hours
           if (match.avgHoursWorked) {
             const parsed = parseFloat(match.avgHoursWorked);
-            if (!isNaN(parsed)) setAvgHours(parsed);
+            if (!isNaN(parsed)) {
+              setAvgHours(parsed);
+              anyFilled = true;
+            }
           }
-          if (match.startDate || match.avgHoursWorked) setAutoFilled(true);
+          // Headcount — count employees sharing the same location as this employee,
+          // which serves as a practical proxy for the 75-mile radius FMLA requirement.
+          // Falls back to total org headcount if no location is set.
+          if (match.location?.trim()) {
+            const loc = match.location.trim().toLowerCase();
+            const sameLocation = employees.filter(
+              (e) => e.location?.trim().toLowerCase() === loc,
+            ).length;
+            setHeadcount(sameLocation);
+            setHeadcountNote(`Employees at "${match.location}" location`);
+          } else {
+            // No location on record — use total org headcount as fallback
+            setHeadcount(employees.length);
+            setHeadcountNote("Total org headcount (no location on file — verify)");
+          }
+          anyFilled = true;
+        } else {
+          // Employee not found by ID — still set total org headcount as a starting point
+          setHeadcount(employees.length);
+          setHeadcountNote("Total org headcount (employee ID not matched — verify)");
         }
+
+        if (anyFilled) setAutoFilled(true);
       })
-      .catch(() => {}) // non-fatal
+      .catch(() => {}) // non-fatal — fields remain at defaults
       .finally(() => setLoadingHris(false));
   }, [isOpen, caseData?.employeeNumber]);
 
@@ -182,9 +218,15 @@ export function AnalyzeCaseModal({
               required
               name="employeeCount"
               type="number"
-              defaultValue={500}
+              value={headcount}
+              onChange={(e) => setHeadcount(parseInt(e.target.value, 10) || 0)}
               className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
+            {headcountNote && (
+              <p className="text-xs text-muted-foreground mt-1">
+                ℹ️ {headcountNote}
+              </p>
+            )}
           </div>
 
           <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
