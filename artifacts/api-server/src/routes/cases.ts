@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, desc, sql, and, ne, gte, lte, isNull, or, inArray, like } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import multer from "multer";
-import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable } from "@workspace/db";
+import { db, leaveCasesTable, hrDecisionsTable, auditLogTable, organizationsTable, caseAccessTokensTable, caseDocumentsTable, usersTable, employeesTable } from "@workspace/db";
 import {
   ListCasesQueryParams,
   CreateCaseBody,
@@ -369,8 +369,35 @@ router.post("/cases", async (req, res): Promise<void> => {
 
     await logAudit(newCase.id, "CASE_CREATED", data.submittedBy);
 
+    // If no email was provided (e.g. employee used portal lookup and email was masked),
+    // fall back to the email stored in the employees table for this employee number.
+    let resolvedEmail = data.employeeEmail ?? null;
+    if (!resolvedEmail && data.employeeNumber && organizationId) {
+      try {
+        const [emp] = await db
+          .select({ personalEmail: employeesTable.personalEmail, workEmail: employeesTable.workEmail })
+          .from(employeesTable)
+          .where(
+            and(
+              eq(employeesTable.organizationId, organizationId),
+              eq(employeesTable.employeeId, data.employeeNumber),
+              eq(employeesTable.isActive, true)
+            )
+          )
+          .limit(1);
+        resolvedEmail = emp?.personalEmail || emp?.workEmail || null;
+        if (resolvedEmail) {
+          // Persist the resolved email on the case record
+          await db.update(leaveCasesTable).set({ employeeEmail: resolvedEmail }).where(eq(leaveCasesTable.id, newCase.id));
+          logger.info({ caseId: newCase.id }, "Resolved employee email from employees table");
+        }
+      } catch (err) {
+        logger.warn({ err, caseId: newCase.id }, "Employee email fallback lookup failed");
+      }
+    }
+
     // Send magic link / confirmation email to employee if email is available
-    if (data.employeeEmail) {
+    if (resolvedEmail) {
       try {
         const token = randomBytes(64).toString("hex");
         // Token expiry: requestedEnd + 90 days if set, else today + 365 days; minimum 90 days from now
@@ -385,13 +412,13 @@ router.post("/cases", async (req, res): Promise<void> => {
         await db.insert(caseAccessTokensTable).values({
           caseId: newCase.id,
           token,
-          employeeEmail: data.employeeEmail,
+          employeeEmail: resolvedEmail,
           expiresAt,
         });
 
         const magicLinkUrl = `${getAppUrl()}/leaveiq/portal?token=${token}`;
-        await sendMagicLinkEmail(data.employeeEmail, newCase.caseNumber, magicLinkUrl);
-        logger.info({ caseId: newCase.id, to: data.employeeEmail }, "Confirmation/magic-link email sent");
+        await sendMagicLinkEmail(resolvedEmail, newCase.caseNumber, magicLinkUrl);
+        logger.info({ caseId: newCase.id }, "Confirmation/magic-link email sent");
       } catch (err) {
         logger.warn({ err, caseId: newCase.id }, "Magic link email failed — case still created");
       }

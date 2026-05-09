@@ -121,6 +121,9 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   },
 ];
 
+// Extend window type for reCAPTCHA v3
+declare const window: Window & { grecaptcha?: { ready: (cb: () => void) => void; execute: (key: string, opts: { action: string }) => Promise<string> } };
+
 export default function EmployeePortal() {
   const { logoUrl: orgLogoUrl, orgName } = useOrgBranding();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -132,6 +135,29 @@ export default function EmployeePortal() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+
+  // Load reCAPTCHA v3 script on mount (no-op if site key not configured)
+  useEffect(() => {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
+    if (!siteKey) return;
+    const existing = document.querySelector(`script[src*="recaptcha"]`);
+    if (existing) return; // already loaded
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
+  /** Get a reCAPTCHA v3 token for a given action — resolves to null if not configured */
+  const getCaptchaToken = (action: string): Promise<string | null> => {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
+    if (!siteKey || !window.grecaptcha) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      window.grecaptcha!.ready(() => {
+        window.grecaptcha!.execute(siteKey, { action }).then(resolve).catch(() => resolve(null));
+      });
+    });
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -259,34 +285,18 @@ export default function EmployeePortal() {
       const branch = data.branch;
 
       if (value === "confirm_yes") {
-        setData((d) => ({ ...d, submittedBy: lookupName, employeeEmail: lookupEmail ?? undefined }));
-
-        if (lookupEmail) {
-          // Has email on file — skip the email step
-          botDelay(() => {
-            if (branch === "leave") {
-              addBotMessage("What's the reason for your leave request?", { options: LEAVE_REASON_OPTIONS });
-              setStep("leave_reason");
-            } else {
-              addBotMessage(
-                `Thank you, ${lookupName?.split(" ")[0] ?? ""}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: "I have difficulty standing for more than 20 minutes."`,
-                { inputType: "textarea" }
-              );
-              setStep("ada_limitation");
-              focusInput();
-            }
-          });
-        } else {
-          // No email on record — collect it
-          botDelay(() => {
-            addBotMessage(
-              "We don't have an email on file for you. What email address should HR use to send you updates?",
-              { inputType: "text" }
-            );
-            setStep("email");
-            focusInput();
-          });
-        }
+        setData((d) => ({ ...d, submittedBy: lookupName }));
+        // Always go through the email step — the masked email is display-only;
+        // the full email is retrieved server-side from the employees table if not provided.
+        botDelay(() => {
+          const hint = lookupEmail ? ` (we have **${lookupEmail}** on file — enter a different address to use instead)` : "";
+          addBotMessage(
+            `What email address should HR use to send you updates?${hint}`,
+            { inputType: "text" }
+          );
+          setStep("email");
+          focusInput();
+        });
       } else {
         // Employee said no — manual name entry
         botDelay(() => {
@@ -361,17 +371,22 @@ export default function EmployeePortal() {
       // Show typing dots while we look up the employee
       setIsTyping(true);
 
-      const orgSlug = getOrgSlug();
-      const params = new URLSearchParams({ employeeId });
-      if (orgSlug) params.set("org", orgSlug);
+      (async () => {
+        try {
+          const orgSlug = getOrgSlug();
+          const captchaToken = await getCaptchaToken("employee_lookup");
+          const params = new URLSearchParams({ employeeId });
+          if (orgSlug) params.set("org", orgSlug);
+          if (captchaToken) params.set("captchaToken", captchaToken);
 
-      fetch(`/api/public/employees/lookup?${params}`)
-        .then((r) => r.json())
-        .then((result: { found: boolean; fullName?: string; email?: string | null }) => {
+          const r = await fetch(`/api/public/employees/lookup?${params}`);
+          const result = await r.json() as { found: boolean; fullName?: string; emailMasked?: string | null };
+
           setIsTyping(false);
           if (result.found && result.fullName) {
-            const emailDisplay = result.email ? ` — ${result.email}` : " — no email on file";
-            setData((d) => ({ ...d, lookupFound: true, lookupName: result.fullName, lookupEmail: result.email ?? null }));
+            const emailDisplay = result.emailMasked ? ` — ${result.emailMasked}` : " — no email on file";
+            // Store the masked email for display only — full email is never sent to the client
+            setData((d) => ({ ...d, lookupFound: true, lookupName: result.fullName, lookupEmail: result.emailMasked ?? null }));
             addBotMessage(
               `I found your record! **${result.fullName}**${emailDisplay}. Is this you?`,
               {
@@ -391,14 +406,14 @@ export default function EmployeePortal() {
             setStep("employee_name_manual");
             focusInput();
           }
-        })
-        .catch(() => {
+        } catch {
           setIsTyping(false);
           setData((d) => ({ ...d, lookupFound: false }));
           addBotMessage("Please enter your full name:", { inputType: "text" });
           setStep("employee_name_manual");
           focusInput();
-        });
+        }
+      })();
 
       return;
     }

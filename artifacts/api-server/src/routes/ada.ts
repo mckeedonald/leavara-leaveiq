@@ -7,6 +7,7 @@ import {
   approvedAccommodationsTable,
   calendarInvitesTable,
   organizationsTable,
+  employeesTable,
 } from "@workspace/db";
 import { requireAuth, type AuthenticatedRequest } from "../lib/jwtAuth.js";
 import { logger } from "../lib/logger.js";
@@ -186,12 +187,38 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
       content: `Accommodation request submitted via employee portal.\n\nFunctional Limitations: ${functionalLimitations ?? "Not specified"}\n\nAccommodation Requested: ${accommodationRequested ?? "Not specified"}`,
     });
 
-    // Send acknowledgment email to employee if email provided
-    if (employeeEmail && typeof employeeEmail === "string" && employeeEmail.trim()) {
+    // If no email was provided (e.g. employee used portal lookup and email was masked),
+    // fall back to the email stored in the employees table for this employee number.
+    let resolvedEmail = (typeof employeeEmail === "string" && employeeEmail.trim()) ? employeeEmail.trim() : null;
+    if (!resolvedEmail && employeeNumber && organizationId) {
+      try {
+        const [emp] = await db
+          .select({ personalEmail: employeesTable.personalEmail, workEmail: employeesTable.workEmail })
+          .from(employeesTable)
+          .where(
+            and(
+              eq(employeesTable.organizationId, organizationId),
+              eq(employeesTable.employeeId, String(employeeNumber)),
+              eq(employeesTable.isActive, true)
+            )
+          )
+          .limit(1);
+        resolvedEmail = emp?.personalEmail || emp?.workEmail || null;
+        if (resolvedEmail) {
+          await db.update(adaCasesTable).set({ employeeEmail: resolvedEmail }).where(eq(adaCasesTable.id, adaCase.id));
+          logger.info({ caseId: adaCase.id }, "Resolved employee email from employees table");
+        }
+      } catch (err) {
+        logger.warn({ err, caseId: adaCase.id }, "ADA employee email fallback lookup failed");
+      }
+    }
+
+    // Send acknowledgment email to employee if email available
+    if (resolvedEmail) {
       const employeeName = [employeeFirstName, employeeLastName].filter(Boolean).join(" ") || "Employee";
       try {
         await sendNoticeEmail({
-          to: employeeEmail.trim(),
+          to: resolvedEmail,
           subject: `Your Accommodation Request Has Been Received — Case ${caseNumber}`,
           noticeType: "ADA_ACKNOWLEDGMENT",
           content: `Dear ${employeeName},
