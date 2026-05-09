@@ -38,7 +38,9 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
   useEffect(() => {
     if (!isOpen) return;
-    apiFetch<Employee[]>("/api/employees").then(setEmployees).catch(() => {});
+    apiFetch<{ employees: Employee[] }>("/api/employees")
+      .then((d) => setEmployees(d.employees ?? []))
+      .catch(() => {});
   }, [isOpen]);
 
   // Close dropdown on outside click

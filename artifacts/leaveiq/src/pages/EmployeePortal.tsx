@@ -29,6 +29,8 @@ type Step =
   | "welcome"
   | "choose_branch"
   | "employee_number"
+  | "employee_confirm"
+  | "employee_name_manual"
   | "email"
   // Leave branch
   | "leave_reason"
@@ -55,6 +57,10 @@ interface IntakeData {
   employeeNumber?: string;
   employeeEmail?: string;
   submittedBy?: string;
+  // Employee lookup result
+  lookupFound?: boolean;
+  lookupName?: string;
+  lookupEmail?: string | null;
   // Leave
   leaveReasonCategory?: string;
   leaveReasonOther?: string;
@@ -225,15 +231,70 @@ export default function EmployeePortal() {
     // Intermittent
     if (step === "intermittent") {
       const intermittent = value === "yes";
-      setData((d) => ({ ...d, intermittent }));
-      botDelay(() => {
-        addBotMessage(
-          "Almost done! What's your full name so we can submit the request?",
-          { inputType: "text" }
-        );
-        setStep("leave_name");
-        focusInput();
-      });
+      if (data.submittedBy) {
+        // Name already collected from lookup/manual — skip leave_name, go straight to summary
+        setData((prev) => {
+          const updated = { ...prev, intermittent };
+          botDelay(() => showLeaveSummary(updated));
+          return updated;
+        });
+      } else {
+        setData((d) => ({ ...d, intermittent }));
+        botDelay(() => {
+          addBotMessage(
+            "Almost done! What's your full name so we can submit the request?",
+            { inputType: "text" }
+          );
+          setStep("leave_name");
+          focusInput();
+        });
+      }
+      return;
+    }
+
+    // Employee lookup confirm
+    if (step === "employee_confirm") {
+      const lookupName = data.lookupName;
+      const lookupEmail = data.lookupEmail;
+      const branch = data.branch;
+
+      if (value === "confirm_yes") {
+        setData((d) => ({ ...d, submittedBy: lookupName, employeeEmail: lookupEmail ?? undefined }));
+
+        if (lookupEmail) {
+          // Has email on file — skip the email step
+          botDelay(() => {
+            if (branch === "leave") {
+              addBotMessage("What's the reason for your leave request?", { options: LEAVE_REASON_OPTIONS });
+              setStep("leave_reason");
+            } else {
+              addBotMessage(
+                `Thank you, ${lookupName?.split(" ")[0] ?? ""}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: "I have difficulty standing for more than 20 minutes."`,
+                { inputType: "textarea" }
+              );
+              setStep("ada_limitation");
+              focusInput();
+            }
+          });
+        } else {
+          // No email on record — collect it
+          botDelay(() => {
+            addBotMessage(
+              "We don't have an email on file for you. What email address should HR use to send you updates?",
+              { inputType: "text" }
+            );
+            setStep("email");
+            focusInput();
+          });
+        }
+      } else {
+        // Employee said no — manual name entry
+        botDelay(() => {
+          addBotMessage("No problem — please enter your full name:", { inputType: "text" });
+          setStep("employee_name_manual");
+          focusInput();
+        });
+      }
       return;
     }
 
@@ -294,10 +355,59 @@ export default function EmployeePortal() {
     setInputValue("");
 
     if (step === "employee_number") {
-      setData((d) => ({ ...d, employeeNumber: trimmed }));
+      const employeeId = trimmed;
+      setData((d) => ({ ...d, employeeNumber: employeeId }));
+
+      // Show typing dots while we look up the employee
+      setIsTyping(true);
+
+      const orgSlug = getOrgSlug();
+      const params = new URLSearchParams({ employeeId });
+      if (orgSlug) params.set("org", orgSlug);
+
+      fetch(`/api/public/employees/lookup?${params}`)
+        .then((r) => r.json())
+        .then((result: { found: boolean; fullName?: string; email?: string | null }) => {
+          setIsTyping(false);
+          if (result.found && result.fullName) {
+            const emailDisplay = result.email ? ` — ${result.email}` : " — no email on file";
+            setData((d) => ({ ...d, lookupFound: true, lookupName: result.fullName, lookupEmail: result.email ?? null }));
+            addBotMessage(
+              `I found your record! **${result.fullName}**${emailDisplay}. Is this you?`,
+              {
+                options: [
+                  { label: "Yes, that's me", value: "confirm_yes" },
+                  { label: "No, I'll enter my info manually", value: "confirm_no" },
+                ],
+              }
+            );
+            setStep("employee_confirm");
+          } else {
+            setData((d) => ({ ...d, lookupFound: false }));
+            addBotMessage(
+              "I wasn't able to find an employee record with that ID. No worries — please enter your full name:",
+              { inputType: "text" }
+            );
+            setStep("employee_name_manual");
+            focusInput();
+          }
+        })
+        .catch(() => {
+          setIsTyping(false);
+          setData((d) => ({ ...d, lookupFound: false }));
+          addBotMessage("Please enter your full name:", { inputType: "text" });
+          setStep("employee_name_manual");
+          focusInput();
+        });
+
+      return;
+    }
+
+    if (step === "employee_name_manual") {
+      setData((d) => ({ ...d, submittedBy: trimmed }));
       botDelay(() => {
         addBotMessage(
-          "Thanks! What email address should HR use to send you updates?",
+          "Got it! What email address should HR use to send you updates?",
           { inputType: "text" }
         );
         setStep("email");
@@ -319,6 +429,7 @@ export default function EmployeePortal() {
       }
       setData((d) => ({ ...d, employeeEmail: trimmed }));
       const branch = data.branch;
+      const alreadyHasName = !!data.submittedBy;
       if (branch === "leave") {
         botDelay(() => {
           addBotMessage("What's the reason for your leave request?", {
@@ -326,8 +437,18 @@ export default function EmployeePortal() {
           });
           setStep("leave_reason");
         });
+      } else if (alreadyHasName) {
+        // Name was collected from lookup or manual entry — skip ada_name
+        botDelay(() => {
+          addBotMessage(
+            `Thank you, ${data.submittedBy!.split(" ")[0]}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: "I have difficulty standing for more than 20 minutes" or "I struggle with concentrating in noisy environments."`,
+            { inputType: "textarea" }
+          );
+          setStep("ada_limitation");
+          focusInput();
+        });
       } else {
-        // accommodation branch → go to name
+        // accommodation branch → collect name
         botDelay(() => {
           addBotMessage(
             "What's your full name?",
@@ -676,9 +797,10 @@ export default function EmployeePortal() {
     if (currentInputType === "textarea") return "Type your answer… (Enter to submit)";
     switch (step) {
       case "employee_number": return "e.g. 1023";
-      case "email": return "your.email@company.com";
+      case "employee_name_manual":
       case "leave_name":
       case "ada_name": return "Your full name";
+      case "email": return "your.email@company.com";
       default: return "Type your answer…";
     }
   };

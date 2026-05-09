@@ -13,9 +13,12 @@ import piqRouter from "./piq/index.js";
 import employeesRouter from "./employees.js";
 import caseMessagesRouter from "./caseMessages.js";
 import adaRouter from "./ada.js";
+import publicRouter from "./publicRoutes.js";
 
 const router: IRouter = Router();
 
+// Public routes must come before any auth middleware
+router.use(publicRouter);
 router.use(employeesRouter);
 router.use(healthRouter);
 router.use(authRouter);
