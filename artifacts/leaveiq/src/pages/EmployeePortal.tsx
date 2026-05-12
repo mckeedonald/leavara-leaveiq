@@ -29,8 +29,7 @@ type Step =
   | "welcome"
   | "choose_branch"
   | "employee_number"
-  | "employee_confirm"
-  | "employee_name_manual"
+  | "employee_name"
   | "email"
   // Leave branch
   | "leave_reason"
@@ -57,10 +56,6 @@ interface IntakeData {
   employeeNumber?: string;
   employeeEmail?: string;
   submittedBy?: string;
-  // Employee lookup result
-  lookupFound?: boolean;
-  lookupName?: string;
-  lookupEmail?: string | null;
   // Leave
   leaveReasonCategory?: string;
   leaveReasonOther?: string;
@@ -121,8 +116,6 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   },
 ];
 
-// Extend window type for reCAPTCHA v3
-declare const window: Window & { grecaptcha?: { ready: (cb: () => void) => void; execute: (key: string, opts: { action: string }) => Promise<string> } };
 
 export default function EmployeePortal() {
   const { logoUrl: orgLogoUrl, orgName } = useOrgBranding();
@@ -135,29 +128,6 @@ export default function EmployeePortal() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-
-  // Load reCAPTCHA v3 script on mount (no-op if site key not configured)
-  useEffect(() => {
-    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
-    if (!siteKey) return;
-    const existing = document.querySelector(`script[src*="recaptcha"]`);
-    if (existing) return; // already loaded
-    const script = document.createElement("script");
-    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
-    script.async = true;
-    document.head.appendChild(script);
-  }, []);
-
-  /** Get a reCAPTCHA v3 token for a given action — resolves to null if not configured */
-  const getCaptchaToken = (action: string): Promise<string | null> => {
-    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
-    if (!siteKey || !window.grecaptcha) return Promise.resolve(null);
-    return new Promise((resolve) => {
-      window.grecaptcha!.ready(() => {
-        window.grecaptcha!.execute(siteKey, { action }).then(resolve).catch(() => resolve(null));
-      });
-    });
-  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -257,54 +227,11 @@ export default function EmployeePortal() {
     // Intermittent
     if (step === "intermittent") {
       const intermittent = value === "yes";
-      if (data.submittedBy) {
-        // Name already collected from lookup/manual — skip leave_name, go straight to summary
-        setData((prev) => {
-          const updated = { ...prev, intermittent };
-          botDelay(() => showLeaveSummary(updated));
-          return updated;
-        });
-      } else {
-        setData((d) => ({ ...d, intermittent }));
-        botDelay(() => {
-          addBotMessage(
-            "Almost done! What's your full name so we can submit the request?",
-            { inputType: "text" }
-          );
-          setStep("leave_name");
-          focusInput();
-        });
-      }
-      return;
-    }
-
-    // Employee lookup confirm
-    if (step === "employee_confirm") {
-      const lookupName = data.lookupName;
-      const lookupEmail = data.lookupEmail;
-      const branch = data.branch;
-
-      if (value === "confirm_yes") {
-        setData((d) => ({ ...d, submittedBy: lookupName }));
-        // Always go through the email step — the masked email is display-only;
-        // the full email is retrieved server-side from the employees table if not provided.
-        botDelay(() => {
-          const hint = lookupEmail ? ` (we have **${lookupEmail}** on file — enter a different address to use instead)` : "";
-          addBotMessage(
-            `What email address should HR use to send you updates?${hint}`,
-            { inputType: "text" }
-          );
-          setStep("email");
-          focusInput();
-        });
-      } else {
-        // Employee said no — manual name entry
-        botDelay(() => {
-          addBotMessage("No problem — please enter your full name:", { inputType: "text" });
-          setStep("employee_name_manual");
-          focusInput();
-        });
-      }
+      setData((prev) => {
+        const updated = { ...prev, intermittent };
+        botDelay(() => showLeaveSummary(updated));
+        return updated;
+      });
       return;
     }
 
@@ -365,60 +292,16 @@ export default function EmployeePortal() {
     setInputValue("");
 
     if (step === "employee_number") {
-      const employeeId = trimmed;
-      setData((d) => ({ ...d, employeeNumber: employeeId }));
-
-      // Show typing dots while we look up the employee
-      setIsTyping(true);
-
-      (async () => {
-        try {
-          const orgSlug = getOrgSlug();
-          const captchaToken = await getCaptchaToken("employee_lookup");
-          const params = new URLSearchParams({ employeeId });
-          if (orgSlug) params.set("org", orgSlug);
-          if (captchaToken) params.set("captchaToken", captchaToken);
-
-          const r = await fetch(`/api/public/employees/lookup?${params}`);
-          const result = await r.json() as { found: boolean; fullName?: string; emailMasked?: string | null };
-
-          setIsTyping(false);
-          if (result.found && result.fullName) {
-            const emailDisplay = result.emailMasked ? ` — ${result.emailMasked}` : " — no email on file";
-            // Store the masked email for display only — full email is never sent to the client
-            setData((d) => ({ ...d, lookupFound: true, lookupName: result.fullName, lookupEmail: result.emailMasked ?? null }));
-            addBotMessage(
-              `I found your record! **${result.fullName}**${emailDisplay}. Is this you?`,
-              {
-                options: [
-                  { label: "Yes, that's me", value: "confirm_yes" },
-                  { label: "No, I'll enter my info manually", value: "confirm_no" },
-                ],
-              }
-            );
-            setStep("employee_confirm");
-          } else {
-            setData((d) => ({ ...d, lookupFound: false }));
-            addBotMessage(
-              "I wasn't able to find an employee record with that ID. No worries — please enter your full name:",
-              { inputType: "text" }
-            );
-            setStep("employee_name_manual");
-            focusInput();
-          }
-        } catch {
-          setIsTyping(false);
-          setData((d) => ({ ...d, lookupFound: false }));
-          addBotMessage("Please enter your full name:", { inputType: "text" });
-          setStep("employee_name_manual");
-          focusInput();
-        }
-      })();
-
+      setData((d) => ({ ...d, employeeNumber: trimmed }));
+      botDelay(() => {
+        addBotMessage("What's your full name?", { inputType: "text" });
+        setStep("employee_name");
+        focusInput();
+      });
       return;
     }
 
-    if (step === "employee_name_manual") {
+    if (step === "employee_name") {
       setData((d) => ({ ...d, submittedBy: trimmed }));
       botDelay(() => {
         addBotMessage(
@@ -444,7 +327,6 @@ export default function EmployeePortal() {
       }
       setData((d) => ({ ...d, employeeEmail: trimmed }));
       const branch = data.branch;
-      const alreadyHasName = !!data.submittedBy;
       if (branch === "leave") {
         botDelay(() => {
           addBotMessage("What's the reason for your leave request?", {
@@ -452,24 +334,14 @@ export default function EmployeePortal() {
           });
           setStep("leave_reason");
         });
-      } else if (alreadyHasName) {
-        // Name was collected from lookup or manual entry — skip ada_name
+      } else {
+        // Accommodation branch — name was always collected at employee_name step
         botDelay(() => {
           addBotMessage(
             `Thank you, ${data.submittedBy!.split(" ")[0]}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: "I have difficulty standing for more than 20 minutes" or "I struggle with concentrating in noisy environments."`,
             { inputType: "textarea" }
           );
           setStep("ada_limitation");
-          focusInput();
-        });
-      } else {
-        // accommodation branch → collect name
-        botDelay(() => {
-          addBotMessage(
-            "What's your full name?",
-            { inputType: "text" }
-          );
-          setStep("ada_name");
           focusInput();
         });
       }
