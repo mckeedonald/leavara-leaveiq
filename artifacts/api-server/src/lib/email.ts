@@ -377,6 +377,7 @@ export async function sendInterestEmail(data: {
   email: string;
   phone?: string;
   companySize: string;
+  products?: string;
   message?: string;
 }): Promise<void> {
   const rows = [
@@ -386,6 +387,7 @@ export async function sendInterestEmail(data: {
     ...(data.title ? [["Title", data.title]] : []),
     ["Email", data.email],
     ...(data.phone ? [["Phone", data.phone]] : []),
+    ...(data.products ? [["Products of Interest", data.products]] : []),
     ...(data.message ? [["Message", data.message]] : []),
   ] as [string, string][];
 

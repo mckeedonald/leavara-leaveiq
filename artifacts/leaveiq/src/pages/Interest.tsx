@@ -30,6 +30,23 @@ const COMPANY_SIZES = [
   "5,000+ employees",
 ];
 
+const PRODUCTS = [
+  {
+    id: "LeaveIQ",
+    label: "LeaveIQ",
+    desc: "Smart Leave of Absence Management",
+    icon: "📅",
+    accent: "#C97E59",
+  },
+  {
+    id: "PerformIQ",
+    label: "PerformIQ",
+    desc: "AI-Assisted Performance Documentation",
+    icon: "📋",
+    accent: "#2E7B7B",
+  },
+];
+
 interface FormData {
   companyName: string;
   contactName: string;
@@ -37,6 +54,7 @@ interface FormData {
   email: string;
   phone: string;
   companySize: string;
+  products: string[];
   message: string;
 }
 
@@ -47,6 +65,7 @@ const EMPTY: FormData = {
   email: "",
   phone: "",
   companySize: "",
+  products: [],
   message: "",
 };
 
@@ -56,11 +75,21 @@ export default function Interest() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function set(field: keyof FormData) {
+  function set(field: keyof Omit<FormData, "products">) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setForm(prev => ({ ...prev, [field]: e.target.value }));
       setError(null);
     };
+  }
+
+  function toggleProduct(id: string) {
+    setForm(prev => ({
+      ...prev,
+      products: prev.products.includes(id)
+        ? prev.products.filter(p => p !== id)
+        : [...prev.products, id],
+    }));
+    setError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,13 +98,17 @@ export default function Interest() {
       setError("Please fill in all required fields.");
       return;
     }
+    if (form.products.length === 0) {
+      setError("Please select at least one product you're interested in.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       const res = await fetch("/api/interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, products: form.products.join(", ") }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Submission failed");
@@ -96,12 +129,12 @@ export default function Interest() {
     color: C.textDark,
     fontSize: 14,
     outline: "none",
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: "Inter, sans-serif",
   };
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: C.bg, fontFamily: "Roboto, sans-serif" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: C.bg, fontFamily: "Inter, sans-serif" }}>
         <div className="w-full max-w-md text-center">
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: C.terracotta + "20" }}>
             <CheckCircle2 className="w-10 h-10" style={{ color: C.terracotta }} />
@@ -109,10 +142,11 @@ export default function Interest() {
           <img src="/leavara-logo.png" alt="Leavara" className="h-10 w-10 object-contain mx-auto mb-3" />
           <h1 className="text-2xl font-bold mb-3" style={{ color: C.textDark }}>Thank You!</h1>
           <p className="text-base mb-2" style={{ color: C.textBody }}>
-            We've received your interest in Leavara LeaveIQ.
+            We've received your interest in{" "}
+            {form.products.length > 0 ? `Leavara ${form.products.join(" & ")}` : "Leavara"}.
           </p>
           <p className="text-sm mb-8" style={{ color: C.textMuted }}>
-            A member of our team will be in touch with you shortly to discuss how LeaveIQ can support your HR team.
+            A member of our team will be in touch shortly to walk you through the platform and discuss how it fits your organization.
           </p>
           <Link
             href="/"
@@ -128,7 +162,7 @@ export default function Interest() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "Roboto, sans-serif" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "Inter, sans-serif" }}>
       <header className="sticky top-0 z-50 border-b shadow-sm" style={{ background: `${C.bg}f5`, borderColor: C.khaki }}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -152,9 +186,9 @@ export default function Interest() {
         <div className="w-full max-w-xl">
           <div className="mb-8">
             <img src="/leavara-logo.png" alt="Leavara" className="h-12 w-12 object-contain mb-4" />
-            <h1 className="text-3xl font-bold mb-2" style={{ color: C.textDark }}>Get Started with LeaveIQ</h1>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: C.textDark }}>Get Started with Leavara</h1>
             <p style={{ color: C.textBody }}>
-              Tell us a bit about your organization and we'll reach out to show you how Leavara LeaveIQ can streamline your leave of absence management.
+              Tell us a bit about your organization and the products you're interested in — we'll reach out to walk you through what's right for your team.
             </p>
           </div>
 
@@ -255,6 +289,39 @@ export default function Interest() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: C.textBody }}>
+                  Products of Interest <span style={{ color: C.terracotta }}>*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {PRODUCTS.map(product => {
+                    const selected = form.products.includes(product.id);
+                    return (
+                      <label
+                        key={product.id}
+                        className="flex items-center gap-3 cursor-pointer rounded-xl border p-4 transition-all"
+                        style={{
+                          background: selected ? product.accent + "10" : C.inputBg,
+                          borderColor: selected ? product.accent : C.inputBorder,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleProduct(product.id)}
+                          style={{ accentColor: product.accent, width: 16, height: 16, cursor: "pointer" }}
+                        />
+                        <span className="text-xl">{product.icon}</span>
+                        <div>
+                          <p className="font-semibold text-sm" style={{ color: C.textDark }}>{product.label}</p>
+                          <p className="text-xs" style={{ color: C.textMuted }}>{product.desc}</p>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: C.textBody }}>
                   Anything else you'd like us to know?
                 </label>
@@ -284,7 +351,7 @@ export default function Interest() {
               </button>
 
               <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                We respect your privacy. Your information is only used to contact you about LeaveIQ.
+                We respect your privacy. Your information is only used to contact you about Leavara products.
               </p>
             </form>
           </div>

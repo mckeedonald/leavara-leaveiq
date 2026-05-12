@@ -107,9 +107,9 @@ function LeaveIQIllustration() {
         <rect x="10" y="10" width="260" height="240" rx="14" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#ls1)" />
         <rect x="10" y="10" width="260" height="42" rx="14" fill={C.terracotta} />
         <rect x="10" y="38" width="260" height="14" fill={C.terracotta} />
-        <text x="140" y="36" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Roboto">Leave Calendar — June</text>
+        <text x="140" y="36" textAnchor="middle" fontSize="12" fontWeight="700" fill="white" fontFamily="Inter, sans-serif">Leave Calendar — June</text>
         {["S","M","T","W","T","F","S"].map((d, i) => (
-          <text key={i} x={33 + i * 34} y="70" textAnchor="middle" fontSize="8.5" fontWeight="600" fill={C.textMuted} fontFamily="Roboto">{d}</text>
+          <text key={i} x={33 + i * 34} y="70" textAnchor="middle" fontSize="8.5" fontWeight="600" fill={C.textMuted} fontFamily="Inter, sans-serif">{d}</text>
         ))}
         <line x1="18" y1="78" x2="262" y2="78" stroke={C.khaki} strokeWidth="0.8" opacity="0.5" />
         {days.map((day, i) => {
@@ -128,7 +128,7 @@ function LeaveIQIllustration() {
               )}
               <text x={cx} y={cy + 5} textAnchor="middle" fontSize="9.5"
                 fill={isToday ? "white" : lit ? C.terracottaDk : C.textDark}
-                fontWeight={isToday ? "700" : "400"} fontFamily="Roboto">
+                fontWeight={isToday ? "700" : "400"} fontFamily="Inter, sans-serif">
                 {day <= 30 ? day : ""}
               </text>
             </g>
@@ -141,23 +141,23 @@ function LeaveIQIllustration() {
         <rect x="276" y="30" width="134" height="76" rx="12" fill={C.bgCard} stroke={C.khaki} strokeWidth="1.5" filter="url(#ls1)" />
         <rect x="284" y="41" width="28" height="28" rx="7" fill={C.terracotta + "20"} />
         <text x="298" y="61" textAnchor="middle" fontSize="14">📋</text>
-        <text x="320" y="52" fontSize="9" fontWeight="700" fill={C.textDark} fontFamily="Roboto">FMLA Leave</text>
-        <text x="320" y="63" fontSize="7.5" fill={C.textMuted} fontFamily="Roboto">12 weeks eligible</text>
+        <text x="320" y="52" fontSize="9" fontWeight="700" fill={C.textDark} fontFamily="Inter, sans-serif">FMLA Leave</text>
+        <text x="320" y="63" fontSize="7.5" fill={C.textMuted} fontFamily="Inter, sans-serif">12 weeks eligible</text>
         <rect x="284" y="78" width="118" height="5" rx="2.5" fill={C.khaki} opacity="0.35" />
         <rect x="284" y="87" width="88" height="5" rx="2.5" fill={C.khaki} opacity="0.22" />
 
         <rect x="276" y="118" width="134" height="60" rx="12" fill={C.terracottaDk} filter="url(#ls2)" />
         <circle cx="296" cy="143" r="9" fill="white" opacity="0.15" />
         <polyline points="290,143 295,148 304,137" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <text x="312" y="139" fontSize="9" fontWeight="700" fill="white" fontFamily="Roboto">Approved</text>
-        <text x="312" y="150" fontSize="7.5" fill={C.bg + "cc"} fontFamily="Roboto">Jun 8 – 12</text>
+        <text x="312" y="139" fontSize="9" fontWeight="700" fill="white" fontFamily="Inter, sans-serif">Approved</text>
+        <text x="312" y="150" fontSize="7.5" fill={C.bg + "cc"} fontFamily="Inter, sans-serif">Jun 8 – 12</text>
         <rect x="284" y="160" width="110" height="4" rx="2" fill="white" opacity="0.18" />
 
         <rect x="276" y="190" width="134" height="52" rx="12" fill={C.bgCard} stroke={C.rose + "60"} strokeWidth="1.5" filter="url(#ls1)" />
         <circle cx="296" cy="212" r="7" fill={C.rose + "50"} />
         <text x="296" y="216" textAnchor="middle" fontSize="9" fill={C.roseDark}>!</text>
-        <text x="310" y="208" fontSize="8.5" fontWeight="700" fill={C.roseDark} fontFamily="Roboto">Pending Review</text>
-        <text x="310" y="219" fontSize="7.5" fill={C.textBody} fontFamily="Roboto">Jun 17 – 18</text>
+        <text x="310" y="208" fontSize="8.5" fontWeight="700" fill={C.roseDark} fontFamily="Inter, sans-serif">Pending Review</text>
+        <text x="310" y="219" fontSize="7.5" fill={C.textBody} fontFamily="Inter, sans-serif">Jun 17 – 18</text>
         <rect x="284" y="228" width="106" height="4" rx="2" fill={C.rose} opacity="0.22" />
       </g>
     </svg>
@@ -215,17 +215,17 @@ function PerformIQIllustration() {
         <rect x="10" y="38" width="268" height="16" fill={C.perfDark} />
         <circle cx="34" cy="32" r="10" fill={C.perf} />
         <text x="34" y="36" textAnchor="middle" fontSize="10">🤖</text>
-        <text x="50" y="29" fontSize="10" fontWeight="700" fill="white" fontFamily="Roboto">Performance Specialist</text>
-        <text x="50" y="40" fontSize="7.5" fill={C.bg + "aa"} fontFamily="Roboto">AI Documentation Partner</text>
+        <text x="50" y="29" fontSize="10" fontWeight="700" fill="white" fontFamily="Inter, sans-serif">Performance Specialist</text>
+        <text x="50" y="40" fontSize="7.5" fill={C.bg + "aa"} fontFamily="Inter, sans-serif">AI Documentation Partner</text>
 
         {/* Manager message bubble */}
         <rect x="120" y="64" width="148" height="28" rx="10" fill={C.perf + "20"} />
-        <text x="194" y="75" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Roboto">Second attendance issue this</text>
-        <text x="194" y="85" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Roboto">month, prior coaching on file.</text>
+        <text x="194" y="75" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Inter, sans-serif">Second attendance issue this</text>
+        <text x="194" y="85" textAnchor="middle" fontSize="7.5" fill={C.perfDark} fontFamily="Inter, sans-serif">month, prior coaching on file.</text>
 
         {/* Agent reply bubble */}
         <rect x="18" y="102" width="232" height="60" rx="10" fill={C.perfBg} />
-        <text x="28" y="115" fontSize="7" fill={C.perfDark} fontFamily="Roboto" fontStyle="italic">Performance Specialist</text>
+        <text x="28" y="115" fontSize="7" fill={C.perfDark} fontFamily="Inter, sans-serif" fontStyle="italic">Performance Specialist</text>
         <foreignObject x="22" y="119" width="222" height="42">
           <div style={{ fontSize: "7.5px", color: C.textDark, fontFamily: "Roboto", lineHeight: "1.45" }}>
             {agentText.slice(0, typedLen)}
@@ -235,16 +235,16 @@ function PerformIQIllustration() {
         {/* Draft summary card */}
         <rect x="18" y="172" width="240" height="54" rx="10" fill={C.perfDark + "12"} stroke={C.perf + "40"} strokeWidth="1" />
         <rect x="26" y="180" width="4" height="38" rx="2" fill={C.perf} />
-        <text x="38" y="190" fontSize="7.5" fontWeight="700" fill={C.perfDark} fontFamily="Roboto">Written Warning — Attendance</text>
-        <text x="38" y="201" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Employee: Marcus Webb</text>
-        <text x="38" y="211" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Manager: Dana Osei  ·  05/08/2026</text>
-        <text x="38" y="220" fontSize="7" fill={C.textMuted} fontFamily="Roboto">Prior docs: 1 coaching note (04/12)</text>
+        <text x="38" y="190" fontSize="7.5" fontWeight="700" fill={C.perfDark} fontFamily="Inter, sans-serif">Written Warning — Attendance</text>
+        <text x="38" y="201" fontSize="7" fill={C.textMuted} fontFamily="Inter, sans-serif">Employee: Marcus Webb</text>
+        <text x="38" y="211" fontSize="7" fill={C.textMuted} fontFamily="Inter, sans-serif">Manager: Dana Osei  ·  05/08/2026</text>
+        <text x="38" y="220" fontSize="7" fill={C.textMuted} fontFamily="Inter, sans-serif">Prior docs: 1 coaching note (04/12)</text>
 
         {/* Confirm button */}
         <rect x="18" y="234" width="105" height="22" rx="7" fill={C.perf} />
-        <text x="70" y="249" textAnchor="middle" fontSize="8" fontWeight="700" fill="white" fontFamily="Roboto">✓  Confirm &amp; Draft</text>
+        <text x="70" y="249" textAnchor="middle" fontSize="8" fontWeight="700" fill="white" fontFamily="Inter, sans-serif">✓  Confirm &amp; Draft</text>
         <rect x="132" y="234" width="126" height="22" rx="7" fill={C.perf + "18"} stroke={C.perf + "50"} strokeWidth="1" />
-        <text x="195" y="249" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.perfDark} fontFamily="Roboto">Provide Feedback</text>
+        <text x="195" y="249" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.perfDark} fontFamily="Inter, sans-serif">Provide Feedback</text>
       </g>
 
       {/* Right-side status cards */}
@@ -252,7 +252,7 @@ function PerformIQIllustration() {
 
         {/* Workflow tracker */}
         <rect x="286" y="10" width="128" height="120" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
-        <text x="350" y="28" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={C.perfDark} fontFamily="Roboto">Approval Workflow</text>
+        <text x="350" y="28" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={C.perfDark} fontFamily="Inter, sans-serif">Approval Workflow</text>
         <line x1="296" y1="34" x2="406" y2="34" stroke="#A8CFCF" strokeWidth="0.8" />
         {workflowSteps.map(({ label, done }, i) => (
           <g key={label}>
@@ -262,8 +262,8 @@ function PerformIQIllustration() {
             {done && <polyline points={`298,${50 + i * 22} 302,${54 + i * 22} 309,${46 + i * 22}`}
               stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
             <text x="317" y={54 + i * 22} fontSize="8" fontWeight={done ? "600" : "400"}
-              fill={done ? C.perfDark : C.textMuted} fontFamily="Roboto">{label}</text>
-            {done && <text x="400" y={54 + i * 22} textAnchor="end" fontSize="7" fill={C.perf} fontFamily="Roboto">✓</text>}
+              fill={done ? C.perfDark : C.textMuted} fontFamily="Inter, sans-serif">{label}</text>
+            {done && <text x="400" y={54 + i * 22} textAnchor="end" fontSize="7" fill={C.perf} fontFamily="Inter, sans-serif">✓</text>}
             {i < 3 && <line x1="303" y1={57 + i * 22} x2="303" y2={43 + (i + 1) * 22}
               stroke={done && step > i ? C.perf : "#DCF0F0"} strokeWidth="1.5"
               style={{ transition: "stroke 0.4s" }} />}
@@ -272,20 +272,20 @@ function PerformIQIllustration() {
 
         {/* E-signature card */}
         <rect x="286" y="140" width="128" height="80" rx="12" fill={C.perfDark} filter="url(#ps2)" />
-        <text x="350" y="158" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.bg + "bb"} fontFamily="Roboto" letterSpacing="0.4">E-SIGNATURE</text>
+        <text x="350" y="158" textAnchor="middle" fontSize="8" fontWeight="600" fill={C.bg + "bb"} fontFamily="Inter, sans-serif" letterSpacing="0.4">E-SIGNATURE</text>
         <circle cx="310" cy="180" r="12" fill="white" opacity="0.12" />
         <text x="310" y="184" textAnchor="middle" fontSize="13">✍️</text>
-        <text x="330" y="174" fontSize="8" fontWeight="700" fill="white" fontFamily="Roboto">Employee Signed</text>
-        <text x="330" y="184" fontSize="7" fill={C.bg + "aa"} fontFamily="Roboto">05/08/2026</text>
-        <text x="330" y="196" fontSize="7" fill={C.bg + "aa"} fontFamily="Roboto">PDF generated &amp; filed</text>
+        <text x="330" y="174" fontSize="8" fontWeight="700" fill="white" fontFamily="Inter, sans-serif">Employee Signed</text>
+        <text x="330" y="184" fontSize="7" fill={C.bg + "aa"} fontFamily="Inter, sans-serif">05/08/2026</text>
+        <text x="330" y="196" fontSize="7" fill={C.bg + "aa"} fontFamily="Inter, sans-serif">PDF generated &amp; filed</text>
         <rect x="296" y="206" width="110" height="4" rx="2" fill="white" opacity="0.18" />
 
         {/* Case closed card */}
         <rect x="286" y="230" width="128" height="66" rx="12" fill={C.bgCard} stroke="#A8CFCF" strokeWidth="1.5" filter="url(#ps1)" />
-        <text x="298" y="249" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Roboto">CASE FILED</text>
+        <text x="298" y="249" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Inter, sans-serif">CASE FILED</text>
         <rect x="296" y="255" width="110" height="5" rx="2.5" fill={C.perf} opacity="0.7" />
         <rect x="296" y="265" width="80" height="5" rx="2.5" fill={C.perf} opacity="0.35" />
-        <text x="350" y="286" textAnchor="middle" fontSize="7.5" fontWeight="700" fill={C.perf} fontFamily="Roboto">Closed &amp; Archived ✓</text>
+        <text x="350" y="286" textAnchor="middle" fontSize="7.5" fontWeight="700" fill={C.perf} fontFamily="Inter, sans-serif">Closed &amp; Archived ✓</text>
       </g>
     </svg>
   );
@@ -310,7 +310,7 @@ export default function Landing() {
   const line2 = h1.length > HERO_LINE1.length + 1 ? h1.slice(HERO_LINE1.length + 1) : "";
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: C.bg, fontFamily: "Roboto, sans-serif", color: C.textDark }}>
+    <div className="min-h-screen flex flex-col" style={{ background: C.bg, color: C.textDark }}>
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-50 border-b shadow-sm" style={{ background: `${C.bg}f5`, borderColor: C.khaki }}>
@@ -577,6 +577,95 @@ export default function Landing() {
                     style={{ borderColor: "#A8CFCF", color: C.perfDark }}>
                     Request Access
                   </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── VIDEO SECTION ── */}
+      <section className="py-20 border-t" style={{ background: C.bgCard, borderColor: C.khaki }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-semibold mb-4"
+              style={{ background: C.bg, borderColor: C.khaki, color: C.textMuted }}>
+              ▶ See It In Action
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: C.textDark }}>
+              Real Workflows. Zero Guesswork.
+            </h2>
+            <p className="max-w-xl mx-auto text-base" style={{ color: C.textBody }}>
+              Watch how each product handles the moments that matter — from employee intake to final HR decision.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* LeaveIQ Video */}
+            <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: C.khaki }}>
+              <div className="px-5 py-4 border-b flex items-center gap-3"
+                style={{ background: C.terracotta + "12", borderColor: C.khaki }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+                  style={{ background: C.terracotta + "25" }}>📅</div>
+                <div>
+                  <p className="font-bold text-sm" style={{ color: C.textDark }}>LeaveIQ in Action</p>
+                  <p className="text-xs" style={{ color: C.textMuted }}>
+                    Employee portal · Ava AI intake · Eligibility analysis · HR decision
+                  </p>
+                </div>
+              </div>
+              <div className="relative aspect-video" style={{ background: "#1c0f08" }}>
+                <video
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  src="/videos/leaveiq-demo.mp4"
+                >
+                  <p className="text-white text-sm p-4">Your browser does not support video playback.</p>
+                </video>
+                {/* Overlay shown until video is ready — hidden by browser once video loads */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+                  style={{ background: "linear-gradient(135deg, #2A1008 0%, #1c0f08 100%)" }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                    style={{ background: C.terracotta + "30", border: `1px solid ${C.terracotta}50` }}>
+                    <span style={{ color: C.terracotta, fontSize: 28 }}>▶</span>
+                  </div>
+                  <p className="text-xs font-semibold" style={{ color: C.terracotta + "bb" }}>LeaveIQ Workflow Demo</p>
+                </div>
+              </div>
+            </div>
+
+            {/* PerformIQ Video */}
+            <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: "#A8CFCF" }}>
+              <div className="px-5 py-4 border-b flex items-center gap-3"
+                style={{ background: C.perf + "0d", borderColor: "#A8CFCF" }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
+                  style={{ background: C.perf + "20" }}>📋</div>
+                <div>
+                  <p className="font-bold text-sm" style={{ color: C.textDark }}>PerformIQ in Action</p>
+                  <p className="text-xs" style={{ color: C.textMuted }}>
+                    AI document drafting · Approval workflow · E-signature · PDF filing
+                  </p>
+                </div>
+              </div>
+              <div className="relative aspect-video" style={{ background: "#0a1f1f" }}>
+                <video
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  src="/videos/performiq-demo.mp4"
+                >
+                  <p className="text-white text-sm p-4">Your browser does not support video playback.</p>
+                </video>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+                  style={{ background: "linear-gradient(135deg, #0a1f1f 0%, #0d2626 100%)" }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                    style={{ background: C.perf + "30", border: `1px solid ${C.perf}50` }}>
+                    <span style={{ color: C.perfLight, fontSize: 28 }}>▶</span>
+                  </div>
+                  <p className="text-xs font-semibold" style={{ color: C.perfLight + "bb" }}>PerformIQ Workflow Demo</p>
                 </div>
               </div>
             </div>

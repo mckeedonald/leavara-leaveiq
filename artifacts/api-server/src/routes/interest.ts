@@ -4,13 +4,14 @@ import { sendInterestEmail } from "../lib/email";
 const router: IRouter = Router();
 
 router.post("/interest", async (req: Request, res: Response): Promise<void> => {
-  const { companyName, contactName, title, email, phone, companySize, message } = req.body as {
+  const { companyName, contactName, title, email, phone, companySize, products, message } = req.body as {
     companyName?: string;
     contactName?: string;
     title?: string;
     email?: string;
     phone?: string;
     companySize?: string;
+    products?: string;
     message?: string;
   };
 
@@ -32,6 +33,7 @@ router.post("/interest", async (req: Request, res: Response): Promise<void> => {
     email: email.trim(),
     phone: phone?.trim(),
     companySize: companySize.trim(),
+    products: products?.trim(),
     message: message?.trim(),
   }).catch((err) => req.log.error({ err }, "Failed to send interest notification email"));
 
