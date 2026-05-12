@@ -37,11 +37,9 @@ type Step =
   | "start_date"
   | "end_date"
   | "intermittent"
-  | "leave_name"
   | "leave_summary"
   | "leave_submitted"
   // Accommodation branch
-  | "ada_name"
   | "ada_limitation"
   | "ada_accommodation_requested"
   | "ada_is_temporary"
@@ -420,29 +418,7 @@ export default function EmployeePortal() {
       return;
     }
 
-    if (step === "leave_name") {
-      setData((prev) => {
-        const updated = { ...prev, submittedBy: trimmed };
-        botDelay(() => showLeaveSummary(updated));
-        return updated;
-      });
-      return;
-    }
-
     // ADA branch steps
-    if (step === "ada_name") {
-      setData((d) => ({ ...d, submittedBy: trimmed }));
-      botDelay(() => {
-        addBotMessage(
-          `Thank you, ${trimmed.split(" ")[0]}. To help HR understand your situation, I have a few questions.\n\nFirst — can you describe the limitation or difficulty you're experiencing at work? Please focus on what you have trouble doing, rather than a diagnosis. For example: \"I have difficulty standing for more than 20 minutes\" or \"I struggle with concentrating in noisy environments.\"`,
-          { inputType: "textarea" }
-        );
-        setStep("ada_limitation");
-        focusInput();
-      });
-      return;
-    }
-
     if (step === "ada_limitation") {
       if (!trimmed) {
         botDelay(() => {
@@ -684,9 +660,7 @@ export default function EmployeePortal() {
     if (currentInputType === "textarea") return "Type your answer… (Enter to submit)";
     switch (step) {
       case "employee_number": return "e.g. 1023";
-      case "employee_name_manual":
-      case "leave_name":
-      case "ada_name": return "Your full name";
+      case "employee_name": return "Your full name";
       case "email": return "your.email@company.com";
       default: return "Type your answer…";
     }
