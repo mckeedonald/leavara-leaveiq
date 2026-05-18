@@ -11,6 +11,7 @@ import {
   auditLogTable,
 } from "@workspace/db";
 import { sendDocumentUploadNotification, sendReturnToWorkNotification, getAppUrl } from "../lib/email";
+import { toPdfBuffer } from "../lib/pdfUtils.js";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -347,8 +348,14 @@ router.get("/portal/case/:caseId/documents/:docId/download", async (req, res): P
     res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
     res.setHeader("Content-Type", mimeType);
     if (mimeType === "text/plain") {
+      // Notices are stored as plain UTF-8 text
       res.send(Buffer.from(contentInline, "utf-8"));
+    } else if (mimeType === "application/pdf") {
+      // contentInline may be a base64-encoded PDF (new entries) or raw text (legacy).
+      // toPdfBuffer handles both transparently — always yields a valid PDF buffer.
+      res.send(toPdfBuffer(contentInline));
     } else {
+      // All other inline types (images, Word docs) are stored as base64-encoded binary
       res.send(Buffer.from(contentInline, "base64"));
     }
     return;
