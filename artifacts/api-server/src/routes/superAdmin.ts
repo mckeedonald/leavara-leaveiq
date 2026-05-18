@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, desc, isNull, isNotNull, and, count } from "drizzle-orm";
-import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable } from "@workspace/db";
+import { eq, desc, isNull, isNotNull, and, count, like, gte, lte } from "drizzle-orm";
+import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable, auditLogTable } from "@workspace/db";
 import { requireSuperAdmin } from "../lib/jwtAuth";
 import { sendWelcomeEmail } from "../lib/email";
 import bcrypt from "bcryptjs";
@@ -303,6 +303,86 @@ router.post("/superadmin/cases/:caseId/restore", requireSuperAdmin, async (req: 
     .returning();
 
   res.json({ case: restored });
+});
+
+// GET /superadmin/organizations/:orgId/audit
+router.get("/superadmin/organizations/:orgId/audit", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const { action, actor, caseId, startDate, endDate, page } = req.query as Record<string, string | undefined>;
+  const pageNum = Math.max(1, parseInt(page ?? "1") || 1);
+  const limit = 200;
+  const offset = (pageNum - 1) * limit;
+
+  const entries = await db
+    .select({
+      id: auditLogTable.id,
+      action: auditLogTable.action,
+      actor: auditLogTable.actor,
+      entityId: auditLogTable.entityId,
+      metadata: auditLogTable.metadata,
+      createdAt: auditLogTable.createdAt,
+      caseNumber: leaveCasesTable.caseNumber,
+      employeeFirstName: leaveCasesTable.employeeFirstName,
+      employeeLastName: leaveCasesTable.employeeLastName,
+    })
+    .from(auditLogTable)
+    .innerJoin(leaveCasesTable, eq(auditLogTable.entityId, leaveCasesTable.id))
+    .where(and(
+      eq(leaveCasesTable.organizationId, orgId),
+      caseId ? eq(auditLogTable.entityId, caseId) : undefined,
+      action ? like(auditLogTable.action, `%${action}%`) : undefined,
+      actor ? like(auditLogTable.actor, `%${actor}%`) : undefined,
+      startDate ? gte(auditLogTable.createdAt, new Date(startDate)) : undefined,
+      endDate ? lte(auditLogTable.createdAt, new Date(endDate)) : undefined,
+    ))
+    .orderBy(desc(auditLogTable.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  res.json({ entries, page: pageNum, limit });
+});
+
+// GET /superadmin/organizations/:orgId/audit/export
+router.get("/superadmin/organizations/:orgId/audit/export", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const { startDate, endDate } = req.query as Record<string, string | undefined>;
+
+  const entries = await db
+    .select({
+      id: auditLogTable.id,
+      action: auditLogTable.action,
+      actor: auditLogTable.actor,
+      entityId: auditLogTable.entityId,
+      createdAt: auditLogTable.createdAt,
+      caseNumber: leaveCasesTable.caseNumber,
+      employeeFirstName: leaveCasesTable.employeeFirstName,
+      employeeLastName: leaveCasesTable.employeeLastName,
+    })
+    .from(auditLogTable)
+    .innerJoin(leaveCasesTable, eq(auditLogTable.entityId, leaveCasesTable.id))
+    .where(and(
+      eq(leaveCasesTable.organizationId, orgId),
+      startDate ? gte(auditLogTable.createdAt, new Date(startDate)) : undefined,
+      endDate ? lte(auditLogTable.createdAt, new Date(endDate)) : undefined,
+    ))
+    .orderBy(desc(auditLogTable.createdAt))
+    .limit(5000);
+
+  // Build CSV
+  const header = "id,action,actor,case_number,employee_name,timestamp\n";
+  const rows = entries.map(e =>
+    [e.id, e.action, e.actor, e.caseNumber, `${e.employeeFirstName ?? ""} ${e.employeeLastName ?? ""}`.trim(), e.createdAt.toISOString()]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      .join(",")
+  ).join("\n");
+
+  const orgRow = await db.select({ name: organizationsTable.name }).from(organizationsTable).where(eq(organizationsTable.id, orgId)).limit(1);
+  const orgName = orgRow[0]?.name ?? orgId;
+  const filename = `audit_${orgName.toLowerCase().replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`;
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(header + rows);
 });
 
 export default router;

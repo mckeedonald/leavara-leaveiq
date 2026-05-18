@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Menu,
   X,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -88,6 +89,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         { icon: Files, label: "Leave Cases", href: "/leaveiq/cases", show: true },
         { icon: ShieldCheck, label: "ADA Cases", href: "/leaveiq/ada-cases", show: true },
         { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
+        { icon: ClipboardList, label: "Audit Log", href: "/leaveiq/audit", show: isHrAdmin },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
         { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
         { icon: Users, label: "Employees", href: "/performiq/employees", show: isHrAdmin || isHrUser },

@@ -5,7 +5,7 @@ import {
   Building2, Users, Files, Plus, ToggleLeft, ToggleRight,
   RefreshCcw, Trash2, ChevronRight, Search, CheckCircle2,
   XCircle, AlertCircle, ArrowLeft, UserPlus, Eye, EyeOff,
-  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2
+  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2, ClipboardList
 } from "lucide-react";
 import { apiFetch } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ const S = {
   headerBg: "#C97E59",
 };
 
-type Tab = "organizations" | "cases" | "users";
+type Tab = "organizations" | "cases" | "users" | "audit";
 
 interface Organization {
   id: string;
@@ -62,6 +62,18 @@ interface SuperUser {
   role: "admin" | "user";
   isActive: boolean;
   isSuperAdmin: boolean;
+  createdAt: string;
+}
+
+interface AuditEntry {
+  id: string;
+  action: string;
+  actor: string;
+  entityId: string;
+  caseNumber: string | null;
+  employeeFirstName: string | null;
+  employeeLastName: string | null;
+  metadata: Record<string, unknown> | null;
   createdAt: string;
 }
 
@@ -1197,6 +1209,10 @@ function UsersTab({ organizations }: { organizations: Organization[] }) {
 
 export default function SuperAdmin() {
   const [activeTab, setActiveTab] = useState<Tab>("organizations");
+  const [auditOrgId, setAuditOrgId] = useState<string>("");
+  const [auditStartDate, setAuditStartDate] = useState("");
+  const [auditEndDate, setAuditEndDate] = useState("");
+  const [auditPage, setAuditPage] = useState(1);
 
   const { data: orgsData } = useQuery({
     queryKey: ["superadmin-orgs"],
@@ -1205,10 +1221,24 @@ export default function SuperAdmin() {
 
   const organizations = orgsData?.organizations ?? [];
 
+  const auditQuery = useQuery({
+    queryKey: ["sa-audit", auditOrgId, auditStartDate, auditEndDate, auditPage],
+    enabled: activeTab === "audit" && !!auditOrgId,
+    queryFn: () => {
+      const p = new URLSearchParams({ page: String(auditPage) });
+      if (auditStartDate) p.set("startDate", auditStartDate);
+      if (auditEndDate) p.set("endDate", auditEndDate);
+      return apiFetch<{ entries: AuditEntry[]; page: number; limit: number }>(
+        `/api/superadmin/organizations/${auditOrgId}/audit?${p.toString()}`
+      );
+    },
+  });
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "organizations", label: "Organizations", icon: Building2 },
     { id: "cases", label: "Cases", icon: Files },
     { id: "users", label: "Users", icon: Users },
+    { id: "audit", label: "Audit", icon: ClipboardList },
   ];
 
   return (
@@ -1264,6 +1294,94 @@ export default function SuperAdmin() {
         {activeTab === "organizations" && <OrganizationsTab />}
         {activeTab === "cases" && <CasesTab organizations={organizations} />}
         {activeTab === "users" && <UsersTab organizations={organizations} />}
+        {activeTab === "audit" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4" style={{ color: S.textDark }}>Organization Audit Log</h2>
+            {/* Org selector + date range + export button */}
+            <div className="bg-white rounded-2xl border p-4 mb-4 flex flex-wrap gap-3 items-end" style={{ borderColor: S.border }}>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium" style={{ color: S.textMid }}>Organization</label>
+                <select
+                  value={auditOrgId}
+                  onChange={e => { setAuditOrgId(e.target.value); setAuditPage(1); }}
+                  className="border rounded-lg px-3 py-2 text-sm outline-none min-w-[200px]"
+                  style={{ borderColor: S.border, color: S.textDark }}
+                >
+                  <option value="">Select an org&hellip;</option>
+                  {organizations.map((org: Organization) => (
+                    <option key={org.id} value={org.id}>{org.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium" style={{ color: S.textMid }}>From</label>
+                <input type="date" value={auditStartDate} onChange={e => setAuditStartDate(e.target.value)}
+                  className="border rounded-lg px-3 py-2 text-sm outline-none" style={{ borderColor: S.border }} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium" style={{ color: S.textMid }}>To</label>
+                <input type="date" value={auditEndDate} onChange={e => setAuditEndDate(e.target.value)}
+                  className="border rounded-lg px-3 py-2 text-sm outline-none" style={{ borderColor: S.border }} />
+              </div>
+              {auditOrgId && (
+                <a
+                  href={`/api/superadmin/organizations/${auditOrgId}/audit/export${auditStartDate ? `?startDate=${auditStartDate}` : ""}${auditEndDate ? `&endDate=${auditEndDate}` : ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+                  style={{ background: S.terracotta }}
+                >
+                  Export CSV
+                </a>
+              )}
+            </div>
+            {/* Audit table */}
+            {!auditOrgId && (
+              <p className="text-sm text-center py-12" style={{ color: S.textMuted }}>Select an organization to view its audit log.</p>
+            )}
+            {auditOrgId && (
+              <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: S.border }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: S.bg, borderBottom: `1px solid ${S.border}` }}>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: S.textMuted }}>Timestamp</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: S.textMuted }}>Event</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: S.textMuted }}>Case</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: S.textMuted }}>Employee</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: S.textMuted }}>By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditQuery.isLoading && (
+                      <tr><td colSpan={5} className="text-center py-12 text-sm" style={{ color: S.textMuted }}>Loading&hellip;</td></tr>
+                    )}
+                    {!auditQuery.isLoading && (auditQuery.data?.entries ?? []).length === 0 && (
+                      <tr><td colSpan={5} className="text-center py-12 text-sm" style={{ color: S.textMuted }}>No audit entries found.</td></tr>
+                    )}
+                    {(auditQuery.data?.entries ?? []).map((entry: AuditEntry) => (
+                      <tr key={entry.id} className="border-t hover:bg-slate-50/50" style={{ borderColor: S.border }}>
+                        <td className="px-4 py-3 text-xs" style={{ color: S.textMuted }}>{new Date(entry.createdAt).toLocaleString()}</td>
+                        <td className="px-4 py-3 font-medium text-xs" style={{ color: S.textDark }}>{entry.action.replace(/_/g, " ")}</td>
+                        <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: S.terracotta }}>{entry.caseNumber ?? "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: S.textDark }}>{[entry.employeeFirstName, entry.employeeLastName].filter(Boolean).join(" ") || "—"}</td>
+                        <td className="px-4 py-3 text-xs" style={{ color: S.textMuted }}>{entry.actor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: S.border }}>
+                  <p className="text-xs" style={{ color: S.textMuted }}>Page {auditPage}</p>
+                  <div className="flex gap-2">
+                    <button disabled={auditPage <= 1} onClick={() => setAuditPage(p => p - 1)}
+                      className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-40" style={{ borderColor: S.border }}>Prev</button>
+                    <button disabled={(auditQuery.data?.entries ?? []).length < 200} onClick={() => setAuditPage(p => p + 1)}
+                      className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-40" style={{ borderColor: S.border }}>Next</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
     </AppLayout>

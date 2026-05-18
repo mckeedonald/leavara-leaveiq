@@ -42,12 +42,16 @@ async function logAudit(
   entityId: string,
   action: string,
   actor: string,
+  metadata?: Record<string, unknown>,
+  organizationId?: string,
 ): Promise<void> {
   await db.insert(auditLogTable).values({
     entity: "leave_case",
     entityId,
     action,
     actor,
+    metadata: metadata ?? null,
+    organizationId: organizationId ?? null,
   });
 }
 
@@ -760,6 +764,17 @@ router.post(
         leaveCase.id,
         "AI_RECOMMENDATION_GENERATED",
         authed.user.email,
+        {
+          recommendation: {
+            action: result.recommendation.action,
+            confidenceScore: result.recommendation.confidenceScore,
+            reasoning: result.recommendation.reasoning,
+          },
+          noticeTypes: result.notices.map((n: { noticeType: string }) => n.noticeType),
+          feedbackProvided: !!feedback,
+          feedbackText: feedback || undefined,
+        },
+        leaveCase.organizationId ?? undefined,
       );
 
       // Note: Medical certification is NOT stored in caseDocuments at recommendation time.
@@ -893,6 +908,8 @@ router.post(
             entityId: leaveCase.id,
             action: `NOTICE_SENT_${notice.noticeType}`,
             actor,
+            metadata: { noticeType: notice.noticeType, employeeEmail: recipientEmail },
+            organizationId: leaveCase.organizationId ?? null,
           })
           .returning();
 
@@ -1635,6 +1652,75 @@ router.patch(
     await logAudit(caseId, "EMPLOYEE_EMAIL_UPDATED", authed.user.email);
     res.json({ ok: true, employeeEmail: employeeEmail.trim() });
   },
+);
+
+// GET /cases/:caseId/ai-history
+router.get(
+  "/cases/:caseId/ai-history",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { caseId } = req.params;
+    const [leaveCase] = await db.select({ organizationId: leaveCasesTable.organizationId })
+      .from(leaveCasesTable).where(eq(leaveCasesTable.id, caseId)).limit(1);
+    if (!leaveCase) { res.status(404).json({ error: "Case not found." }); return; }
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      res.status(403).json({ error: "Access denied." }); return;
+    }
+    const entries = await db.select()
+      .from(auditLogTable)
+      .where(and(
+        eq(auditLogTable.entityId, caseId),
+        or(
+          like(auditLogTable.action, "AI_%"),
+          like(auditLogTable.action, "NOTICE_SENT_%"),
+        )
+      ))
+      .orderBy(desc(auditLogTable.createdAt))
+      .limit(30);
+    res.json({ entries });
+  }
+);
+
+// GET /admin/audit
+router.get(
+  "/admin/audit",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const authed = req as AuthenticatedRequest;
+    const { action, actor, caseId, startDate, endDate, page } = req.query as Record<string, string | undefined>;
+    const pageNum = Math.max(1, parseInt(page ?? "1") || 1);
+    const limit = 100;
+    const offset = (pageNum - 1) * limit;
+
+    const entries = await db
+      .select({
+        id: auditLogTable.id,
+        action: auditLogTable.action,
+        actor: auditLogTable.actor,
+        entityId: auditLogTable.entityId,
+        metadata: auditLogTable.metadata,
+        createdAt: auditLogTable.createdAt,
+        caseNumber: leaveCasesTable.caseNumber,
+        employeeFirstName: leaveCasesTable.employeeFirstName,
+        employeeLastName: leaveCasesTable.employeeLastName,
+      })
+      .from(auditLogTable)
+      .innerJoin(leaveCasesTable, eq(auditLogTable.entityId, leaveCasesTable.id))
+      .where(and(
+        eq(leaveCasesTable.organizationId, authed.user.organizationId),
+        caseId ? eq(auditLogTable.entityId, caseId) : undefined,
+        action ? like(auditLogTable.action, `%${action}%`) : undefined,
+        actor ? like(auditLogTable.actor, `%${actor}%`) : undefined,
+        startDate ? gte(auditLogTable.createdAt, new Date(startDate)) : undefined,
+        endDate ? lte(auditLogTable.createdAt, new Date(endDate)) : undefined,
+      ))
+      .orderBy(desc(auditLogTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    res.json({ entries, page: pageNum, limit });
+  }
 );
 
 export default router;

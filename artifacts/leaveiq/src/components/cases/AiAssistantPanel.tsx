@@ -59,6 +59,14 @@ interface EditedNotice {
   reviewed: boolean;
 }
 
+interface AuditEntry {
+  id: string;
+  action: string;
+  actor: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
 const ACTION_CONFIG = {
   APPROVE: {
     label: "Approve Leave",
@@ -157,6 +165,10 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [docReviewSendError, setDocReviewSendError] = useState<string | null>(null);
   const [docReviewEmailWarning, setDocReviewEmailWarning] = useState(false);
 
+  const [sessionHistory, setSessionHistory] = useState<AuditEntry[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+
   // Derive case-state booleans BEFORE any useEffect that depends on them
   const isEligibility = caseState === "ELIGIBILITY_ANALYSIS";
   const isHrReview = caseState === "HR_REVIEW_QUEUE";
@@ -202,6 +214,13 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
       })
       .catch(() => { /* silent */ });
   }, [caseId, isNoticeDrafted]);
+
+  React.useEffect(() => {
+    if (!caseId || historyLoaded) return;
+    apiFetch<{ entries: AuditEntry[] }>(`/api/cases/${caseId}/ai-history`)
+      .then(data => { setSessionHistory(data.entries); setHistoryLoaded(true); })
+      .catch(() => setHistoryLoaded(true));
+  }, [caseId, historyLoaded]);
 
   function requestGenerate() {
     setDisclaimerAction("generate");
@@ -379,6 +398,8 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
       });
       setDocReviewSendSuccess(true);
       if (!result.emailDelivered) setDocReviewEmailWarning(true);
+      // Refresh session history to show the new entries
+      setHistoryLoaded(false);
       onNoticesSent?.();
     } catch (err) {
       setDocReviewSendError(err instanceof Error ? err.message : "Failed to send");
@@ -432,6 +453,8 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
       // Remove notices from view now that they've been sent
       setResult(null);
       setEditedNotices([]);
+      // Refresh session history to show the new entries
+      setHistoryLoaded(false);
       // Notify parent so it can transition case state (e.g. ELIGIBILITY_ANALYSIS → NOTICE_DRAFTED)
       onNoticesSent?.();
     } catch (err) {
@@ -832,6 +855,27 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                 )}
               </div>
             )}
+
+            {/* Session History — shown when there are past entries */}
+            {sessionHistory.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <button
+                  onClick={() => setHistoryExpanded(e => !e)}
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors w-full"
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  Session History ({sessionHistory.length} entries)
+                  {historyExpanded ? <ChevronUp className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+                </button>
+                {historyExpanded && (
+                  <div className="mt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {sessionHistory.map((entry) => (
+                      <HistoryEntry key={entry.id} entry={entry} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -994,6 +1038,68 @@ function NoticeEditor({
                 Mark as Reviewed
               </button>
             </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HistoryEntry({ entry }: { entry: AuditEntry }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta = entry.metadata;
+  const date = new Date(entry.createdAt).toLocaleString();
+
+  const actionLabel: Record<string, string> = {
+    AI_RECOMMENDATION_GENERATED: "AI Recommendation Generated",
+    AI_DOCUMENTATION_REVIEW: "Documentation Reviewed by Ava",
+    NOTICE_SENT_ELIGIBILITY_NOTICE: "Eligibility Notice Sent",
+    NOTICE_SENT_RIGHTS_RESPONSIBILITIES: "Rights & Responsibilities Sent",
+    NOTICE_SENT_DESIGNATION_NOTICE: "Designation Notice Sent",
+    NOTICE_SENT_MEDICAL_CERTIFICATION: "Medical Certification Sent",
+  };
+
+  const label = actionLabel[entry.action] ?? entry.action.replace(/_/g, " ");
+  const isAI = entry.action.startsWith("AI_");
+  const isNotice = entry.action.startsWith("NOTICE_SENT_");
+
+  return (
+    <div className="border border-slate-200 rounded-xl overflow-hidden text-sm">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className={`w-2 h-2 rounded-full shrink-0 ${isAI ? "bg-amber-400" : isNotice ? "bg-green-400" : "bg-slate-300"}`} />
+          <span className="font-medium text-slate-700">{label}</span>
+          {meta?.feedbackProvided && (
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">w/ feedback</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs text-slate-400">{date}</span>
+          {expanded ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-slate-100 pt-2 space-y-1.5">
+          <p className="text-xs text-slate-500">By: {entry.actor}</p>
+          {meta?.recommendation && (
+            <p className="text-xs">
+              <span className="font-medium">Recommendation:</span>{" "}
+              <span className={`font-semibold ${(meta.recommendation as any).action === "APPROVE" ? "text-green-700" : (meta.recommendation as any).action === "DENY" ? "text-red-700" : "text-amber-700"}`}>
+                {String((meta.recommendation as any).action)} ({Math.round(Number((meta.recommendation as any).confidenceScore ?? 0) * 100)}% confidence)
+              </span>
+            </p>
+          )}
+          {meta?.noticeTypes && Array.isArray(meta.noticeTypes) && (
+            <p className="text-xs"><span className="font-medium">Notices:</span> {(meta.noticeTypes as string[]).join(", ")}</p>
+          )}
+          {meta?.feedbackText && (
+            <p className="text-xs"><span className="font-medium">Feedback given:</span> &ldquo;{String(meta.feedbackText)}&rdquo;</p>
+          )}
+          {meta?.employeeEmail && (
+            <p className="text-xs"><span className="font-medium">Sent to:</span> {String(meta.employeeEmail)}</p>
           )}
         </div>
       )}

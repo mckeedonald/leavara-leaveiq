@@ -40,6 +40,23 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history, isLoading]);
 
+  useEffect(() => {
+    apiFetch<{ log: Array<{ entryType: string; authorRole: string; content: string; createdAt: string; authorName: string }> }>(
+      `/api/ada/cases/${caseId}/interactive-log`
+    )
+      .then(data => {
+        // Convert interactive log entries to chat history
+        const restored: AdaMessage[] = data.log
+          .filter(e => e.entryType === "hr_message" || e.entryType === "ada_response")
+          .map(e => ({
+            role: e.entryType === "hr_message" ? "user" : "assistant",
+            content: e.content,
+          }));
+        if (restored.length > 0) setHistory(restored);
+      })
+      .catch(() => { /* silent — fresh start on error */ });
+  }, [caseId]);
+
   const sendMessage = async () => {
     const msg = inputValue.trim();
     if (!msg || isLoading) return;

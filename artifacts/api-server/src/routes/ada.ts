@@ -300,23 +300,28 @@ router.post("/ada/cases/:caseId/agent", requireAuth, async (req: Request, res: R
       lookupJan,
     });
 
-    // Log the Ada interaction to the interactive process log
+    // Persist HR message and Ada response to interactive log for full conversation history
+    const hrAuthorName = [authed.user.firstName, authed.user.lastName].filter(Boolean).join(" ") || authed.user.email;
     await db.insert(adaInteractiveLogTable).values([
       {
         caseId,
-        entryType: "hr_note",
+        entryType: "hr_message",
         authorId: authed.user.sub,
-        authorName: [authed.user.firstName, authed.user.lastName].filter(Boolean).join(" ") || authed.user.email,
+        authorName: hrAuthorName,
         authorRole: "hr",
         content: message.trim(),
+        metadata: JSON.stringify({ lookupJan: lookupJan ?? false }),
       },
       {
         caseId,
-        entryType: "ada_determination",
-        authorName: "Ada (ADA Agent)",
+        entryType: "ada_response",
+        authorId: null,
+        authorName: "Ada (ADA Specialist)",
         authorRole: "system",
         content: result.response,
-        metadata: result.janLookupPerformed ? JSON.stringify({ janLookup: true }) : undefined,
+        metadata: result.actionSuggested || result.suggestedFollowUpDate
+          ? JSON.stringify({ actionSuggested: result.actionSuggested, suggestedFollowUpDate: result.suggestedFollowUpDate, janLookupPerformed: result.janLookupPerformed })
+          : null,
       },
     ]);
 
