@@ -620,6 +620,7 @@ export default function Landing() {
                   controls
                   playsInline
                   preload="metadata"
+                  poster="/videos/leaveiq-demo-poster.jpg"
                   src="/videos/leaveiq-demo.mp4"
                 >
                   <p className="text-white text-sm p-4">Your browser does not support video playback.</p>
