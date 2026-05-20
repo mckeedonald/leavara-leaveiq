@@ -614,7 +614,7 @@ export default function Landing() {
                   </p>
                 </div>
               </div>
-              <div className="relative aspect-video" style={{ background: "#1c0f08" }}>
+              <div className="aspect-video bg-black">
                 <video
                   className="w-full h-full object-cover"
                   controls
@@ -623,17 +623,8 @@ export default function Landing() {
                   poster="/videos/leaveiq-demo-poster.jpg"
                   src="/videos/leaveiq-demo.mp4"
                 >
-                  <p className="text-white text-sm p-4">Your browser does not support video playback.</p>
+                  Your browser does not support video playback.
                 </video>
-                {/* Overlay shown until video is ready — hidden by browser once video loads */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-                  style={{ background: "linear-gradient(135deg, #2A1008 0%, #1c0f08 100%)" }}>
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                    style={{ background: C.terracotta + "30", border: `1px solid ${C.terracotta}50` }}>
-                    <span style={{ color: C.terracotta, fontSize: 28 }}>▶</span>
-                  </div>
-                  <p className="text-xs font-semibold" style={{ color: C.terracotta + "bb" }}>LeaveIQ Workflow Demo</p>
-                </div>
               </div>
             </div>
 
