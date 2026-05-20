@@ -622,6 +622,8 @@ export default function Landing() {
                   preload="metadata"
                   poster="/videos/leaveiq-demo-poster.jpg"
                   src="/videos/leaveiq-demo.mp4"
+                  controlsList="nodownload noplaybackrate"
+                  disablePictureInPicture
                 >
                   Your browser does not support video playback.
                 </video>
@@ -648,6 +650,8 @@ export default function Landing() {
                   playsInline
                   preload="metadata"
                   src="/videos/performiq-demo.mp4"
+                  controlsList="nodownload noplaybackrate"
+                  disablePictureInPicture
                 >
                   <p className="text-white text-sm p-4">Your browser does not support video playback.</p>
                 </video>
