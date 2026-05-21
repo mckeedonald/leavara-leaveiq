@@ -4,6 +4,12 @@ import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable, aud
 import { requireSuperAdmin } from "../lib/jwtAuth";
 import { sendWelcomeEmail } from "../lib/email";
 import bcrypt from "bcryptjs";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router: IRouter = Router();
 
@@ -383,6 +389,19 @@ router.get("/superadmin/organizations/:orgId/audit/export", requireSuperAdmin, a
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(header + rows);
+});
+
+// GET /superadmin/prd — serve the living PRD markdown document
+router.get("/superadmin/prd", requireSuperAdmin, (_req: Request, res: Response): void => {
+  try {
+    // Bundle output is dist/index.mjs (single file), so __dirname = artifacts/api-server/dist/
+    // 3 levels up from dist/ → repo root, then docs/PRD.md
+    const prdPath = join(__dirname, "..", "..", "..", "docs", "PRD.md");
+    const content = readFileSync(prdPath, "utf-8");
+    res.json({ content });
+  } catch {
+    res.status(404).json({ error: "PRD document not found" });
+  }
 });
 
 export default router;

@@ -5,8 +5,10 @@ import {
   Building2, Users, Files, Plus, ToggleLeft, ToggleRight,
   RefreshCcw, Trash2, ChevronRight, Search, CheckCircle2,
   XCircle, AlertCircle, ArrowLeft, UserPlus, Eye, EyeOff,
-  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2, ClipboardList
+  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2, ClipboardList, BookMarked
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { apiFetch } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +29,7 @@ const S = {
   headerBg: "#C97E59",
 };
 
-type Tab = "organizations" | "cases" | "users" | "audit";
+type Tab = "organizations" | "cases" | "users" | "audit" | "prd";
 
 interface Organization {
   id: string;
@@ -1234,11 +1236,19 @@ export default function SuperAdmin() {
     },
   });
 
+  const prdQuery = useQuery({
+    queryKey: ["superadmin-prd"],
+    queryFn: () => apiFetch<{ content: string }>("/api/superadmin/prd"),
+    enabled: activeTab === "prd",
+    staleTime: 5 * 60 * 1000,
+  });
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "organizations", label: "Organizations", icon: Building2 },
     { id: "cases", label: "Cases", icon: Files },
     { id: "users", label: "Users", icon: Users },
     { id: "audit", label: "Audit", icon: ClipboardList },
+    { id: "prd", label: "PRD", icon: BookMarked },
   ];
 
   return (
@@ -1377,6 +1387,103 @@ export default function SuperAdmin() {
                     <button disabled={(auditQuery.data?.entries ?? []).length < 200} onClick={() => setAuditPage(p => p + 1)}
                       className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-40" style={{ borderColor: S.border }}>Next</button>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {activeTab === "prd" && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold" style={{ color: S.textDark }}>Product Requirements Document</h2>
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#FEF3E8", color: S.terracotta, border: `1px solid #FBDCBE` }}>
+                Living Document
+              </span>
+            </div>
+            {prdQuery.isLoading && (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: S.terracotta }} />
+              </div>
+            )}
+            {prdQuery.isError && (
+              <div className="bg-white rounded-2xl border p-8 text-center" style={{ borderColor: S.border }}>
+                <AlertCircle className="w-8 h-8 mx-auto mb-2" style={{ color: S.red }} />
+                <p className="text-sm" style={{ color: S.textMid }}>Could not load PRD document.</p>
+              </div>
+            )}
+            {prdQuery.data?.content && (
+              <div className="bg-white rounded-2xl border p-8 overflow-auto" style={{ borderColor: S.border }}>
+                <div style={{
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                  color: S.textDark,
+                  lineHeight: "1.7",
+                  maxWidth: "900px",
+                }}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ children }) => (
+                        <h1 style={{ fontSize: "1.6rem", fontWeight: 700, color: S.textDark, marginTop: "2rem", marginBottom: "0.75rem", paddingBottom: "0.5rem", borderBottom: `2px solid ${S.terracotta}` }}>{children}</h1>
+                      ),
+                      h2: ({ children }) => (
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: S.textDark, marginTop: "2rem", marginBottom: "0.5rem", paddingBottom: "0.25rem", borderBottom: `1px solid #E8DDD4` }}>{children}</h2>
+                      ),
+                      h3: ({ children }) => (
+                        <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#7A5540", marginTop: "1.5rem", marginBottom: "0.4rem" }}>{children}</h3>
+                      ),
+                      p: ({ children }) => (
+                        <p style={{ marginBottom: "0.875rem", color: "#5C3D28" }}>{children}</p>
+                      ),
+                      a: ({ children, href }) => (
+                        <a href={href} style={{ color: S.terracotta, textDecoration: "underline" }}>{children}</a>
+                      ),
+                      ul: ({ children }) => (
+                        <ul style={{ paddingLeft: "1.4rem", marginBottom: "0.875rem", listStyleType: "disc" }}>{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol style={{ paddingLeft: "1.4rem", marginBottom: "0.875rem", listStyleType: "decimal" }}>{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li style={{ marginBottom: "0.3rem", color: "#5C3D28" }}>{children}</li>
+                      ),
+                      code: ({ children, className }) => {
+                        const isBlock = className?.includes("language-");
+                        return isBlock ? (
+                          <code style={{ display: "block", background: "#F5F0EB", borderRadius: "8px", padding: "1rem", fontFamily: "'Courier New', monospace", fontSize: "0.82rem", color: "#3D2010", overflowX: "auto", marginBottom: "0.875rem", whiteSpace: "pre" }}>{children}</code>
+                        ) : (
+                          <code style={{ background: "#F5F0EB", borderRadius: "4px", padding: "0.15em 0.4em", fontFamily: "'Courier New', monospace", fontSize: "0.85em", color: "#7A3D18" }}>{children}</code>
+                        );
+                      },
+                      pre: ({ children }) => (
+                        <pre style={{ background: "#F5F0EB", borderRadius: "8px", padding: "1rem", overflowX: "auto", marginBottom: "0.875rem" }}>{children}</pre>
+                      ),
+                      blockquote: ({ children }) => (
+                        <blockquote style={{ borderLeft: `3px solid ${S.terracotta}`, paddingLeft: "1rem", margin: "1rem 0", color: S.textMid, fontStyle: "italic" }}>{children}</blockquote>
+                      ),
+                      table: ({ children }) => (
+                        <div style={{ overflowX: "auto", marginBottom: "1.25rem" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>{children}</table>
+                        </div>
+                      ),
+                      thead: ({ children }) => (
+                        <thead style={{ background: "#F5F0EB" }}>{children}</thead>
+                      ),
+                      th: ({ children }) => (
+                        <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 600, color: S.textDark, borderBottom: `2px solid #D4C9BB`, whiteSpace: "nowrap" }}>{children}</th>
+                      ),
+                      td: ({ children }) => (
+                        <td style={{ padding: "0.5rem 0.75rem", color: "#5C3D28", borderBottom: `1px solid #EDE7DF` }}>{children}</td>
+                      ),
+                      hr: () => (
+                        <hr style={{ border: "none", borderTop: `1px solid #E8DDD4`, margin: "1.75rem 0" }} />
+                      ),
+                      strong: ({ children }) => (
+                        <strong style={{ fontWeight: 600, color: S.textDark }}>{children}</strong>
+                      ),
+                    }}
+                  >
+                    {prdQuery.data.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             )}
