@@ -90,7 +90,7 @@ export default function NewCase() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     piqApiFetch<Employee[]>("/api/performiq/employees?isActive=true")
@@ -102,7 +102,9 @@ export default function NewCase() {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatListRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   async function startAgentSession(employee: Employee) {
@@ -422,7 +424,7 @@ export default function NewCase() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <div ref={chatListRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
               {/* Banner: draft generated */}
               {draft && (
                 <div className="flex items-start gap-2 px-4 py-3 rounded-xl text-sm border"
@@ -500,7 +502,6 @@ export default function NewCase() {
                   )}
                 </div>
               ))}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
