@@ -20,7 +20,22 @@ import {
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch, usePiqRole } from "@/lib/piqAuth";
 import { format } from "date-fns";
-import type { PiqDocumentContent } from "@workspace/db";
+interface PiqDocumentContent {
+  employeeInfo?: { fullName: string; jobTitle: string; department: string; hireDate: string; managerName: string };
+  companyName?: string;
+  employeeName?: string;
+  managerName?: string;
+  deliveryDate?: string;
+  documentTypePurpose: string;
+  incidentDescription: string;
+  policyViolations: string;
+  impactConsequences: string;
+  priorDisciplineHistory: string;
+  expectationsGoingForward: string;
+  failureConsequences: string;
+  additionalNotes: string;
+  [key: string]: unknown;
+}
 
 const C = {
   perf: "#2E7B7B",
@@ -462,7 +477,7 @@ export default function PiqCaseDetail() {
                   </p>
                 ) : (
                   DOCUMENT_SECTIONS.map(([field, label]) => (
-                    <div key={field}>
+                    <div key={field as React.Key}>
                       <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: C.textMuted }}>
                         {label}
                       </p>

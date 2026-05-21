@@ -354,11 +354,30 @@ router.post("/auth/register", async (req: Request, res: Response): Promise<void>
     .set({ usedAt: now })
     .where(eq(invitesTable.id, invite.id));
 
+  let hasLeaveIq = true;
+  let hasPerformIq = false;
+  if (newUser.organizationId) {
+    const [org] = await db
+      .select({ hasLeaveIq: organizationsTable.hasLeaveIq, hasPerformIq: organizationsTable.hasPerformIq })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, newUser.organizationId))
+      .limit(1);
+    if (org) {
+      hasLeaveIq = org.hasLeaveIq;
+      hasPerformIq = org.hasPerformIq;
+    }
+  }
+
   const jwtToken = signToken({
     sub: newUser.id,
     email: newUser.email,
-    role: newUser.role,
+    role: normalizeRole(newUser.role),
     organizationId: newUser.organizationId ?? null,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
+    hasLeaveIq,
+    hasPerformIq,
+    isSuperAdmin: false,
   });
 
   res.status(201).json({

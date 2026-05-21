@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useListCases, LeaveState } from "@workspace/api-client-react";
+import { useListCases, LeaveState, type LeaveCase } from "@workspace/api-client-react";
 import { ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, cn } from "@/lib/utils";
 import { Plus, Users, Clock, AlertCircle, CheckCircle2, ChevronRight, Loader2, Files } from "lucide-react";
@@ -15,9 +15,9 @@ export default function Dashboard() {
   
   const stats = {
     total: cases.length,
-    pendingHr: cases.filter(c => c.state === LeaveState.HR_REVIEW_QUEUE).length,
-    inAnalysis: cases.filter(c => c.state === LeaveState.ELIGIBILITY_ANALYSIS).length,
-    closed: cases.filter(c => c.state === LeaveState.CLOSED).length,
+    pendingHr: cases.filter((c: LeaveCase) => c.state === LeaveState.HR_REVIEW_QUEUE).length,
+    inAnalysis: cases.filter((c: LeaveCase) => c.state === LeaveState.ELIGIBILITY_ANALYSIS).length,
+    closed: cases.filter((c: LeaveCase) => c.state === LeaveState.CLOSED).length,
   };
 
   const caseTrend = (() => {
@@ -25,8 +25,8 @@ export default function Dashboard() {
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const thisMonthCount = cases.filter(c => new Date(c.createdAt) >= thisMonthStart).length;
-    const lastMonthCount = cases.filter(c => {
+    const thisMonthCount = cases.filter((c: LeaveCase) => new Date(c.createdAt) >= thisMonthStart).length;
+    const lastMonthCount = cases.filter((c: LeaveCase) => {
       const d = new Date(c.createdAt);
       return d >= lastMonthStart && d < thisMonthStart;
     }).length;
@@ -136,7 +136,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {cases.slice(0, 10).map((c) => (
+                {cases.slice(0, 10).map((c: LeaveCase) => (
                   <tr key={c.id} className="hover:bg-muted/30 transition-colors group cursor-pointer">
                     <td className="px-6 py-4 font-medium text-foreground">
                       <Link href={`/cases/${c.id}`} className="hover:underline hover:text-primary">

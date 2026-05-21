@@ -845,7 +845,7 @@ router.post(
     }[] = [];
 
     // Find the medical certification notice — from the current send batch OR from DB (previously stored)
-    const medCertNotice = notices.find((n) => n.noticeType === "MEDICAL_CERTIFICATION");
+    const medCertNotice = notices.find((n: { noticeType: string; content: string }) => n.noticeType === "MEDICAL_CERTIFICATION");
     let medCertContent: string | null = medCertNotice?.content ?? null;
 
     // If not in this batch, try to find a previously archived med cert document for this case
@@ -950,7 +950,7 @@ router.post(
 
     // Update displayStatus based on which notices were sent
     let newDisplayStatus: string;
-    if (notices.some((n) => n.noticeType === "DESIGNATION_NOTICE")) {
+    if (notices.some((n: { noticeType: string; content: string }) => n.noticeType === "DESIGNATION_NOTICE")) {
       const [latestDecision] = await db
         .select()
         .from(hrDecisionsTable)
@@ -990,7 +990,7 @@ router.post(
   hrDocUpload.single("file"),
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
 
     const [leaveCase] = await db
       .select({ organizationId: leaveCasesTable.organizationId })
@@ -1037,7 +1037,7 @@ router.post(
       })
       .returning();
 
-    await logAudit(caseId, "HR_DOCUMENT_UPLOADED", authed.user.email ?? authed.user.id);
+    await logAudit(caseId, "HR_DOCUMENT_UPLOADED", authed.user.email);
     res.status(201).json({ documents: [{ ...doc }] });
   },
 );
@@ -1166,7 +1166,7 @@ router.delete(
       return;
     }
 
-    const caseId = req.params.caseId;
+    const caseId = String(req.params["caseId"]);
     const { reason } = req.body as { reason?: string };
 
     if (!reason || reason.trim().length < 10) {
@@ -1211,7 +1211,7 @@ router.patch(
   requireAuth,
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
     const { assignedToUserId } = req.body as { assignedToUserId?: string | null };
 
     const [leaveCase] = await db
@@ -1328,9 +1328,9 @@ router.post(
 router.post(
   "/cases/:caseId/review-documentation",
   requireAuth,
-  async (req: Request, res: Response): Promise<void> => {
+  async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
     const { documentIds } = req.body as { documentIds: string[] };
 
     if (!Array.isArray(documentIds) || documentIds.length === 0) {
@@ -1491,9 +1491,9 @@ Respond ONLY with valid JSON in exactly this format:
 router.post(
   "/cases/:caseId/benefits-continuation-letter",
   requireAuth,
-  async (req: Request, res: Response): Promise<void> => {
+  async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
     const { benefits } = req.body as {
       benefits?: Array<{ name: string; monthlyAmount: string | number }>;
     };
@@ -1574,8 +1574,8 @@ Return ONLY the letter text, formatted for direct use. No additional commentary.
 );
 
 // GET /notifications
-router.get("/notifications", requireAuth, async (req: Request, res: Response) => {
-  const user = (req as any).user as JwtPayload;
+router.get("/notifications", requireAuth, async (req, res) => {
+  const user = (req as AuthenticatedRequest).user;
   if (!user?.organizationId) {
     res.status(403).json({ error: "Forbidden" });
     return;
@@ -1620,7 +1620,7 @@ router.patch(
   requireAuth,
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
     const { employeeEmail } = req.body as { employeeEmail?: string };
 
     if (!employeeEmail?.trim()) {

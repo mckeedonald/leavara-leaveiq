@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useSearch } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useListCases, LeaveState } from "@workspace/api-client-react";
+import { useListCases, LeaveState, type LeaveCase } from "@workspace/api-client-react";
 import { ReasonBadge, DisplayStatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate } from "@/lib/utils";
 import { Search, Loader2, Filter, Plus } from "lucide-react";
@@ -43,8 +43,8 @@ export default function Cases() {
               className="w-full sm:w-auto py-2 px-3 text-sm bg-white border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
             >
               <option value="ALL">All States</option>
-              {Object.values(LeaveState).map(state => (
-                <option key={state} value={state}>{state.replace(/_/g, ' ')}</option>
+              {Object.values(LeaveState).map((state) => (
+                <option key={state as string} value={state as string}>{(state as string).replace(/_/g, ' ')}</option>
               ))}
             </select>
             <button
@@ -83,7 +83,7 @@ export default function Cases() {
                     </td>
                   </tr>
                 ) : (
-                  cases.map((c) => (
+                  cases.map((c: LeaveCase) => (
                     <tr key={c.id} className="hover:bg-muted/30 transition-colors group">
                       <td className="px-6 py-4 font-medium">
                         <Link href={`/cases/${c.id}`} className="text-primary hover:underline font-semibold">

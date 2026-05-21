@@ -1072,7 +1072,7 @@ function HistoryEntry({ entry }: { entry: AuditEntry }) {
         <div className="flex items-center gap-2.5">
           <div className={`w-2 h-2 rounded-full shrink-0 ${isAI ? "bg-amber-400" : isNotice ? "bg-green-400" : "bg-slate-300"}`} />
           <span className="font-medium text-slate-700">{label}</span>
-          {meta?.feedbackProvided && (
+          {!!meta?.feedbackProvided && (
             <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">w/ feedback</span>
           )}
         </div>
@@ -1084,7 +1084,7 @@ function HistoryEntry({ entry }: { entry: AuditEntry }) {
       {expanded && (
         <div className="px-3 pb-3 border-t border-slate-100 pt-2 space-y-1.5">
           <p className="text-xs text-slate-500">By: {entry.actor}</p>
-          {meta?.recommendation && (
+          {!!meta?.recommendation && (
             <p className="text-xs">
               <span className="font-medium">Recommendation:</span>{" "}
               <span className={`font-semibold ${(meta.recommendation as any).action === "APPROVE" ? "text-green-700" : (meta.recommendation as any).action === "DENY" ? "text-red-700" : "text-amber-700"}`}>
@@ -1092,13 +1092,13 @@ function HistoryEntry({ entry }: { entry: AuditEntry }) {
               </span>
             </p>
           )}
-          {meta?.noticeTypes && Array.isArray(meta.noticeTypes) && (
+          {!!meta?.noticeTypes && Array.isArray(meta.noticeTypes) && (
             <p className="text-xs"><span className="font-medium">Notices:</span> {(meta.noticeTypes as string[]).join(", ")}</p>
           )}
-          {meta?.feedbackText && (
+          {!!meta?.feedbackText && (
             <p className="text-xs"><span className="font-medium">Feedback given:</span> &ldquo;{String(meta.feedbackText)}&rdquo;</p>
           )}
-          {meta?.employeeEmail && (
+          {!!meta?.employeeEmail && (
             <p className="text-xs"><span className="font-medium">Sent to:</span> {String(meta.employeeEmail)}</p>
           )}
         </div>

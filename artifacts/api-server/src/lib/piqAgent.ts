@@ -300,15 +300,15 @@ export async function runAgentTurn({
 
   const PDF_INLINE_PREFIX = "data:application/pdf;base64,";
   const textPolicies = policies.filter(
-    (p) => !p.pdfStorageKey && p.content?.trim() && !p.content.startsWith(PDF_INLINE_PREFIX)
+    (p: { pdfStorageKey: string | null; content: string | null }) => !p.pdfStorageKey && p.content?.trim() && !p.content.startsWith(PDF_INLINE_PREFIX)
   );
   const pdfPolicies = policies.filter(
-    (p) => !!p.pdfStorageKey || p.content?.startsWith(PDF_INLINE_PREFIX)
+    (p: { pdfStorageKey: string | null; content: string | null }) => !!p.pdfStorageKey || p.content?.startsWith(PDF_INLINE_PREFIX)
   );
 
   const policyContext =
     textPolicies.length > 0
-      ? `\n\n[POLICY CONTEXT]\n${textPolicies.map((p) => `### ${p.title} (${p.category})\n${p.content}`).join("\n\n")}`
+      ? `\n\n[POLICY CONTEXT]\n${textPolicies.map((p: { title: string; category: string; content: string | null }) => `### ${p.title} (${p.category})\n${p.content}`).join("\n\n")}`
       : pdfPolicies.length === 0
         ? "\n\n[POLICY CONTEXT]\nNo policies have been configured for this organization yet. Generate documentation using HR best practices and note the gap as described in your instructions."
         : "\n\n[POLICY CONTEXT]\nOrganizational policies are provided as PDF documents alongside this message. Reference them when applicable.";
@@ -386,7 +386,7 @@ export async function runAgentTurn({
   lastMessageContent.push({ type: "text", text: userMessage });
 
   const messages: Anthropic.MessageParam[] = [
-    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    ...history.map((m: { role: string; content: string }) => ({ role: m.role as "user" | "assistant", content: m.content })),
     { role: "user", content: lastMessageContent },
   ];
 

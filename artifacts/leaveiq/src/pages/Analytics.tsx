@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useListCases, LeaveState } from "@workspace/api-client-react";
+import { useListCases, LeaveState, type LeaveCase } from "@workspace/api-client-react";
 import { BarChart2, TrendingUp, Clock, CheckCircle2, Users, FileText } from "lucide-react";
 
 const PALETTE = {
@@ -104,7 +104,7 @@ export default function Analytics() {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const next = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
       const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
-      const count = cases.filter((c) => {
+      const count = cases.filter((c: LeaveCase) => {
         const cd = new Date(c.createdAt);
         return cd >= d && cd < next;
       }).length;
@@ -114,15 +114,15 @@ export default function Analytics() {
   }, [cases]);
   const monthlyMax = Math.max(...monthly.map((m) => m.count), 1);
 
-  const activeCases = cases.filter((c) => c.state !== "CLOSED");
-  const closedCases = cases.filter((c) => c.state === "CLOSED");
-  const hrReview = cases.filter((c) => c.state === "HR_REVIEW_QUEUE");
+  const activeCases = cases.filter((c: LeaveCase) => c.state !== "CLOSED");
+  const closedCases = cases.filter((c: LeaveCase) => c.state === "CLOSED");
+  const hrReview = cases.filter((c: LeaveCase) => c.state === "HR_REVIEW_QUEUE");
 
   // Avg close time (days)
   const avgClose = useMemo(() => {
-    const closed = cases.filter((c) => c.state === "CLOSED" && c.updatedAt && c.createdAt);
+    const closed = cases.filter((c: LeaveCase) => c.state === "CLOSED" && c.updatedAt && c.createdAt);
     if (!closed.length) return null;
-    const totalDays = closed.reduce((sum, c) => {
+    const totalDays = closed.reduce((sum: number, c: LeaveCase) => {
       const days = (new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime()) / 86_400_000;
       return sum + days;
     }, 0);

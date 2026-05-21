@@ -26,7 +26,7 @@ async function extractText(buffer: Buffer, mimetype: string, filename: string): 
   if (mimetype === "application/pdf" || filename.toLowerCase().endsWith(".pdf")) {
     const { default: PDFParser } = await import("pdf2json");
     return new Promise<string>((resolve, reject) => {
-      const parser = new PDFParser(null, 1);
+      const parser = new PDFParser(null, true);
       parser.on("pdfParser_dataError", (err: { parserError: Error }) => reject(err.parserError));
       parser.on("pdfParser_dataReady", () => {
         try {
@@ -161,7 +161,7 @@ router.post(
       name: req.file.originalname,
       sourceType: "UPLOAD",
       fullText: text,
-      organizationId: req.params.orgId,
+      organizationId: String(req.params["orgId"]),
     });
 
     const [doc] = await db

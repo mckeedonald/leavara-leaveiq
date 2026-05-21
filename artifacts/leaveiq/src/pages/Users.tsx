@@ -119,7 +119,7 @@ export default function Users() {
     }
   }
 
-  if (me?.role !== "hr_admin" && me?.role !== "admin") {
+  if (me?.role !== "hr_admin") {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-48">

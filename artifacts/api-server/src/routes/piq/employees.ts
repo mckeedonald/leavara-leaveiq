@@ -33,12 +33,12 @@ router.get("/performiq/employees", requirePiqAuth, async (req: Request, res: Res
     let filtered = employees;
     if (isActive !== undefined) {
       const active = isActive === "true";
-      filtered = filtered.filter((e) => e.isActive === active);
+      filtered = filtered.filter((e: { isActive: boolean }) => e.isActive === active);
     }
     if (search) {
       const term = search.toLowerCase();
       filtered = filtered.filter(
-        (e) =>
+        (e: { fullName: string; workEmail: string | null; department: string | null }) =>
           e.fullName.toLowerCase().includes(term) ||
           (e.workEmail ?? "").toLowerCase().includes(term) ||
           (e.department ?? "").toLowerCase().includes(term),

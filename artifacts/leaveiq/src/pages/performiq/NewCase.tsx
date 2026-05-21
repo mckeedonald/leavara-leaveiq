@@ -13,7 +13,22 @@ import {
 } from "lucide-react";
 import { PiqLayout } from "@/components/performiq/PiqLayout";
 import { piqApiFetch, usePiqAuth } from "@/lib/piqAuth";
-import type { PiqDocumentContent } from "@workspace/db";
+interface PiqDocumentContent {
+  employeeInfo?: { fullName: string; jobTitle: string; department: string; hireDate: string; managerName: string };
+  companyName?: string;
+  employeeName?: string;
+  managerName?: string;
+  deliveryDate?: string;
+  documentTypePurpose: string;
+  incidentDescription: string;
+  policyViolations: string;
+  impactConsequences: string;
+  priorDisciplineHistory: string;
+  expectationsGoingForward: string;
+  failureConsequences: string;
+  additionalNotes: string;
+  [key: string]: unknown;
+}
 
 const C = {
   perf: "#2E7B7B",

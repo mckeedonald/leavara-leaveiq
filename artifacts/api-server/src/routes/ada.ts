@@ -181,8 +181,9 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
       try {
         await sendNoticeEmail({
           to: resolvedEmail,
-          subject: `Your Accommodation Request Has Been Received — Case ${caseNumber}`,
           noticeType: "ADA_ACKNOWLEDGMENT",
+          caseNumber,
+          employeeNumber: String(employeeNumber ?? ""),
           content: `Dear ${employeeName},
 
 Thank you for submitting your accommodation request. We have received your request and assigned it case number ${caseNumber}.

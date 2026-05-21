@@ -25,7 +25,7 @@ function decryptNotice<T extends { draftContent: string; editedContent: string |
 // Admin-only: Generates (or regenerates) AI recommendation + notice drafts for a case
 router.post("/cases/:caseId/ai-recommend", requireAdmin, aiLimiter, async (req, res): Promise<void> => {
   const authed = req as AuthenticatedRequest;
-  const { caseId } = req.params;
+  const caseId = String(req.params["caseId"]);
 
   const [leaveCase] = await db
     .select()
@@ -59,7 +59,6 @@ router.post("/cases/:caseId/ai-recommend", requireAdmin, aiLimiter, async (req, 
       requestedEnd: leaveCase.requestedEnd,
       intermittent: leaveCase.intermittent,
       analysisResult: analysis,
-      organizationId: leaveCase.organizationId,
     });
 
     await db
@@ -175,7 +174,8 @@ router.patch("/cases/:caseId/notices/:noticeId", requireAdmin, async (req, res):
 // POST /cases/:caseId/notices/:noticeId/send — Admin only
 router.post("/cases/:caseId/notices/:noticeId/send", requireAdmin, async (req, res): Promise<void> => {
   const authed = req as AuthenticatedRequest;
-  const { caseId, noticeId } = req.params;
+  const caseId = String(req.params["caseId"]);
+  const noticeId = String(req.params["noticeId"]);
 
   const [notice] = await db
     .select()
@@ -211,8 +211,8 @@ router.post("/cases/:caseId/notices/:noticeId/send", requireAdmin, async (req, r
 
   await sendNoticeEmail({
     to: leaveCase.employeeEmail,
-    subject: notice.subject,
     caseNumber: leaveCase.caseNumber,
+    employeeNumber: leaveCase.employeeNumber,
     noticeType: notice.noticeType,
     content,
   });

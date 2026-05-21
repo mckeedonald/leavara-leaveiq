@@ -214,7 +214,7 @@ async function getOrgInfo(organizationId: string | null): Promise<OrgInfo> {
 
     return {
       name: org?.name ?? "",
-      states: [...new Set(locations.map((l) => l.state.toUpperCase()))],
+      states: [...new Set(locations.map((l: { state: string }) => l.state.toUpperCase()))] as string[],
     };
   } catch (err) {
     logger.warn({ err, organizationId }, "Could not fetch org info for AI notice — proceeding with federal only");

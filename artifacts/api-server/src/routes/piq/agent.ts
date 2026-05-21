@@ -89,7 +89,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
         .limit(10);
       if (priorCaseRows.length > 0) {
         priorCases = priorCaseRows
-          .map((c) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
+          .map((c: { caseNumber: string; status: string; createdAt: Date }) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
           .join("\n");
       }
     }
@@ -122,7 +122,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
     // Fire the __INIT__ turn so the agent opens with its greeting
     const { text: greeting } = await runAgentTurn({
       sessionId: session.id,
-      organizationId: authed.piqUser.organizationId,
+      organizationId: authed.piqUser.organizationId ?? "",
       userMessage: "__INIT__",
       isInit: true,
       userRole: authed.piqUser.role,
@@ -181,7 +181,7 @@ router.post(
   requirePiqAuth,
   async (req: Request, res: Response) => {
     const authed = req as PiqAuthenticatedRequest;
-    const { sessionId } = req.params;
+    const sessionId = String(req.params["sessionId"]);
     const { message, employeeInfo } = req.body as {
       message?: string;
       employeeInfo?: {
@@ -252,7 +252,7 @@ router.post(
           .limit(10);
         if (priorCaseRows.length > 0) {
           priorCases = priorCaseRows
-            .map((c) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
+            .map((c: { caseNumber: string; status: string; createdAt: Date }) => `- Case ${c.caseNumber} (${new Date(c.createdAt).toLocaleDateString("en-US")}): ${c.status}`)
             .join("\n");
         }
       }
@@ -267,7 +267,7 @@ router.post(
     try {
       const { text, draft } = await runAgentTurn({
         sessionId,
-        organizationId: authed.piqUser.organizationId,
+        organizationId: authed.piqUser.organizationId ?? "",
         userMessage: message.trim(),
         userRole: authed.piqUser.role,
         employeeInfo: employeeInfo ?? undefined,

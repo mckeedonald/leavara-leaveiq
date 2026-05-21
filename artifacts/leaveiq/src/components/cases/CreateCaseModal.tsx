@@ -258,7 +258,7 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             <label className="text-sm font-semibold">Leave Reason <span className="text-destructive">*</span></label>
             <select required name="leaveReasonCategory" className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white">
               {Object.entries(LeaveReasonCategory).map(([, val]) => (
-                <option key={val} value={val}>{LEAVE_REASON_LABELS[val] ?? val}</option>
+                <option key={val as string} value={val as string}>{LEAVE_REASON_LABELS[val as string] ?? (val as string)}</option>
               ))}
             </select>
           </div>

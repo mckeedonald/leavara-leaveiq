@@ -192,7 +192,7 @@ export default function AccountSettings() {
   }
 
   const roleBadge =
-    user?.role === "admin" ? (
+    user?.role === "hr_admin" ? (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border" style={{ background: "#F5E8DF", borderColor: "#C97E5966", color: "#9E5D38" }}>
         <Shield className="w-3 h-3" />
         Administrator
@@ -377,7 +377,7 @@ export default function AccountSettings() {
         </SectionCard>
 
         {/* Organization Logo (admin only) */}
-        {user?.role === "admin" && (
+        {user?.role === "hr_admin" && (
           <SectionCard
             title="Organization Logo"
             description="Upload your organization's logo. It will appear on the employee portal, case page, and HR sidebar."

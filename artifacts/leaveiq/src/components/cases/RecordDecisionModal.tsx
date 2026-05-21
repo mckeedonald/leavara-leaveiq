@@ -58,7 +58,7 @@ export function RecordDecisionModal({ isOpen, onClose, caseId }: { isOpen: boole
             <label className="text-sm font-semibold">Decision <span className="text-destructive">*</span></label>
             <select required name="decisionType" className="w-full border rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white">
               {Object.entries(HrDecisionType).map(([key, val]) => (
-                <option key={key} value={val}>{key.replace(/_/g, ' ')}</option>
+                <option key={key} value={val as string}>{key.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>

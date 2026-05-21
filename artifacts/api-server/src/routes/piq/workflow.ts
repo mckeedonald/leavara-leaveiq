@@ -52,7 +52,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
       .where(eq(piqWorkflowStepsTable.caseId, caseId))
       .orderBy(piqWorkflowStepsTable.stepOrder);
 
-    const currentStep = steps.find((s) => s.status === "in_progress");
+    const currentStep = steps.find((s: { id: string; stepType: string; status: string }) => s.status === "in_progress");
 
     const { role, sub } = authed.piqUser;
     const now = new Date();
@@ -81,7 +81,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
       // Activate next step if specified
       if (nextStepType) {
-        const nextStep = steps.find((s) => s.stepType === nextStepType && s.status === "pending");
+        const nextStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === nextStepType && s.status === "pending");
         if (nextStep) {
           const updates: Record<string, unknown> = { status: "in_progress", updatedAt: now };
           if (assigneeId) updates.assignedTo = assigneeId;
@@ -101,11 +101,11 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
           return;
         }
 
-        const supervisorStep = steps.find((s) => s.stepType === "supervisor_review");
+        const supervisorStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === "supervisor_review");
         if (supervisorStep) {
           await advanceToNextStep("supervisor_review", "supervisor_review");
         } else {
-          const hrStep = steps.find((s) => s.stepType === "hr_approval");
+          const hrStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === "hr_approval");
           if (hrStep) {
             await advanceToNextStep("hr_approval", "hr_approval");
           } else {
@@ -132,7 +132,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
           return;
         }
 
-        const hrStep = steps.find((s) => s.stepType === "hr_approval");
+        const hrStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === "hr_approval");
         if (hrStep) {
           await advanceToNextStep("hr_approval", "hr_approval");
         } else {
@@ -165,7 +165,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
         }
 
         // Re-activate draft step for manager revision
-        const draftStep = steps.find((s) => s.stepType === "draft");
+        const draftStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === "draft");
         if (draftStep) {
           await db.update(piqWorkflowStepsTable)
             .set({ status: "in_progress", updatedAt: now, assignedTo: c.initiatedBy })
@@ -222,7 +222,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
             .where(eq(piqWorkflowStepsTable.id, currentStep.id));
         }
 
-        const draftStep = steps.find((s) => s.stepType === "draft");
+        const draftStep = steps.find((s: { id: string; stepType: string; status: string }) => s.stepType === "draft");
         if (draftStep) {
           await db.update(piqWorkflowStepsTable)
             .set({ status: "in_progress", updatedAt: now, assignedTo: c.initiatedBy })

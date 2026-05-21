@@ -329,7 +329,7 @@ router.get("/performiq/admin/hr-users", requirePiqAuth, async (req: Request, res
       .from(usersTable)
       .where(and(eq(usersTable.organizationId, authed.piqUser.organizationId), eq(usersTable.isActive, true)));
 
-    res.json(hrUsers.filter((u) => ["hr_user", "hr_admin"].includes(u.role)));
+    res.json(hrUsers.filter((u: { id: string; fullName: string | null; email: string; role: string }) => ["hr_user", "hr_admin"].includes(u.role)));
   } catch (err) {
     logger.error({ err }, "PIQ HR users list error");
     res.status(500).json({ error: "Internal server error" });

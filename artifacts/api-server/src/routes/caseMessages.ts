@@ -91,8 +91,8 @@ router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Re
         caseId,
         organizationId: authed.user.organizationId,
         senderType: "hr",
-        senderId: authed.user.id,
-        senderName: authed.user.fullName ?? authed.user.email,
+        senderId: authed.user.sub,
+        senderName: `${authed.user.firstName} ${authed.user.lastName}`.trim() || authed.user.email,
         content: content.trim(),
       })
       .returning();
@@ -243,8 +243,8 @@ router.post("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Req
         caseId,
         organizationId: authed.piqUser.organizationId,
         senderType: "hr",
-        senderId: authed.piqUser.id,
-        senderName: authed.piqUser.fullName ?? authed.piqUser.email,
+        senderId: authed.piqUser.sub,
+        senderName: `${authed.piqUser.firstName} ${authed.piqUser.lastName}`.trim() || authed.piqUser.email,
         content: content.trim(),
       })
       .returning();

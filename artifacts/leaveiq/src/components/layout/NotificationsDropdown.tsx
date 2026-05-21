@@ -147,7 +147,7 @@ export function NotificationsDropdown() {
           </div>
 
           {/* Body */}
-          <div className="max-h-96 overflow-y-auto divide-y" style={{ divideColor: "#EDE9E3" }}>
+          <div className="max-h-96 overflow-y-auto divide-y" style={{ borderColor: "#EDE9E3" }}>
             {loading && notifications.length === 0 && (
               <div className="py-10 text-center text-sm text-muted-foreground">Loading…</div>
             )}

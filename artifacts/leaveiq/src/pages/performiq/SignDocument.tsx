@@ -69,7 +69,7 @@ export default function SignDocument() {
       });
       const d = await r.json();
       if (d.error) { setError(d.error); return; }
-      setResult(action);
+      setResult(action === "sign" ? "signed" : "declined");
     } catch {
       setError("Failed to submit. Please try again.");
     } finally {

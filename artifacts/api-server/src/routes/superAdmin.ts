@@ -26,7 +26,7 @@ router.get("/superadmin/organizations", requireSuperAdmin, async (_req: Request,
     .orderBy(organizationsTable.name);
 
   const counts = await Promise.all(
-    orgs.map(async (org) => {
+    orgs.map(async (org: { id: string }) => {
       const [userRow] = await db
         .select({ value: count() })
         .from(usersTable)
@@ -39,8 +39,8 @@ router.get("/superadmin/organizations", requireSuperAdmin, async (_req: Request,
     }),
   );
 
-  const enriched = orgs.map((org) => {
-    const c = counts.find((x) => x.orgId === org.id);
+  const enriched = orgs.map((org: { id: string }) => {
+    const c = counts.find((x: { orgId: string }) => x.orgId === org.id);
     return { ...org, userCount: c?.userCount ?? 0, caseCount: c?.caseCount ?? 0 };
   });
 
@@ -381,7 +381,7 @@ router.get("/superadmin/organizations/:orgId/audit/export", requireSuperAdmin, a
 
   // Build CSV
   const header = "id,action,actor,case_number,employee_name,timestamp\n";
-  const rows = entries.map(e =>
+  const rows = entries.map((e: { id: string; action: string; actor: string; caseNumber: string | null; employeeFirstName: string | null; employeeLastName: string | null; createdAt: Date }) =>
     [e.id, e.action, e.actor, e.caseNumber, `${e.employeeFirstName ?? ""} ${e.employeeLastName ?? ""}`.trim(), e.createdAt.toISOString()]
       .map(v => `"${String(v).replace(/"/g, '""')}"`)
       .join(",")

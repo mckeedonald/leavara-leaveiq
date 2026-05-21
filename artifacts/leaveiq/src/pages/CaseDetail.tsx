@@ -99,7 +99,7 @@ export default function CaseDetail() {
         { caseId, data: { event: TransitionRequestEvent.DRAFT_NOTICE, actor: user?.email ?? "HR" } },
         {
           onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCaseQueryKey(caseId) }),
-          onError: (err) => console.error("Failed to transition case after sending notices:", err),
+          onError: (err: unknown) => console.error("Failed to transition case after sending notices:", err),
         },
       );
     }
@@ -366,7 +366,7 @@ export default function CaseDetail() {
                 <LogIn className="w-4 h-4" /> Close Case / Confirm RTW
               </button>
             )}
-            {user?.role === "admin" && (
+            {user?.role === "hr_admin" && (
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all text-sm border border-red-200 text-red-600 hover:bg-red-50"

@@ -24,7 +24,7 @@ async function generateCaseNumber(orgId: string): Promise<string> {
     .select({ caseNumber: piqCasesTable.caseNumber })
     .from(piqCasesTable)
     .where(eq(piqCasesTable.organizationId, orgId));
-  const yearCases = existing.filter((c) => c.caseNumber.startsWith(`PIQ-${year}`));
+  const yearCases = existing.filter((c: { caseNumber: string }) => c.caseNumber.startsWith(`PIQ-${year}`));
   const seq = String(yearCases.length + 1).padStart(4, "0");
   return `PIQ-${year}${seq}`;
 }
@@ -95,11 +95,11 @@ router.get("/performiq/cases", requirePiqAuth, async (req: Request, res: Respons
 
     const { role, sub } = authed.piqUser;
     if (role === "manager") {
-      filtered = filtered.filter((c) => c.initiatedBy === sub);
+      filtered = filtered.filter((c: { initiatedBy: string | null }) => c.initiatedBy === sub);
     }
 
-    if (status) filtered = filtered.filter((c) => c.status === status);
-    if (employeeId) filtered = filtered.filter((c) => c.employeeId === employeeId);
+    if (status) filtered = filtered.filter((c: { status: string }) => c.status === status);
+    if (employeeId) filtered = filtered.filter((c: { employeeId: string }) => c.employeeId === employeeId);
 
     res.json(filtered);
   } catch (err) {
@@ -250,7 +250,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
 
     const documentTypeId_resolved = resolvedDocTypeId;
 
-    const caseNumber = await generateCaseNumber(authed.piqUser.organizationId);
+    const caseNumber = await generateCaseNumber(authed.piqUser.organizationId ?? "");
 
     const [newCase] = await db
       .insert(piqCasesTable)
@@ -292,7 +292,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       }
     }
 
-    const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId, docType, authed.piqUser.sub, authed.piqUser.role);
+    const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId ?? "", docType, authed.piqUser.sub, authed.piqUser.role);
     if (steps.length > 0) {
       await db.insert(piqWorkflowStepsTable).values(steps);
     }
@@ -340,7 +340,7 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
       .where(and(eq(piqDocumentsTable.caseId, caseId), eq(piqDocumentsTable.isCurrent, true)));
 
     const existing = await db.select({ version: piqDocumentsTable.version }).from(piqDocumentsTable).where(eq(piqDocumentsTable.caseId, caseId));
-    const nextVersion = existing.length > 0 ? Math.max(...existing.map((d) => d.version)) + 1 : 1;
+    const nextVersion = existing.length > 0 ? Math.max(...existing.map((d: { version: number }) => d.version)) + 1 : 1;
 
     const [newDoc] = await db
       .insert(piqDocumentsTable)
@@ -374,7 +374,7 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
 router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
-    const { caseId } = req.params;
+    const caseId = String(req.params["caseId"]);
     const { docBaseType, documentTypeId } = req.body as { docBaseType?: string; documentTypeId?: string };
 
     if (!docBaseType && !documentTypeId) {
@@ -465,12 +465,12 @@ router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (re
         .where(eq(piqWorkflowStepsTable.caseId, caseId))
         .orderBy(piqWorkflowStepsTable.stepOrder);
 
-      const hasCompletedSteps = existingSteps.some((s) => s.status === "completed");
+      const hasCompletedSteps = existingSteps.some((s: { status: string }) => s.status === "completed");
 
       if (!hasCompletedSteps) {
         // Safe to rebuild all steps
         await db.delete(piqWorkflowStepsTable).where(eq(piqWorkflowStepsTable.caseId, caseId));
-        const newSteps = buildWorkflowSteps(caseId, authed.piqUser.organizationId, newDocType, authed.piqUser.sub, role);
+        const newSteps = buildWorkflowSteps(caseId, authed.piqUser.organizationId ?? "", newDocType, authed.piqUser.sub, role);
         if (newSteps.length > 0) {
           await db.insert(piqWorkflowStepsTable).values(newSteps);
         }
