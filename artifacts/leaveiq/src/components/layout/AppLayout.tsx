@@ -92,9 +92,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         { icon: ClipboardList, label: "Audit Log", href: "/leaveiq/audit", show: isHrAdmin },
         { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
         { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
-        { icon: Users, label: "Employees", href: "/performiq/employees", show: isHrAdmin || isHrUser },
+        { icon: Users, label: "Employees", href: "/leaveiq/employees", show: isHrAdmin || isHrUser },
         { icon: UserPlus, label: "Team Members", href: "/leaveiq/users", show: isHrAdmin },
-        { icon: Building2, label: "HRIS Integration", href: "/leaveiq/hris-settings", show: isHrAdmin },
       ];
 
   const initials = user

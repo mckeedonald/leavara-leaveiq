@@ -5,7 +5,8 @@ import {
   Building2, Users, Files, Plus, ToggleLeft, ToggleRight,
   RefreshCcw, Trash2, ChevronRight, Search, CheckCircle2,
   XCircle, AlertCircle, ArrowLeft, UserPlus, Eye, EyeOff,
-  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2, ClipboardList, BookMarked
+  ShieldAlert, MapPin, BookOpen, Upload, FileText, Globe, Loader2, ClipboardList, BookMarked,
+  Link2, RefreshCw, FileSpreadsheet, X, Clock, Download,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -29,7 +30,7 @@ const S = {
   headerBg: "#C97E59",
 };
 
-type Tab = "organizations" | "cases" | "users" | "audit" | "prd";
+type Tab = "organizations" | "cases" | "users" | "audit" | "employees" | "prd";
 
 interface Organization {
   id: string;
@@ -1216,6 +1217,25 @@ export default function SuperAdmin() {
   const [auditEndDate, setAuditEndDate] = useState("");
   const [auditPage, setAuditPage] = useState(1);
 
+  // Employees tab state
+  const [empOrgId, setEmpOrgId] = useState<string>("");
+  const [empFile, setEmpFile] = useState<File | null>(null);
+  const [empDragOver, setEmpDragOver] = useState(false);
+  const [empUploading, setEmpUploading] = useState(false);
+  const [empResult, setEmpResult] = useState<null | { inserted: number; updated: number; errors: number; totalRows: number; status: string; errorCsv: string | null }>(null);
+  const [empUploadError, setEmpUploadError] = useState<string | null>(null);
+  const empFileRef = React.useRef<HTMLInputElement>(null);
+
+  // HRIS state (per selected org)
+  const [hrisProvider, setHrisProvider] = useState<string>("bamboohr");
+  const [hrisCreds, setHrisCreds] = useState<Record<string, string>>({});
+  const [hrisSaving, setHrisSaving] = useState(false);
+  const [hrisSyncing, setHrisSyncing] = useState(false);
+  const [hrisDeleting, setHrisDeleting] = useState(false);
+  const [hrisMsg, setHrisMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const queryClient = useQueryClient();
+
   const { data: orgsData } = useQuery({
     queryKey: ["superadmin-orgs"],
     queryFn: () => apiFetch<{ organizations: Organization[] }>("/api/superadmin/organizations"),
@@ -1236,6 +1256,109 @@ export default function SuperAdmin() {
     },
   });
 
+  // Employees tab — HRIS connection query
+  const hrisQuery = useQuery({
+    queryKey: ["sa-hris", empOrgId],
+    enabled: activeTab === "employees" && !!empOrgId,
+    queryFn: () => apiFetch<{ connection: { id: string; provider: string; lastSyncAt: string | null; createdAt: string } | null }>(
+      `/api/superadmin/organizations/${empOrgId}/hris`
+    ),
+  });
+  const hrisConnection = hrisQuery.data?.connection ?? null;
+
+  // Employees tab — import log query
+  const importLogQuery = useQuery({
+    queryKey: ["sa-import-log", empOrgId],
+    enabled: activeTab === "employees" && !!empOrgId,
+    queryFn: () => apiFetch<{ logs: Array<{ id: string; filename: string | null; uploadedBy: string | null; totalRows: number; inserted: number; updated: number; errors: number; status: string; createdAt: string }> }>(
+      `/api/superadmin/organizations/${empOrgId}/employees/import-log`
+    ),
+  });
+  const importLogs = importLogQuery.data?.logs ?? [];
+
+  const PROVIDERS = [
+    { value: "bamboohr", label: "BambooHR" },
+    { value: "workday", label: "Workday" },
+    { value: "adp", label: "ADP Workforce Now" },
+    { value: "rippling", label: "Rippling" },
+  ];
+  const HRIS_FIELDS: Record<string, { name: string; label: string; type?: string; placeholder?: string }[]> = {
+    bamboohr: [
+      { name: "subdomain", label: "Company Subdomain", placeholder: "yourcompany (from yourcompany.bamboohr.com)" },
+      { name: "apiKey", label: "API Key", type: "password", placeholder: "BambooHR API key" },
+    ],
+    workday: [
+      { name: "tenantUrl", label: "Tenant URL", placeholder: "https://services1.myworkday.com/..." },
+      { name: "clientId", label: "Client ID" },
+      { name: "clientSecret", label: "Client Secret", type: "password" },
+    ],
+    adp: [
+      { name: "clientId", label: "Client ID" },
+      { name: "clientSecret", label: "Client Secret", type: "password" },
+    ],
+    rippling: [
+      { name: "apiKey", label: "API Key", type: "password" },
+    ],
+  };
+
+  async function handleHrisSave(e: React.FormEvent) {
+    e.preventDefault();
+    setHrisSaving(true); setHrisMsg(null);
+    try {
+      await apiFetch(`/api/superadmin/organizations/${empOrgId}/hris`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: hrisProvider, credentials: hrisCreds }),
+      });
+      setHrisCreds({});
+      setHrisMsg({ type: "ok", text: "Connection saved and verified." });
+      queryClient.invalidateQueries({ queryKey: ["sa-hris", empOrgId] });
+    } catch (err) {
+      setHrisMsg({ type: "err", text: err instanceof Error ? err.message : "Failed to save." });
+    } finally { setHrisSaving(false); }
+  }
+
+  async function handleHrisSync() {
+    setHrisSyncing(true); setHrisMsg(null);
+    try {
+      const data = await apiFetch<{ synced: number }>(`/api/superadmin/organizations/${empOrgId}/hris/sync`, { method: "POST" });
+      setHrisMsg({ type: "ok", text: `Sync complete — ${data.synced} employee records updated.` });
+      queryClient.invalidateQueries({ queryKey: ["sa-hris", empOrgId] });
+    } catch (err) {
+      setHrisMsg({ type: "err", text: err instanceof Error ? err.message : "Sync failed." });
+    } finally { setHrisSyncing(false); }
+  }
+
+  async function handleHrisDelete() {
+    if (!confirm("Remove this HRIS connection?")) return;
+    setHrisDeleting(true); setHrisMsg(null);
+    try {
+      await apiFetch(`/api/superadmin/organizations/${empOrgId}/hris`, { method: "DELETE" });
+      setHrisMsg({ type: "ok", text: "Connection removed." });
+      queryClient.invalidateQueries({ queryKey: ["sa-hris", empOrgId] });
+    } catch (err) {
+      setHrisMsg({ type: "err", text: err instanceof Error ? err.message : "Failed to remove." });
+    } finally { setHrisDeleting(false); }
+  }
+
+  async function handleEmpUpload() {
+    if (!empFile || !empOrgId) return;
+    setEmpUploading(true); setEmpResult(null); setEmpUploadError(null);
+    try {
+      const csv = await empFile.text();
+      const data = await apiFetch<typeof empResult>(`/api/superadmin/organizations/${empOrgId}/employees/csv-upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv, filename: empFile.name }),
+      });
+      setEmpResult(data);
+      setEmpFile(null);
+      queryClient.invalidateQueries({ queryKey: ["sa-import-log", empOrgId] });
+    } catch (err) {
+      setEmpUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally { setEmpUploading(false); }
+  }
+
   const prdQuery = useQuery({
     queryKey: ["superadmin-prd"],
     queryFn: () => apiFetch<{ content: string }>("/api/superadmin/prd"),
@@ -1248,6 +1371,7 @@ export default function SuperAdmin() {
     { id: "cases", label: "Cases", icon: Files },
     { id: "users", label: "Users", icon: Users },
     { id: "audit", label: "Audit", icon: ClipboardList },
+    { id: "employees", label: "Employees", icon: Users },
     { id: "prd", label: "PRD", icon: BookMarked },
   ];
 
@@ -1387,6 +1511,205 @@ export default function SuperAdmin() {
                     <button disabled={(auditQuery.data?.entries ?? []).length < 200} onClick={() => setAuditPage(p => p + 1)}
                       className="px-3 py-1.5 text-xs border rounded-lg disabled:opacity-40" style={{ borderColor: S.border }}>Next</button>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {activeTab === "employees" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4" style={{ color: S.textDark }}>Employee Management</h2>
+
+            {/* Org selector */}
+            <div className="bg-white rounded-2xl border p-4 mb-5 flex items-end gap-4" style={{ borderColor: S.border }}>
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-xs font-medium" style={{ color: S.textMid }}>Organization</label>
+                <select value={empOrgId} onChange={e => { setEmpOrgId(e.target.value); setEmpResult(null); setEmpUploadError(null); setHrisMsg(null); setHrisCreds({}); }}
+                  className="border rounded-lg px-3 py-2 text-sm outline-none" style={{ borderColor: S.border, color: S.textDark }}>
+                  <option value="">— Select organization —</option>
+                  {organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {empOrgId && (
+              <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 360px" }}>
+                {/* Left: CSV upload + import log */}
+                <div className="flex flex-col gap-5">
+                  {/* Upload card */}
+                  <div className="bg-white rounded-2xl border p-5" style={{ borderColor: S.border }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Upload className="w-4 h-4" style={{ color: S.terracotta }} />
+                      <h3 className="font-semibold text-sm" style={{ color: S.textDark }}>Import Employees from CSV</h3>
+                    </div>
+                    <p className="text-xs mb-4" style={{ color: S.textMuted }}>
+                      Upload a CSV with employee data. Only <strong>employee_name</strong> is required. Data is shared between LeaveIQ and PerformIQ.
+                    </p>
+
+                    <div
+                      onDragOver={e => { e.preventDefault(); setEmpDragOver(true); }}
+                      onDragLeave={() => setEmpDragOver(false)}
+                      onDrop={e => { e.preventDefault(); setEmpDragOver(false); const f = e.dataTransfer.files[0]; if (f?.name.endsWith(".csv")) { setEmpFile(f); setEmpResult(null); setEmpUploadError(null); } }}
+                      onClick={() => empFileRef.current?.click()}
+                      className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer transition-all"
+                      style={{ borderColor: empDragOver ? S.terracotta : "#FBDCBE", background: empDragOver ? "#FDF6F0" : "#FAFAF8" }}
+                    >
+                      <input ref={empFileRef} type="file" accept=".csv" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) { setEmpFile(f); setEmpResult(null); setEmpUploadError(null); } e.target.value = ""; }} />
+                      <FileSpreadsheet className="w-7 h-7" style={{ color: empFile ? S.terracotta : S.textMuted }} />
+                      {empFile ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium" style={{ color: S.textDark }}>{empFile.name}</span>
+                          <button type="button" onClick={e => { e.stopPropagation(); setEmpFile(null); }}>
+                            <X className="w-3.5 h-3.5 text-gray-400" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-center" style={{ color: S.textMid }}>Drop CSV here or <span style={{ color: S.terracotta }}>browse</span></p>
+                      )}
+                    </div>
+
+                    {empUploadError && (
+                      <div className="flex items-start gap-2 text-xs rounded-xl px-3 py-2.5 border mt-3" style={{ background: "#FEF2F2", borderColor: "#FCA5A5", color: S.red }}>
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />{empUploadError}
+                      </div>
+                    )}
+
+                    {empResult && (
+                      <div className="mt-3 rounded-xl p-3 border text-xs space-y-1" style={{
+                        background: empResult.status === "success" ? "#F0FDF4" : empResult.status === "partial" ? "#FFFBEB" : "#FEF2F2",
+                        borderColor: empResult.status === "success" ? "#86EFAC" : empResult.status === "partial" ? "#FCD34D" : "#FCA5A5",
+                        color: empResult.status === "success" ? "#166534" : empResult.status === "partial" ? "#92400E" : S.red,
+                      }}>
+                        <p className="font-semibold">{empResult.status === "success" ? "Import complete" : empResult.status === "partial" ? "Completed with errors" : "Import failed"}</p>
+                        <p style={{ color: S.textMid }}>
+                          {empResult.inserted} added · {empResult.updated} updated · {empResult.errors} errors
+                        </p>
+                        {empResult.errorCsv && (
+                          <button onClick={() => {
+                            const blob = new Blob([empResult.errorCsv!], { type: "text/csv" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a"); a.href = url; a.download = "import_errors.csv"; a.click(); URL.revokeObjectURL(url);
+                          }} className="flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg font-medium border" style={{ borderColor: "#FBDCBE", color: S.darkTerra, background: "#FDF6F0" }}>
+                            <Download className="w-3 h-3" /> Download error report
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    <button onClick={handleEmpUpload} disabled={!empFile || empUploading}
+                      className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                      style={{ background: S.terracotta }}>
+                      {empUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {empUploading ? "Importing…" : "Import Employees"}
+                    </button>
+                  </div>
+
+                  {/* Import log */}
+                  {importLogs.length > 0 && (
+                    <div className="bg-white rounded-2xl border" style={{ borderColor: S.border }}>
+                      <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: S.border }}>
+                        <Clock className="w-4 h-4" style={{ color: S.terracotta }} />
+                        <h3 className="font-semibold text-sm" style={{ color: S.textDark }}>Import History</h3>
+                      </div>
+                      <div className="divide-y" style={{ borderColor: S.border }}>
+                        {importLogs.map(log => (
+                          <div key={log.id} className="px-4 py-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-xs font-medium truncate" style={{ color: S.textDark }}>{log.filename ?? "Unnamed"}</p>
+                                <p className="text-xs mt-0.5" style={{ color: S.textMuted }}>{new Date(log.createdAt).toLocaleString()} · {log.uploadedBy ?? "—"}</p>
+                              </div>
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{
+                                background: log.status === "success" ? "#F0FDF4" : log.status === "partial" ? "#FFFBEB" : "#FEF2F2",
+                                color: log.status === "success" ? "#166534" : log.status === "partial" ? "#92400E" : S.red,
+                              }}>{log.status}</span>
+                            </div>
+                            <p className="text-xs mt-1" style={{ color: S.textMid }}>
+                              {log.totalRows} rows · +{log.inserted} · ~{log.updated} · {log.errors} errors
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: HRIS config */}
+                <div className="bg-white rounded-2xl border p-5" style={{ borderColor: S.border }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link2 className="w-4 h-4" style={{ color: S.terracotta }} />
+                    <h3 className="font-semibold text-sm" style={{ color: S.textDark }}>HRIS Integration</h3>
+                  </div>
+
+                  {hrisQuery.isLoading ? (
+                    <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin" style={{ color: S.terracotta }} /></div>
+                  ) : (
+                    <>
+                      {hrisConnection && (
+                        <div className="rounded-xl border p-3 mb-4 flex items-center justify-between gap-3" style={{ borderColor: S.border }}>
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: S.textDark }}>{hrisConnection.provider}</p>
+                            <p className="text-xs" style={{ color: S.textMuted }}>{hrisConnection.lastSyncAt ? `Last synced ${new Date(hrisConnection.lastSyncAt).toLocaleString()}` : "Never synced"}</p>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button onClick={handleHrisSync} disabled={hrisSyncing} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg text-white" style={{ background: S.terracotta }}>
+                              {hrisSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Sync
+                            </button>
+                            <button onClick={handleHrisDelete} disabled={hrisDeleting} className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border" style={{ borderColor: "#FCA5A5", color: S.red }}>
+                              {hrisDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {hrisMsg && (
+                        <div className="text-xs rounded-xl px-3 py-2.5 border mb-3 flex items-center gap-2" style={{
+                          background: hrisMsg.type === "ok" ? "#F0FDF4" : "#FEF2F2",
+                          borderColor: hrisMsg.type === "ok" ? "#86EFAC" : "#FCA5A5",
+                          color: hrisMsg.type === "ok" ? "#166534" : S.red,
+                        }}>
+                          {hrisMsg.type === "ok" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                          {hrisMsg.text}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleHrisSave} className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium block mb-1.5" style={{ color: S.textMid }}>Provider</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {PROVIDERS.map(p => (
+                              <button key={p.value} type="button"
+                                onClick={() => { setHrisProvider(p.value); setHrisCreds({}); }}
+                                className="px-3 py-2 rounded-lg border text-xs font-medium text-left transition-all"
+                                style={hrisProvider === p.value ? { borderColor: S.terracotta, background: "#FDF6F0", color: S.darkTerra } : { borderColor: S.border, color: S.textMid }}>
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
+                          {(hrisProvider === "workday" || hrisProvider === "adp" || hrisProvider === "rippling") && (
+                            <p className="text-xs mt-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: "#FFFBEB", color: "#92400E" }}>
+                              ⚠️ {PROVIDERS.find(p => p.value === hrisProvider)?.label} integration coming soon.
+                            </p>
+                          )}
+                        </div>
+                        {(HRIS_FIELDS[hrisProvider] ?? []).map(field => (
+                          <div key={field.name}>
+                            <label className="text-xs font-medium block mb-1" style={{ color: S.textMid }}>{field.label}</label>
+                            <input type={field.type ?? "text"} value={hrisCreds[field.name] ?? ""} placeholder={field.placeholder}
+                              onChange={e => setHrisCreds(prev => ({ ...prev, [field.name]: e.target.value }))}
+                              className="w-full border rounded-lg px-3 py-2 text-xs outline-none" style={{ borderColor: S.border }} />
+                          </div>
+                        ))}
+                        <button type="submit" disabled={hrisSaving || (HRIS_FIELDS[hrisProvider] ?? []).some(f => !hrisCreds[f.name]?.trim())}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+                          style={{ background: S.terracotta }}>
+                          {hrisSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          {hrisConnection ? "Update Connection" : "Save & Test Connection"}
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             )}

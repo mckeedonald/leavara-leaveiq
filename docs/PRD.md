@@ -885,3 +885,4 @@ Recommended columns:
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-05-21 | 1.0 | Initial PRD created; covers LeaveIQ v1, PerformIQ v1, planned v1.1–v2.0 features, data model, AI architecture, deployment, security |
+| 2026-05-21 | 1.1 | Employee management overhaul: unified `/leaveiq/employees` page (LeaveIQ palette, shared by both products); batch CSV upload (fixes 1789-row timeout); `employee_import_log` table; CSV error report; HRIS configuration moved to Super Admin panel; HRIS removed from HR Admin nav |

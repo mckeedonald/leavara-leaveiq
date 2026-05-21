@@ -15,6 +15,7 @@ export * from "./caseAccessTokens";
 
 // Unified tables
 export * from "./employees";
+export * from "./employeeImportLog";
 export * from "./caseMessages";
 
 // ADA Accommodations

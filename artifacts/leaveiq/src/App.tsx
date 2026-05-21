@@ -45,6 +45,7 @@ import Analytics from "@/pages/Analytics";
 import AdaCases from "@/pages/AdaCases";
 import AdaCase from "@/pages/AdaCase";
 import AdminAudit from "@/pages/AdminAudit";
+import Employees from "@/pages/Employees";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +139,7 @@ function Router() {
       <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
       <Route path="/leaveiq/analytics" component={() => <ProtectedRoute component={Analytics} />} />
       <Route path="/leaveiq/audit" component={() => <ProtectedRoute component={AdminAudit} />} />
+      <Route path="/leaveiq/employees" component={() => <ProtectedRoute component={Employees} />} />
       <Route path="/leaveiq/ada-cases" component={() => <ProtectedRoute component={AdaCases} />} />
       <Route path="/leaveiq/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />

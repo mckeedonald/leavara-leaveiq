@@ -1,12 +1,17 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, desc, isNull, isNotNull, and, count, like, gte, lte } from "drizzle-orm";
-import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable, auditLogTable } from "@workspace/db";
+import { db, usersTable, organizationsTable, leaveCasesTable, piqUsersTable, auditLogTable, hrisConnectionsTable, employeeImportLogTable } from "@workspace/db";
 import { requireSuperAdmin } from "../lib/jwtAuth";
 import { sendWelcomeEmail } from "../lib/email";
 import bcrypt from "bcryptjs";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { processCsvUpload } from "./employees.js";
+import { encrypt } from "../lib/crypto.js";
+import { getAdapter } from "../lib/hris/index.js";
+import { syncHrisEmployees } from "../lib/hris/sync.js";
+import type { HrisProvider } from "../lib/hris/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -389,6 +394,141 @@ router.get("/superadmin/organizations/:orgId/audit/export", requireSuperAdmin, a
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(header + rows);
+});
+
+const VALID_PROVIDERS: HrisProvider[] = ["bamboohr", "workday", "adp", "rippling"];
+
+// GET /superadmin/organizations/:orgId/hris — get HRIS connection for an org
+router.get("/superadmin/organizations/:orgId/hris", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const [connection] = await db
+    .select({
+      id: hrisConnectionsTable.id,
+      provider: hrisConnectionsTable.provider,
+      lastSyncAt: hrisConnectionsTable.lastSyncAt,
+      createdAt: hrisConnectionsTable.createdAt,
+    })
+    .from(hrisConnectionsTable)
+    .where(eq(hrisConnectionsTable.organizationId, orgId))
+    .limit(1);
+  res.json({ connection: connection ?? null });
+});
+
+// POST /superadmin/organizations/:orgId/hris — create or update HRIS connection
+router.post("/superadmin/organizations/:orgId/hris", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const { provider, credentials } = req.body as { provider?: string; credentials?: Record<string, unknown> };
+
+  if (!provider || !VALID_PROVIDERS.includes(provider as HrisProvider)) {
+    res.status(400).json({ error: `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(", ")}` });
+    return;
+  }
+  if (!credentials || typeof credentials !== "object") {
+    res.status(400).json({ error: "credentials must be a JSON object" });
+    return;
+  }
+
+  try {
+    const adapter = getAdapter(provider as HrisProvider, encrypt(JSON.stringify(credentials)));
+    await adapter.testConnection();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Connection failed";
+    res.status(400).json({ error: `Connection test failed: ${msg}` });
+    return;
+  }
+
+  const encryptedCreds = encrypt(JSON.stringify(credentials));
+  const [existing] = await db.select({ id: hrisConnectionsTable.id }).from(hrisConnectionsTable).where(eq(hrisConnectionsTable.organizationId, orgId)).limit(1);
+
+  let connection;
+  if (existing) {
+    [connection] = await db.update(hrisConnectionsTable).set({ provider: provider as HrisProvider, credentials: encryptedCreds, updatedAt: new Date() })
+      .where(eq(hrisConnectionsTable.id, existing.id))
+      .returning({ id: hrisConnectionsTable.id, provider: hrisConnectionsTable.provider, lastSyncAt: hrisConnectionsTable.lastSyncAt, createdAt: hrisConnectionsTable.createdAt });
+  } else {
+    [connection] = await db.insert(hrisConnectionsTable).values({ organizationId: orgId, provider: provider as HrisProvider, credentials: encryptedCreds })
+      .returning({ id: hrisConnectionsTable.id, provider: hrisConnectionsTable.provider, lastSyncAt: hrisConnectionsTable.lastSyncAt, createdAt: hrisConnectionsTable.createdAt });
+  }
+
+  res.status(existing ? 200 : 201).json({ connection });
+});
+
+// DELETE /superadmin/organizations/:orgId/hris
+router.delete("/superadmin/organizations/:orgId/hris", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const deleted = await db.delete(hrisConnectionsTable).where(eq(hrisConnectionsTable.organizationId, orgId)).returning({ id: hrisConnectionsTable.id });
+  if (deleted.length === 0) {
+    res.status(404).json({ error: "No HRIS connection found" });
+    return;
+  }
+  res.json({ success: true });
+});
+
+// POST /superadmin/organizations/:orgId/hris/sync — trigger HRIS sync
+router.post("/superadmin/organizations/:orgId/hris/sync", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const orgId = String(req.params["orgId"]);
+  try {
+    const synced = await syncHrisEmployees(orgId);
+    res.json({ synced });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Sync failed";
+    res.status(400).json({ error: msg });
+  }
+});
+
+// POST /superadmin/organizations/:orgId/employees/csv-upload — upload employees for an org
+router.post("/superadmin/organizations/:orgId/employees/csv-upload", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const orgId = String(req.params["orgId"]);
+  const body = req.body as { csv?: string; filename?: string };
+
+  if (!body.csv?.trim()) {
+    res.status(400).json({ error: "CSV data is required in body.csv" });
+    return;
+  }
+
+  const { parse: csvParse } = await import("csv-parse/sync");
+  let rows: Record<string, string>[];
+  try {
+    rows = csvParse(body.csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string, string>[];
+  } catch {
+    res.status(400).json({ error: "Invalid CSV format" });
+    return;
+  }
+  if (!rows[0] || !("employee_name" in rows[0])) {
+    res.status(400).json({ error: "CSV must include column: employee_name" });
+    return;
+  }
+
+  const result = await processCsvUpload({
+    organizationId: orgId,
+    csv: body.csv,
+    filename: body.filename,
+    uploadedBy: "super_admin",
+  });
+
+  res.json(result);
+});
+
+// GET /superadmin/organizations/:orgId/employees/import-log — import log for an org
+router.get("/superadmin/organizations/:orgId/employees/import-log", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { orgId } = req.params;
+  const logs = await db
+    .select({
+      id: employeeImportLogTable.id,
+      filename: employeeImportLogTable.filename,
+      uploadedBy: employeeImportLogTable.uploadedBy,
+      totalRows: employeeImportLogTable.totalRows,
+      inserted: employeeImportLogTable.inserted,
+      updated: employeeImportLogTable.updated,
+      errors: employeeImportLogTable.errors,
+      status: employeeImportLogTable.status,
+      createdAt: employeeImportLogTable.createdAt,
+    })
+    .from(employeeImportLogTable)
+    .where(eq(employeeImportLogTable.organizationId, orgId))
+    .orderBy(desc(employeeImportLogTable.createdAt))
+    .limit(50);
+  res.json({ logs });
 });
 
 // GET /superadmin/prd — serve the living PRD markdown document
