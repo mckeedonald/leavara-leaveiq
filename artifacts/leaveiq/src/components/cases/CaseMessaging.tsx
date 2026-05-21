@@ -35,7 +35,7 @@ export function CaseMessaging({
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchMessages()
@@ -45,7 +45,9 @@ export function CaseMessaging({
   }, [fetchMessages]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   async function handleSend() {
@@ -89,7 +91,7 @@ export function CaseMessaging({
       </div>
 
       {/* Message list */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: "380px", background: "#FAFAF8" }}>
+      <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: "380px", background: "#FAFAF8" }}>
         {loading ? (
           <div className="text-center py-8 text-xs" style={{ color: "#8C7058" }}>Loading messages…</div>
         ) : messages.length === 0 ? (
@@ -131,7 +133,6 @@ export function CaseMessaging({
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
 
       {/* Compose */}

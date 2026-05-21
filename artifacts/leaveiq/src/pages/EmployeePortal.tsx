@@ -124,11 +124,13 @@ export default function EmployeePortal() {
   const [isTyping, setIsTyping] = useState(false);
   const [caseNumber, setCaseNumber] = useState<string | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const chatListRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatListRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, isTyping]);
 
   const addBotMessage = (text: string, opts?: Partial<Omit<ChatMessage, "id" | "role" | "text">>) => {
@@ -670,7 +672,7 @@ export default function EmployeePortal() {
     <EmployeeLayout showBack orgLogoUrl={orgLogoUrl} orgName={orgName}>
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-6 gap-4">
         {/* Chat window */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+        <div ref={chatListRef} className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
           {messages.map((msg) => (
             <MessageBubble
               key={msg.id}
@@ -703,7 +705,6 @@ export default function EmployeePortal() {
             />
           )}
 
-          <div ref={bottomRef} />
         </div>
 
         {/* Input area */}

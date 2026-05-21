@@ -33,11 +33,13 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
   const [janToggle, setJanToggle] = useState(false);
   const [lastJanUsed, setLastJanUsed] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const chatListRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatListRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [history, isLoading]);
 
   useEffect(() => {
@@ -134,7 +136,7 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
       {!isCollapsed && (
         <>
           {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-[200px] max-h-[420px]">
+          <div ref={chatListRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-[200px] max-h-[420px]">
             {history.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full py-8 text-center gap-2">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#EDE9FE" }}>
@@ -201,7 +203,6 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
               </div>
             )}
 
-            <div ref={bottomRef} />
           </div>
 
           {/* JAN lookup toggle */}
