@@ -19,7 +19,7 @@ import {
   SendNoticesBody,
 } from "@workspace/api-zod";
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
-import { requireAuth, verifyToken, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
+import { requireAuth, verifyToken, logCrossOrgAttempt, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
 import { sendNoticeEmail, sendMagicLinkEmail, sendNewCaseNotificationEmail, getAppUrl, type EmailAttachment } from "../lib/email";
 import { buildMedCertPdf, isBase64Pdf, toPdfBase64, toPdfBuffer } from "../lib/pdfUtils.js";
@@ -51,16 +51,21 @@ async function logAudit(
     action,
     actor,
     metadata: metadata ?? null,
-    organizationId: organizationId ?? null,
+    organizationId: organizationId ?? "",
   });
 }
 
 function isOrgAuthorized(
   userOrgId: string | null,
   caseOrgId: string | null,
+  req?: import("express").Request,
+  sub?: string,
 ): boolean {
-  if (!userOrgId) return true;
-  return caseOrgId === userOrgId;
+  if (!userOrgId) return true; // super-admin path
+  if (caseOrgId === userOrgId) return true;
+  // Cross-tenant attempt: log for breach detection
+  if (req && sub) logCrossOrgAttempt(req, sub, userOrgId, caseOrgId);
+  return false;
 }
 
 async function fetchCaseDetail(caseId: string) {
@@ -376,7 +381,7 @@ router.get("/cases/:caseId", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  if (!isOrgAuthorized(authed.user.organizationId, detail.organizationId)) {
+  if (!isOrgAuthorized(authed.user.organizationId, detail.organizationId, req, authed.user.sub)) {
     res.status(403).json({ error: "Access denied" });
     return;
   }
@@ -410,7 +415,7 @@ router.post("/cases/:caseId/analyze", requireAuth, async (req, res): Promise<voi
     return;
   }
 
-  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
     res.status(403).json({ error: "Access denied" });
     return;
   }
@@ -513,7 +518,7 @@ router.post("/cases/:caseId/transition", requireAuth, async (req, res): Promise<
     return;
   }
 
-  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
     res.status(403).json({ error: "Access denied" });
     return;
   }
@@ -596,7 +601,7 @@ router.post(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied" });
       return;
     }
@@ -675,7 +680,7 @@ router.get(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied" });
       return;
     }
@@ -714,7 +719,7 @@ router.post(
         return;
       }
 
-      if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+      if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
         res.status(403).json({ error: "Access denied" });
         return;
       }
@@ -818,7 +823,7 @@ router.post(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied" });
       return;
     }
@@ -909,7 +914,7 @@ router.post(
             action: `NOTICE_SENT_${notice.noticeType}`,
             actor,
             metadata: { noticeType: notice.noticeType, employeeEmail: recipientEmail },
-            organizationId: leaveCase.organizationId ?? null,
+            organizationId: leaveCase.organizationId,
           })
           .returning();
 
@@ -999,7 +1004,7 @@ router.post(
       .limit(1);
 
     if (!leaveCase) { res.status(404).json({ error: "Case not found." }); return; }
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." }); return;
     }
 
@@ -1058,7 +1063,7 @@ router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<vo
     return;
   }
 
-  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+  if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
     res.status(403).json({ error: "Access denied." });
     return;
   }
@@ -1098,7 +1103,7 @@ router.get(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." });
       return;
     }
@@ -1113,6 +1118,9 @@ router.get(
       res.status(404).json({ error: "Document not found." });
       return;
     }
+
+    // Audit log: record who downloaded this document (important for medical certs)
+    await logAudit(String(caseId), "DOCUMENT_DOWNLOADED", authed.user.email, { docId: String(docId), fileName: doc.fileName }, leaveCase.organizationId);
 
     try {
       // Inline content (notices / cached forms) — serve directly without R2
@@ -1184,7 +1192,7 @@ router.delete(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId ?? null, leaveCase.organizationId ?? null)) {
+    if (!isOrgAuthorized(authed.user.organizationId ?? null, leaveCase.organizationId ?? null, req, authed.user.sub)) {
       res.status(403).json({ error: "Not authorized for this organization." });
       return;
     }
@@ -1225,7 +1233,7 @@ router.patch(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." });
       return;
     }
@@ -1293,7 +1301,7 @@ router.post(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." });
       return;
     }
@@ -1345,7 +1353,7 @@ router.post(
       .limit(1);
 
     if (!leaveCase) { res.status(404).json({ error: "Case not found" }); return; }
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied" }); return;
     }
 
@@ -1510,7 +1518,7 @@ router.post(
       .limit(1);
 
     if (!leaveCase) { res.status(404).json({ error: "Case not found" }); return; }
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied" }); return;
     }
 
@@ -1639,7 +1647,7 @@ router.patch(
       return;
     }
 
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." });
       return;
     }
@@ -1664,7 +1672,7 @@ router.get(
     const [leaveCase] = await db.select({ organizationId: leaveCasesTable.organizationId })
       .from(leaveCasesTable).where(eq(leaveCasesTable.id, caseId)).limit(1);
     if (!leaveCase) { res.status(404).json({ error: "Case not found." }); return; }
-    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId)) {
+    if (!isOrgAuthorized(authed.user.organizationId, leaveCase.organizationId, req, authed.user.sub)) {
       res.status(403).json({ error: "Access denied." }); return;
     }
     const entries = await db.select()

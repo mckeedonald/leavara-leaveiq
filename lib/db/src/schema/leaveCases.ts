@@ -6,7 +6,7 @@ import { usersTable } from "./users";
 
 export const leaveCasesTable = pgTable("leave_case", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id").references(() => organizationsTable.id),
+  organizationId: uuid("organization_id").notNull().references(() => organizationsTable.id),
   caseNumber: text("case_number").unique().notNull(),
   employeeNumber: text("employee_number").notNull(),
   employeeFirstName: text("employee_first_name"),

@@ -9,13 +9,13 @@ export const auditLogTable = pgTable("audit_log", {
   action: text("action").notNull(),
   actor: text("actor").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  organizationId: uuid("organization_id"),
+  organizationId: uuid("organization_id").notNull(),
   metadata: jsonb("metadata"),
 });
 
 export const insertAuditLogSchema = createInsertSchema(auditLogTable).omit({
   id: true,
   createdAt: true,
-}).partial({ organizationId: true, metadata: true });
+}).partial({ metadata: true });
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLogEntry = typeof auditLogTable.$inferSelect;

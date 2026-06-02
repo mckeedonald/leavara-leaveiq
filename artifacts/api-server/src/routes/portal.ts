@@ -179,7 +179,7 @@ router.post(
 
     // Fetch the case to check displayStatus before upload
     const [caseForUpload] = await db
-      .select({ displayStatus: leaveCasesTable.displayStatus })
+      .select({ displayStatus: leaveCasesTable.displayStatus, organizationId: leaveCasesTable.organizationId })
       .from(leaveCasesTable)
       .where(eq(leaveCasesTable.id, caseId))
       .limit(1);
@@ -225,6 +225,7 @@ router.post(
       entityId: caseId,
       action: "EMPLOYEE_DOCUMENT_UPLOADED",
       actor: "employee",
+      organizationId: caseForUpload?.organizationId ?? "",
     });
 
     // Only advance to "Documentation Received" if still waiting for docs
@@ -414,6 +415,7 @@ router.post("/portal/case/:caseId/return-to-work", async (req, res): Promise<voi
     entityId: caseId,
     action: "EMPLOYEE_REPORTED_RTW",
     actor: accessToken.employeeEmail ?? "employee",
+    organizationId: leaveCase.organizationId,
   });
 
   // Notify HR: assigned user if set, otherwise all org HR users

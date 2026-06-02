@@ -9,8 +9,8 @@ import { aiLimiter } from "../lib/rateLimiters";
 
 const router: IRouter = Router();
 
-async function logAudit(entityId: string, action: string, actor: string): Promise<void> {
-  await db.insert(auditLogTable).values({ entity: "leave_case", entityId, action, actor });
+async function logAudit(entityId: string, action: string, actor: string, organizationId: string): Promise<void> {
+  await db.insert(auditLogTable).values({ entity: "leave_case", entityId, action, actor, organizationId });
 }
 
 function decryptNotice<T extends { draftContent: string; editedContent: string | null }>(notice: T): T {
@@ -90,7 +90,7 @@ router.post("/cases/:caseId/ai-recommend", requireAdmin, aiLimiter, async (req, 
       )
       .returning();
 
-    await logAudit(caseId, "AI_RECOMMENDATION_GENERATED", authed.user.email);
+    await logAudit(caseId, "AI_RECOMMENDATION_GENERATED", authed.user.email, authed.user.organizationId ?? "");
 
     res.json({
       recommendation: result.recommendation,
@@ -223,7 +223,7 @@ router.post("/cases/:caseId/notices/:noticeId/send", requireAdmin, async (req, r
     .where(eq(caseNoticesTable.id, noticeId))
     .returning();
 
-  await logAudit(caseId, `NOTICE_SENT_${notice.noticeType}`, authed.user.email);
+  await logAudit(caseId, `NOTICE_SENT_${notice.noticeType}`, authed.user.email, authed.user.organizationId ?? "");
 
   res.json({ notice: decryptNotice(updated) });
 });

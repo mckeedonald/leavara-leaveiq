@@ -3,6 +3,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { UnifiedRole } from "@workspace/db";
+import { logger } from "./logger";
 
 const JWT_SECRET = process.env["JWT_SECRET"];
 if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
@@ -51,6 +52,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   const token = header.slice(7);
   const payload = verifyToken(token);
   if (!payload) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? "unknown";
+    logger.warn({ ip, url: req.originalUrl }, "Auth failed: invalid or expired token");
     res.status(401).json({ error: "Invalid or expired token" });
     return;
   }
@@ -59,6 +62,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     .from(usersTable)
     .where(eq(usersTable.id, payload.sub));
   if (!user?.isActive) {
+    const ip = req.ip ?? req.socket?.remoteAddress ?? "unknown";
+    logger.warn({ ip, sub: payload.sub, url: req.originalUrl }, "Auth failed: account inactive or not found");
     res.status(401).json({ error: "Account is inactive or not found" });
     return;
   }
@@ -70,6 +75,7 @@ export async function requireHrAdmin(req: Request, res: Response, next: NextFunc
   await requireAuth(req, res, async () => {
     const { user } = req as AuthenticatedRequest;
     if (user.role !== "hr_admin" && !user.isSuperAdmin) {
+      logger.warn({ sub: user.sub, role: user.role, url: req.originalUrl }, "Authorization failed: HR Admin role required");
       res.status(403).json({ error: "HR Admin access required" });
       return;
     }
@@ -114,11 +120,23 @@ export async function requireSuperAdmin(req: Request, res: Response, next: NextF
   await requireAuth(req, res, async () => {
     const { user } = req as AuthenticatedRequest;
     if (!user.isSuperAdmin) {
+      logger.warn({ sub: user.sub, role: user.role, url: req.originalUrl }, "Authorization failed: Super admin access required");
       res.status(403).json({ error: "Super admin access required" });
       return;
     }
     next();
   });
+}
+
+/**
+ * Log a cross-tenant access attempt for breach detection.
+ * Call this whenever isOrgAuthorized() returns false before sending a 403.
+ */
+export function logCrossOrgAttempt(req: Request, sub: string, userOrgId: string | null, caseOrgId: string | null): void {
+  logger.warn(
+    { sub, userOrgId, caseOrgId, url: req.originalUrl, ip: req.ip ?? req.socket?.remoteAddress },
+    "SECURITY: cross-tenant access attempt blocked",
+  );
 }
 
 // Legacy alias so existing imports continue to work

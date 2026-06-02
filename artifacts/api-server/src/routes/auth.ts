@@ -6,6 +6,7 @@ import { db, usersTable, invitesTable, passwordResetsTable, organizationsTable }
 import { signToken, requireAuth, requireAdmin, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { sendPasswordResetEmail, sendInviteEmail } from "../lib/email";
 import { loginLimiter } from "../lib/rateLimiters";
+import { logger } from "../lib/logger";
 import type { UnifiedRole } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -35,12 +36,14 @@ router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Pr
     .where(eq(usersTable.email, email.toLowerCase().trim()));
 
   if (!user || !user.isActive) {
+    logger.warn({ email: email.toLowerCase().trim(), ip: req.ip ?? req.socket?.remoteAddress }, "Login failed: user not found or inactive");
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    logger.warn({ email: email.toLowerCase().trim(), ip: req.ip ?? req.socket?.remoteAddress }, "Login failed: incorrect password");
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
