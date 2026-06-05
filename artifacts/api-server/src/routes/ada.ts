@@ -21,6 +21,7 @@ import {
 import { generateIcs } from "../lib/icsGenerator.js";
 import { sendNoticeEmail, getAppUrl } from "../lib/email.js";
 import { buildMedCertPdf } from "../lib/pdfUtils.js";
+import { encryptAdaWrite, decryptAdaRow, decryptAdaRows } from "../lib/encryptedFields.js";
 
 const router = Router();
 
@@ -51,7 +52,7 @@ router.get("/ada/cases", requireAuth, async (req: Request, res: Response) => {
         isNull(adaCasesTable.deletedAt),
       ))
       .orderBy(desc(adaCasesTable.createdAt));
-    res.json({ cases });
+    res.json({ cases: decryptAdaRows(cases) });
   } catch (err) {
     logger.error({ err }, "ADA cases list error");
     res.status(500).json({ error: "Internal server error" });
@@ -81,7 +82,7 @@ router.get("/ada/cases/:caseId", requireAuth, async (req: Request, res: Response
       .from(approvedAccommodationsTable)
       .where(and(eq(approvedAccommodationsTable.caseId, caseId), eq(approvedAccommodationsTable.isActive, true)));
 
-    res.json({ case: adaCase, log, accommodations });
+    res.json({ case: decryptAdaRow(adaCase), log, accommodations });
   } catch (err) {
     logger.error({ err }, "ADA case fetch error");
     res.status(500).json({ error: "Internal server error" });
@@ -120,7 +121,7 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
     const caseNumber = generateCaseNumber();
     const accessToken = require("node:crypto").randomBytes(32).toString("hex");
 
-    const [adaCase] = await db.insert(adaCasesTable).values({
+    const [adaCase] = await db.insert(adaCasesTable).values(encryptAdaWrite({
       organizationId,
       caseNumber,
       employeeNumber: String(employeeNumber ?? ""),
@@ -138,7 +139,7 @@ router.post("/ada/cases", async (req: Request, res: Response) => {
       status: "pending_review",
       displayStatus: "Pending HR Review",
       accessToken,
-    }).returning();
+    })).returning();
 
     // Log the submission
     await db.insert(adaInteractiveLogTable).values({
@@ -228,8 +229,8 @@ router.patch("/ada/cases/:caseId", requireAuth, async (req: Request, res: Respon
       if (key in req.body) updates[key] = req.body[key];
     }
 
-    const [updated] = await db.update(adaCasesTable).set(updates).where(eq(adaCasesTable.id, caseId)).returning();
-    res.json(updated);
+    const [updated] = await db.update(adaCasesTable).set(encryptAdaWrite(updates)).where(eq(adaCasesTable.id, caseId)).returning();
+    res.json(decryptAdaRow(updated));
   } catch (err) {
     logger.error({ err }, "ADA case update error");
     res.status(500).json({ error: "Internal server error" });
@@ -287,10 +288,11 @@ router.post("/ada/cases/:caseId/agent", requireAuth, async (req: Request, res: R
   if (!message?.trim()) { res.status(400).json({ error: "message is required" }); return; }
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     const result = await runAdaTurn({
       caseData: adaCase,
@@ -340,10 +342,11 @@ router.get("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Request
   const authed = req as AuthenticatedRequest;
   const { caseId } = req.params;
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
     const letter = await generatePhysicianCertRequest(adaCase);
     res.json({ letter });
   } catch (err) {
@@ -364,10 +367,11 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
   };
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     // Re-use the letter the user already previewed; only regenerate if not provided
     const certContent = providedContent?.trim() || await generatePhysicianCertRequest(adaCase);
@@ -474,10 +478,11 @@ router.post("/ada/cases/:caseId/approval-letter", requireAuth, async (req: Reque
   }
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     const letter = await generateApprovalLetter(adaCase, accommodations, [authed.user.firstName, authed.user.lastName].filter(Boolean).join(" ") || authed.user.email);
     res.json({ letter });
@@ -499,10 +504,11 @@ router.post("/ada/cases/:caseId/denial-letter", requireAuth, async (req: Request
   }
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     const letter = await generateDenialLetter(adaCase, hardshipJustification, [authed.user.firstName, authed.user.lastName].filter(Boolean).join(" ") || authed.user.email);
     res.json({ letter });
@@ -521,10 +527,11 @@ router.post("/ada/cases/:caseId/accommodations", requireAuth, async (req: Reques
   const { description, category, startDate, endDate, isOngoing } = req.body as Record<string, unknown>;
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     const employeeName = [adaCase.employeeFirstName, adaCase.employeeLastName].filter(Boolean).join(" ") || `Employee #${adaCase.employeeNumber}`;
     const calendarLabel = `${employeeName} — Reasonable Accommodation`;
@@ -619,10 +626,11 @@ router.post("/ada/cases/:caseId/calendar-invite", requireAuth, async (req: Reque
   }
 
   try {
-    const [adaCase] = await db.select().from(adaCasesTable)
+    const [adaCaseRaw] = await db.select().from(adaCasesTable)
       .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
       .limit(1);
-    if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
+    if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
+    const adaCase = decryptAdaRow(adaCaseRaw);
 
     const hrEmail = authed.user.email;
     const allAttendees = [...new Set([...attendeeEmails as string[], hrEmail])];

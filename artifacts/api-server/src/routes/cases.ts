@@ -19,7 +19,8 @@ import {
   SendNoticesBody,
 } from "@workspace/api-zod";
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
-import { requireAuth, verifyToken, logCrossOrgAttempt, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
+import { requireAuth, requireHrAccess, verifyToken, logCrossOrgAttempt, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
+import { encryptDocContent, decryptDocContent } from "../lib/encryptedFields";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
 import { sendNoticeEmail, sendMagicLinkEmail, sendNewCaseNotificationEmail, getAppUrl, type EmailAttachment } from "../lib/email";
 import { buildMedCertPdf, isBase64Pdf, toPdfBase64, toPdfBuffer } from "../lib/pdfUtils.js";
@@ -866,7 +867,7 @@ router.post(
         )
         .orderBy(desc(caseDocumentsTable.createdAt))
         .limit(1);
-      medCertContent = storedMedCert?.contentInline ?? null;
+      medCertContent = storedMedCert?.contentInline ? decryptDocContent(storedMedCert.contentInline) ?? null : null;
     }
 
     // medCertContent may be a base64-encoded PDF (new entries) or raw text (legacy).
@@ -944,7 +945,7 @@ router.post(
           uploadedBy: "notice",
           fileName: noticeFileName,
           storageKey: null,
-          contentInline: inlineContent,
+          contentInline: encryptDocContent(inlineContent),
           mimeType,
           sizeBytes,
         });
@@ -1036,7 +1037,7 @@ router.post(
         uploadedBy: "hr",
         fileName: file.originalname,
         storageKey,
-        contentInline,
+        contentInline: contentInline ? encryptDocContent(contentInline) : null,
         mimeType: file.mimetype,
         sizeBytes: file.size,
       })
@@ -1048,7 +1049,8 @@ router.post(
 );
 
 // GET /cases/:caseId/documents (HR — requires auth)
-router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<void> => {
+// Restricted to HR (hr_admin / hr_user). Managers must not access medical documents.
+router.get("/cases/:caseId/documents", requireHrAccess, async (req, res): Promise<void> => {
   const authed = req as AuthenticatedRequest;
   const { caseId } = req.params;
 
@@ -1084,10 +1086,10 @@ router.get("/cases/:caseId/documents", requireAuth, async (req, res): Promise<vo
   res.json({ documents });
 });
 
-// GET /cases/:caseId/documents/:docId/download (HR — requires auth)
+// GET /cases/:caseId/documents/:docId/download (HR only — managers excluded from medical docs)
 router.get(
   "/cases/:caseId/documents/:docId/download",
-  requireAuth,
+  requireHrAccess,
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
     const { caseId, docId } = req.params;
@@ -1124,7 +1126,7 @@ router.get(
 
     try {
       // Inline content (notices / cached forms) — serve directly without R2
-      const contentInline = (doc as any).contentInline as string | null | undefined;
+      const contentInline = decryptDocContent((doc as any).contentInline as string | null | undefined);
       if (!doc.storageKey && contentInline) {
         const mimeType = doc.mimeType ?? "text/plain";
         res.setHeader("Content-Disposition", `attachment; filename="${doc.fileName}"`);
@@ -1430,14 +1432,15 @@ Respond ONLY with valid JSON in exactly this format:
           });
         } else if (doc.contentInline) {
           // contentInline may be a base64-encoded PDF (uploaded file, no storage configured)
-          // or raw text (HR-generated notices). Handle both correctly.
-          if (isBase64Pdf(doc.contentInline)) {
+          // or raw text (HR-generated notices). It is encrypted at rest — decrypt first.
+          const inline = decryptDocContent(doc.contentInline) ?? "";
+          if (isBase64Pdf(inline)) {
             contentBlocks.push({
               type: "document",
               source: {
                 type: "base64",
                 media_type: "application/pdf",
-                data: doc.contentInline,
+                data: inline,
               },
               title: doc.fileName,
             });
@@ -1445,7 +1448,7 @@ Respond ONLY with valid JSON in exactly this format:
             // Raw text document (e.g. HR notices stored as plain text)
             contentBlocks.push({
               type: "text",
-              text: `\n--- DOCUMENT: ${doc.fileName} ---\n${doc.contentInline}\n--- END DOCUMENT ---`,
+              text: `\n--- DOCUMENT: ${doc.fileName} ---\n${inline}\n--- END DOCUMENT ---`,
             });
           }
         }

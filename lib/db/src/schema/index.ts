@@ -12,6 +12,7 @@ export * from "./hrisConnections";
 export * from "./hrisEmployeeCache";
 export * from "./caseDocuments";
 export * from "./caseAccessTokens";
+export * from "./retentionPolicies";
 
 // Unified tables
 export * from "./employees";

@@ -12,6 +12,7 @@ import {
 } from "@workspace/db";
 import { sendDocumentUploadNotification, sendReturnToWorkNotification, getAppUrl } from "../lib/email";
 import { toPdfBuffer } from "../lib/pdfUtils.js";
+import { encryptDocContent, decryptDocContent } from "../lib/encryptedFields";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -214,7 +215,7 @@ router.post(
         uploadedBy: "employee",
         fileName: file.originalname,
         storageKey: finalStorageKey,
-        contentInline,
+        contentInline: contentInline ? encryptDocContent(contentInline) : null,
         mimeType: file.mimetype,
         sizeBytes: file.size,
       })
@@ -341,7 +342,7 @@ router.get("/portal/case/:caseId/documents/:docId/download", async (req, res): P
     return;
   }
 
-  const contentInline = (doc as any).contentInline as string | null | undefined;
+  const contentInline = decryptDocContent((doc as any).contentInline as string | null | undefined);
 
   // Inline-stored doc (no R2 key) — serve the binary directly
   if (!doc.storageKey && contentInline) {

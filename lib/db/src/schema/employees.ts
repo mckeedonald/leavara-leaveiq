@@ -27,6 +27,8 @@ export const employeesTable = pgTable("employee", {
   dataSource: text("data_source").$type<EmployeeDataSource>().notNull().default("manual"),
   lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
   hrisId: text("hris_id"),
+  // Set when the retention job has anonymized this record's PII (tombstone — row is kept for referential integrity).
+  anonymizedAt: timestamp("anonymized_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
