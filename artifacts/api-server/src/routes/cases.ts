@@ -19,7 +19,7 @@ import {
   SendNoticesBody,
 } from "@workspace/api-zod";
 import { analyzeEligibility, getEventTransition } from "../lib/eligibility";
-import { requireAuth, requireHrAccess, verifyToken, logCrossOrgAttempt, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
+import { requireAuth, requireHrAccess, requireOrgId, verifyToken, logCrossOrgAttempt, type AuthenticatedRequest, type JwtPayload } from "../lib/jwtAuth";
 import { encryptDocContent, decryptDocContent } from "../lib/encryptedFields";
 import { generateAiRecommendation } from "../lib/aiRecommendation";
 import { sendNoticeEmail, sendMagicLinkEmail, sendNewCaseNotificationEmail, getAppUrl, type EmailAttachment } from "../lib/email";
@@ -191,6 +191,11 @@ router.post("/cases", async (req, res): Promise<void> => {
           organizationId = payload.organizationId;
         }
       }
+    }
+
+    if (!organizationId) {
+      res.status(400).json({ error: "Organization could not be determined for this case." });
+      return;
     }
 
     const [newCase] = await db
@@ -942,7 +947,7 @@ router.post(
 
         await db.insert(caseDocumentsTable).values({
           caseId: leaveCase.id,
-          uploadedBy: "notice",
+          uploadedBy: "hr",
           fileName: noticeFileName,
           storageKey: null,
           contentInline: encryptDocContent(inlineContent),
@@ -1171,7 +1176,7 @@ router.delete(
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
 
-    if (authed.user.role !== "admin") {
+    if (authed.user.role !== "hr_admin") {
       res.status(403).json({ error: "Only admin users may delete cases." });
       return;
     }
@@ -1699,6 +1704,8 @@ router.get(
   requireAuth,
   async (req, res): Promise<void> => {
     const authed = req as AuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { action, actor, caseId, startDate, endDate, page } = req.query as Record<string, string | undefined>;
     const pageNum = Math.max(1, parseInt(page ?? "1") || 1);
     const limit = 100;
@@ -1719,7 +1726,7 @@ router.get(
       .from(auditLogTable)
       .innerJoin(leaveCasesTable, eq(auditLogTable.entityId, leaveCasesTable.id))
       .where(and(
-        eq(leaveCasesTable.organizationId, authed.user.organizationId),
+        eq(leaveCasesTable.organizationId, orgId),
         caseId ? eq(auditLogTable.entityId, caseId) : undefined,
         action ? like(auditLogTable.action, `%${action}%`) : undefined,
         actor ? like(auditLogTable.actor, `%${actor}%`) : undefined,

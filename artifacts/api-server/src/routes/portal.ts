@@ -258,7 +258,7 @@ router.post(
           .where(
             and(
               eq(usersTable.organizationId, leaveCase.organizationId),
-              eq(usersTable.role, "admin"),
+              eq(usersTable.role, "hr_admin"),
               eq(usersTable.isActive, true),
             ),
           );

@@ -7,7 +7,7 @@ import {
   adaCasesTable,
   caseAccessTokensTable,
 } from "@workspace/db";
-import { requireAuth, type AuthenticatedRequest } from "../lib/jwtAuth";
+import { requireAuth, requireOrgId, type AuthenticatedRequest } from "../lib/jwtAuth";
 import { requirePiqAuth, type PiqAuthenticatedRequest } from "../lib/piqJwtAuth.js";
 import { logger } from "../lib/logger.js";
 
@@ -19,20 +19,22 @@ const router = Router();
 router.get("/cases/:caseId/messages", requireAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as AuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
 
     // Verify the case belongs to this org (check leave cases first, then ADA cases)
     const [leaveCase] = await db
       .select({ id: leaveCasesTable.id })
       .from(leaveCasesTable)
-      .where(and(eq(leaveCasesTable.id, caseId), eq(leaveCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(leaveCasesTable.id, caseId), eq(leaveCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!leaveCase) {
       const [adaCase] = await db
         .select({ id: adaCasesTable.id })
         .from(adaCasesTable)
-        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
         .limit(1);
       if (!adaCase) {
         res.status(404).json({ error: "Case not found" });
@@ -57,6 +59,8 @@ router.get("/cases/:caseId/messages", requireAuth, async (req: Request, res: Res
 router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as AuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
     const { content } = req.body as { content?: string };
 
@@ -69,14 +73,14 @@ router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Re
     const [leaveCase] = await db
       .select({ id: leaveCasesTable.id })
       .from(leaveCasesTable)
-      .where(and(eq(leaveCasesTable.id, caseId), eq(leaveCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(leaveCasesTable.id, caseId), eq(leaveCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!leaveCase) {
       const [adaCase] = await db
         .select({ id: adaCasesTable.id })
         .from(adaCasesTable)
-        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+        .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
         .limit(1);
       if (!adaCase) {
         res.status(404).json({ error: "Case not found" });
@@ -89,7 +93,7 @@ router.post("/cases/:caseId/messages", requireAuth, async (req: Request, res: Re
       .values({
         product: "leaveiq",
         caseId,
-        organizationId: authed.user.organizationId,
+        organizationId: orgId,
         senderType: "hr",
         senderId: authed.user.sub,
         senderName: `${authed.user.firstName} ${authed.user.lastName}`.trim() || authed.user.email,
@@ -203,6 +207,8 @@ router.post("/portal/cases/:caseId/messages", async (req: Request, res: Response
 router.get("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
 
     const msgs = await db
@@ -212,7 +218,7 @@ router.get("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Requ
         and(
           eq(caseMessagesTable.caseId, caseId),
           eq(caseMessagesTable.product, "performiq"),
-          eq(caseMessagesTable.organizationId, authed.piqUser.organizationId),
+          eq(caseMessagesTable.organizationId, orgId),
         )
       )
       .orderBy(asc(caseMessagesTable.createdAt));
@@ -228,6 +234,8 @@ router.get("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Requ
 router.post("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
     const { content } = req.body as { content?: string };
 
@@ -241,7 +249,7 @@ router.post("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Req
       .values({
         product: "performiq",
         caseId,
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         senderType: "hr",
         senderId: authed.piqUser.sub,
         senderName: `${authed.piqUser.firstName} ${authed.piqUser.lastName}`.trim() || authed.piqUser.email,

@@ -9,7 +9,7 @@ import {
   organizationsTable,
   employeesTable,
 } from "@workspace/db";
-import { requireAuth, type AuthenticatedRequest } from "../lib/jwtAuth.js";
+import { requireAuth, requireOrgId, type AuthenticatedRequest } from "../lib/jwtAuth.js";
 import { logger } from "../lib/logger.js";
 import {
   runAdaTurn,
@@ -43,12 +43,14 @@ function generateCaseNumber(): string {
 // GET /api/ada/cases
 router.get("/ada/cases", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   try {
     const cases = await db
       .select()
       .from(adaCasesTable)
       .where(and(
-        eq(adaCasesTable.organizationId, authed.user.organizationId),
+        eq(adaCasesTable.organizationId, orgId),
         isNull(adaCasesTable.deletedAt),
       ))
       .orderBy(desc(adaCasesTable.createdAt));
@@ -62,12 +64,14 @@ router.get("/ada/cases", requireAuth, async (req: Request, res: Response) => {
 // GET /api/ada/cases/:caseId
 router.get("/ada/cases/:caseId", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   try {
     const [adaCase] = await db
       .select()
       .from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
 
@@ -217,10 +221,12 @@ This is an automated notification. Please do not reply to this email.`,
 // PATCH /api/ada/cases/:caseId  (HR — update status, decision, etc.)
 router.patch("/ada/cases/:caseId", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   try {
     const [existing] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId))).limit(1);
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId))).limit(1);
     if (!existing) { res.status(404).json({ error: "Case not found" }); return; }
 
     const allowed = ["status", "displayStatus", "decision", "decisionDate", "decisionNotes", "hardshipJustification", "assignedToUserId", "physicianCertSentAt", "physicianCertReceivedAt", "employeeEmail"];
@@ -242,6 +248,8 @@ router.patch("/ada/cases/:caseId", requireAuth, async (req: Request, res: Respon
 // POST /api/ada/cases/:caseId/log  (add a manual log entry — HR or system)
 router.post("/ada/cases/:caseId/log", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { entryType, content } = req.body as { entryType?: string; content?: string };
 
@@ -253,7 +261,7 @@ router.post("/ada/cases/:caseId/log", requireAuth, async (req: Request, res: Res
   try {
     const [adaCase] = await db.select({ id: adaCasesTable.id })
       .from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCase) { res.status(404).json({ error: "Case not found" }); return; }
 
@@ -278,6 +286,8 @@ router.post("/ada/cases/:caseId/log", requireAuth, async (req: Request, res: Res
 // POST /api/ada/cases/:caseId/agent
 router.post("/ada/cases/:caseId/agent", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { message, history, lookupJan } = req.body as {
     message?: string;
@@ -289,7 +299,7 @@ router.post("/ada/cases/:caseId/agent", requireAuth, async (req: Request, res: R
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -340,10 +350,12 @@ router.post("/ada/cases/:caseId/agent", requireAuth, async (req: Request, res: R
 // GET /api/ada/cases/:caseId/physician-cert  (generate letter preview)
 router.get("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -358,6 +370,8 @@ router.get("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Request
 // POST /api/ada/cases/:caseId/physician-cert  (generate + send)
 router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   // Accept certContent from frontend (pre-generated preview) to avoid a redundant AI call.
   // employeeEmail is the recipient — frontend sends it as "employeeEmail".
@@ -368,7 +382,7 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -469,6 +483,8 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
 // POST /api/ada/cases/:caseId/approval-letter
 router.post("/ada/cases/:caseId/approval-letter", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { accommodations } = req.body as { accommodations?: string[] };
 
@@ -479,7 +495,7 @@ router.post("/ada/cases/:caseId/approval-letter", requireAuth, async (req: Reque
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -495,6 +511,8 @@ router.post("/ada/cases/:caseId/approval-letter", requireAuth, async (req: Reque
 // POST /api/ada/cases/:caseId/denial-letter
 router.post("/ada/cases/:caseId/denial-letter", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { hardshipJustification } = req.body as { hardshipJustification?: string };
 
@@ -505,7 +523,7 @@ router.post("/ada/cases/:caseId/denial-letter", requireAuth, async (req: Request
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -523,12 +541,14 @@ router.post("/ada/cases/:caseId/denial-letter", requireAuth, async (req: Request
 // POST /api/ada/cases/:caseId/accommodations  (record approved accommodations)
 router.post("/ada/cases/:caseId/accommodations", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { description, category, startDate, endDate, isOngoing } = req.body as Record<string, unknown>;
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -538,7 +558,7 @@ router.post("/ada/cases/:caseId/accommodations", requireAuth, async (req: Reques
 
     const [accommodation] = await db.insert(approvedAccommodationsTable).values({
       caseId,
-      organizationId: authed.user.organizationId!,
+      organizationId: orgId,
       description: String(description),
       category: category as string | undefined,
       startDate: startDate as string | undefined,
@@ -567,12 +587,14 @@ router.post("/ada/cases/:caseId/accommodations", requireAuth, async (req: Reques
 // GET /api/ada/accommodations/calendar — for calendar display (legacy)
 router.get("/ada/accommodations/calendar", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   try {
     const accommodations = await db
       .select()
       .from(approvedAccommodationsTable)
       .where(and(
-        eq(approvedAccommodationsTable.organizationId, authed.user.organizationId),
+        eq(approvedAccommodationsTable.organizationId, orgId),
         eq(approvedAccommodationsTable.isActive, true),
       ));
     res.json({ accommodations });
@@ -585,6 +607,8 @@ router.get("/ada/accommodations/calendar", requireAuth, async (req: Request, res
 // GET /api/ada/calendar — enriched calendar data with caseNumber
 router.get("/ada/calendar", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   try {
     const rows = await db
       .select({
@@ -602,7 +626,7 @@ router.get("/ada/calendar", requireAuth, async (req: Request, res: Response) => 
       .from(approvedAccommodationsTable)
       .leftJoin(adaCasesTable, eq(approvedAccommodationsTable.caseId, adaCasesTable.id))
       .where(and(
-        eq(approvedAccommodationsTable.organizationId, authed.user.organizationId!),
+        eq(approvedAccommodationsTable.organizationId, orgId),
         eq(approvedAccommodationsTable.isActive, true),
       ));
     res.json({ accommodations: rows });
@@ -617,6 +641,8 @@ router.get("/ada/calendar", requireAuth, async (req: Request, res: Response) => 
 // POST /api/ada/cases/:caseId/calendar-invite
 router.post("/ada/cases/:caseId/calendar-invite", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
+  const orgId = requireOrgId(req, res);
+  if (!orgId) return;
   const { caseId } = req.params;
   const { title, description, scheduledAt, durationMinutes, attendeeEmails } = req.body as Record<string, unknown>;
 
@@ -627,7 +653,7 @@ router.post("/ada/cases/:caseId/calendar-invite", requireAuth, async (req: Reque
 
   try {
     const [adaCaseRaw] = await db.select().from(adaCasesTable)
-      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, authed.user.organizationId)))
+      .where(and(eq(adaCasesTable.id, caseId), eq(adaCasesTable.organizationId, orgId)))
       .limit(1);
     if (!adaCaseRaw) { res.status(404).json({ error: "Case not found" }); return; }
     const adaCase = decryptAdaRow(adaCaseRaw);
@@ -647,7 +673,7 @@ router.post("/ada/cases/:caseId/calendar-invite", requireAuth, async (req: Reque
 
     // Store the invite record
     const [invite] = await db.insert(calendarInvitesTable).values({
-      organizationId: authed.user.organizationId,
+      organizationId: orgId,
       caseType: "ada",
       caseId,
       caseNumber: adaCase.caseNumber,
@@ -698,7 +724,7 @@ router.post("/ada/cases/:caseId/calendar-invite", requireAuth, async (req: Reque
 // POST /api/ada/scrape-leave-laws  (trigger manual scrape — sys admin)
 router.post("/ada/scrape-leave-laws", requireAuth, async (req: Request, res: Response) => {
   const authed = req as AuthenticatedRequest;
-  if (authed.user.role !== "system_admin" && authed.user.role !== "hr_admin") {
+  if (authed.user.role !== "hr_admin") {
     res.status(403).json({ error: "Forbidden" }); return;
   }
   try {

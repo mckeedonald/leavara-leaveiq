@@ -11,7 +11,7 @@ import {
   piqAgentSessionsTable,
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { requirePiqAuth, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 import type { PiqCaseStatus, PiqDocumentContent, InsertPiqWorkflowStep } from "@workspace/db";
 
@@ -65,6 +65,8 @@ function buildWorkflowSteps(
 router.get("/performiq/cases", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { status, employeeId } = req.query as { status?: string; employeeId?: string };
 
     const cases = await db
@@ -88,7 +90,7 @@ router.get("/performiq/cases", requirePiqAuth, async (req: Request, res: Respons
       .leftJoin(employeesTable, eq(piqCasesTable.employeeId, employeesTable.id))
       .leftJoin(piqDocumentTypesTable, eq(piqCasesTable.documentTypeId, piqDocumentTypesTable.id))
       .leftJoin(usersTable, eq(piqCasesTable.initiatedBy, usersTable.id))
-      .where(eq(piqCasesTable.organizationId, authed.piqUser.organizationId))
+      .where(eq(piqCasesTable.organizationId, orgId))
       .orderBy(desc(piqCasesTable.updatedAt));
 
     let filtered = cases;
@@ -112,12 +114,14 @@ router.get("/performiq/cases", requirePiqAuth, async (req: Request, res: Respons
 router.get("/performiq/cases/:caseId", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
 
     const [c] = await db
       .select()
       .from(piqCasesTable)
-      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!c) {
@@ -176,6 +180,8 @@ const DOC_TYPE_DEFAULTS: Record<string, { label: string; supervisorReview: boole
 router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { employeeId, documentTypeId, docBaseType, agentSessionId, initialDraft } = req.body as {
       employeeId?: string;
       documentTypeId?: string;
@@ -192,7 +198,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
     const [employee] = await db
       .select()
       .from(employeesTable)
-      .where(and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, orgId)))
       .limit(1);
     if (!employee) {
       res.status(400).json({ error: "Employee not found" });
@@ -206,7 +212,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
         .select()
         .from(piqDocumentTypesTable)
         .where(and(
-          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqDocumentTypesTable.organizationId, orgId),
           eq(piqDocumentTypesTable.baseType, docBaseType as any),
           eq(piqDocumentTypesTable.isActive, true),
         ))
@@ -220,7 +226,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
         const [created] = await db
           .insert(piqDocumentTypesTable)
           .values({
-            organizationId: authed.piqUser.organizationId,
+            organizationId: orgId,
             baseType: docBaseType as any,
             displayLabel: defaults.label,
             requiresSupervisorReview: defaults.supervisorReview,
@@ -250,12 +256,12 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
 
     const documentTypeId_resolved = resolvedDocTypeId;
 
-    const caseNumber = await generateCaseNumber(authed.piqUser.organizationId ?? "");
+    const caseNumber = await generateCaseNumber(orgId ?? "");
 
     const [newCase] = await db
       .insert(piqCasesTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         caseNumber,
         employeeId,
         initiatedBy: authed.piqUser.sub,
@@ -269,7 +275,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
     if (initialDraft) {
       const [insertedDoc] = await db.insert(piqDocumentsTable).values({
         caseId: newCase.id,
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         version: 1,
         content: initialDraft,
         createdBy: authed.piqUser.sub,
@@ -282,7 +288,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
         await db.insert(piqDocumentHistoryTable).values({
           documentId: insertedDoc.id,
           caseId: newCase.id,
-          organizationId: authed.piqUser.organizationId,
+          organizationId: orgId,
           action: "created",
           performedBy: authed.piqUser.sub,
           performedByRole: authed.piqUser.role,
@@ -292,7 +298,7 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
       }
     }
 
-    const steps = buildWorkflowSteps(newCase.id, authed.piqUser.organizationId ?? "", docType, authed.piqUser.sub, authed.piqUser.role);
+    const steps = buildWorkflowSteps(newCase.id, orgId ?? "", docType, authed.piqUser.sub, authed.piqUser.role);
     if (steps.length > 0) {
       await db.insert(piqWorkflowStepsTable).values(steps);
     }
@@ -308,6 +314,8 @@ router.post("/performiq/cases", requirePiqAuth, async (req: Request, res: Respon
 router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId } = req.params;
     const { content } = req.body as { content?: PiqDocumentContent };
 
@@ -319,7 +327,7 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
     const [c] = await db
       .select()
       .from(piqCasesTable)
-      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!c) {
@@ -346,7 +354,7 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
       .insert(piqDocumentsTable)
       .values({
         caseId,
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         version: nextVersion,
         content,
         createdBy: authed.piqUser.sub,
@@ -357,7 +365,7 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
     await db.insert(piqDocumentHistoryTable).values({
       documentId: newDoc.id,
       caseId,
-      organizationId: authed.piqUser.organizationId,
+      organizationId: orgId,
       action: "edited",
       performedBy: authed.piqUser.sub,
       performedByRole: authed.piqUser.role,
@@ -374,6 +382,8 @@ router.patch("/performiq/cases/:caseId/document", requirePiqAuth, async (req: Re
 router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const caseId = String(req.params["caseId"]);
     const { docBaseType, documentTypeId } = req.body as { docBaseType?: string; documentTypeId?: string };
 
@@ -392,7 +402,7 @@ router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (re
     const [c] = await db
       .select()
       .from(piqCasesTable)
-      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!c) {
@@ -407,7 +417,7 @@ router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (re
         .select()
         .from(piqDocumentTypesTable)
         .where(and(
-          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqDocumentTypesTable.organizationId, orgId),
           eq(piqDocumentTypesTable.baseType, docBaseType as any),
           eq(piqDocumentTypesTable.isActive, true),
         ))
@@ -421,7 +431,7 @@ router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (re
         const [created] = await db
           .insert(piqDocumentTypesTable)
           .values({
-            organizationId: authed.piqUser.organizationId,
+            organizationId: orgId,
             baseType: docBaseType as any,
             displayLabel: defaults.label,
             requiresSupervisorReview: defaults.supervisorReview,
@@ -470,7 +480,7 @@ router.patch("/performiq/cases/:caseId/document-type", requirePiqAuth, async (re
       if (!hasCompletedSteps) {
         // Safe to rebuild all steps
         await db.delete(piqWorkflowStepsTable).where(eq(piqWorkflowStepsTable.caseId, caseId));
-        const newSteps = buildWorkflowSteps(caseId, authed.piqUser.organizationId ?? "", newDocType, authed.piqUser.sub, role);
+        const newSteps = buildWorkflowSteps(caseId, orgId ?? "", newDocType, authed.piqUser.sub, role);
         if (newSteps.length > 0) {
           await db.insert(piqWorkflowStepsTable).values(newSteps);
         }

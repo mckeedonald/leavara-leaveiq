@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { db, usersTable, piqInvitesTable, piqPasswordResetsTable, organizationsTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
-import { signPiqToken, requirePiqAuth, requirePiqHrAdmin, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { signPiqToken, requirePiqAuth, requirePiqHrAdmin, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 import type { UnifiedRole } from "@workspace/db";
 
@@ -111,6 +111,8 @@ router.get("/performiq/auth/me", requirePiqAuth, async (req: Request, res: Respo
 router.post("/performiq/auth/invite", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { email, role } = req.body as { email?: string; role?: string };
     if (!email || !role) {
       res.status(400).json({ error: "email and role are required" });
@@ -121,7 +123,7 @@ router.post("/performiq/auth/invite", requirePiqHrAdmin, async (req: Request, re
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await db.insert(piqInvitesTable).values({
-      organizationId: authed.piqUser.organizationId,
+      organizationId: orgId,
       email: email.toLowerCase().trim(),
       role: role as UnifiedRole,
       token,
@@ -331,6 +333,8 @@ router.post("/performiq/auth/reset-password", async (req: Request, res: Response
 router.get("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const users = await db
       .select({
         id: usersTable.id,
@@ -341,7 +345,7 @@ router.get("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res:
         createdAt: usersTable.createdAt,
       })
       .from(usersTable)
-      .where(eq(usersTable.organizationId, authed.piqUser.organizationId));
+      .where(eq(usersTable.organizationId, orgId));
 
     res.json(users);
   } catch (err) {
@@ -354,6 +358,8 @@ router.get("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res:
 router.post("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { fullName, email, role } = req.body as { fullName?: string; email?: string; role?: string };
 
     if (!fullName || !email || !role) {
@@ -372,7 +378,7 @@ router.post("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res
     const [existing] = await db
       .select({ id: usersTable.id })
       .from(usersTable)
-      .where(and(eq(usersTable.email, normalizedEmail), eq(usersTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(usersTable.email, normalizedEmail), eq(usersTable.organizationId, orgId)))
       .limit(1);
     if (existing) {
       res.status(409).json({ error: "A user with this email already exists in your organization" });
@@ -391,7 +397,7 @@ router.post("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res
     const [user] = await db
       .insert(usersTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         fullName: fullName.trim(),
         firstName,
         lastName,
@@ -420,13 +426,15 @@ router.post("/performiq/auth/users", requirePiqHrAdmin, async (req: Request, res
 router.patch("/performiq/auth/users/:userId", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { userId } = req.params;
     const { isActive, role } = req.body as { isActive?: boolean; role?: string };
 
     const [existing] = await db
       .select({ id: usersTable.id })
       .from(usersTable)
-      .where(and(eq(usersTable.id, userId), eq(usersTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(usersTable.id, userId), eq(usersTable.organizationId, orgId)))
       .limit(1);
 
     if (!existing) {

@@ -8,7 +8,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { requirePiqAuth, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 import type { PiqCaseStatus } from "@workspace/db";
 
@@ -28,6 +28,8 @@ type WorkflowAction =
 router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { caseId, action } = req.params as { caseId: string; action: WorkflowAction };
     const { feedback, assigneeId, reassignReason } = req.body as {
       feedback?: string;
@@ -38,7 +40,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
     const [c] = await db
       .select()
       .from(piqCasesTable)
-      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqCasesTable.id, caseId), eq(piqCasesTable.organizationId, orgId)))
       .limit(1);
 
     if (!c) {
@@ -115,7 +117,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "submitted", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -141,7 +143,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "supervisor_approved", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -178,7 +180,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "supervisor_returned", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -199,7 +201,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "hr_approved", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -235,7 +237,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "hr_returned", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -264,7 +266,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
 
         if (currentDoc) {
           await db.insert(piqDocumentHistoryTable).values({
-            documentId: currentDoc.id, caseId, organizationId: authed.piqUser.organizationId,
+            documentId: currentDoc.id, caseId, organizationId: orgId,
             action: "delivered", performedBy: sub, performedByRole: role, notes: feedback,
           });
         }
@@ -281,7 +283,7 @@ router.post("/performiq/cases/:caseId/workflow/:action", requirePiqAuth, async (
         const [newAssignee] = await db
           .select({ id: usersTable.id })
           .from(usersTable)
-          .where(and(eq(usersTable.id, assigneeId), eq(usersTable.organizationId, authed.piqUser.organizationId)))
+          .where(and(eq(usersTable.id, assigneeId), eq(usersTable.organizationId, orgId)))
           .limit(1);
         if (!newAssignee) {
           res.status(400).json({ error: "Assignee not found in this organization" });

@@ -25,6 +25,27 @@ export interface AuthenticatedRequest extends Request {
   user: JwtPayload;
 }
 
+/**
+ * Resolve the authenticated user's organization id for org-scoped routes.
+ * Returns the org id as a plain string, or sends a 403 and returns null when
+ * the user has no organization (e.g. a super-admin hitting an org-scoped route).
+ *
+ * Usage:
+ *   const orgId = requireOrgId(req, res);
+ *   if (!orgId) return;
+ *
+ * Works for both LeaveIQ (`req.user`) and PerformIQ (`req.piqUser`) routes,
+ * since the PerformIQ shim aliases `piqUser` to the same JWT payload as `user`.
+ */
+export function requireOrgId(req: Request, res: Response): string | null {
+  const org = (req as AuthenticatedRequest).user?.organizationId ?? null;
+  if (!org) {
+    res.status(403).json({ error: "Organization context required" });
+    return null;
+  }
+  return org;
+}
+
 export function signToken(payload: JwtPayload): string {
   return jwt.sign(payload, JWT_SECRET!, { expiresIn: "24h" });
 }

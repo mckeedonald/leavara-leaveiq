@@ -10,7 +10,7 @@ import {
   piqDocumentTypesTable,
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { requirePiqAuth, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { runAgentTurn } from "../../lib/piqAgent.js";
 import { logger } from "../../lib/logger.js";
 
@@ -20,6 +20,8 @@ const router = Router();
 router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { employeeId, documentTypeId } = req.body as { employeeId?: string; documentTypeId?: string };
 
     let employeeInfo: {
@@ -37,7 +39,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
         .where(
           and(
             eq(employeesTable.id, employeeId),
-            eq(employeesTable.organizationId, authed.piqUser.organizationId),
+            eq(employeesTable.organizationId, orgId),
           ),
         )
         .limit(1);
@@ -67,7 +69,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
     const [orgRow] = await db
       .select({ name: organizationsTable.name })
       .from(organizationsTable)
-      .where(eq(organizationsTable.id, authed.piqUser.organizationId))
+      .where(eq(organizationsTable.id, orgId))
       .limit(1);
     if (orgRow) orgName = orgRow.name;
 
@@ -83,7 +85,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
         .from(piqCasesTable)
         .where(and(
           eq(piqCasesTable.employeeId, employeeId),
-          eq(piqCasesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqCasesTable.organizationId, orgId),
         ))
         .orderBy(desc(piqCasesTable.createdAt))
         .limit(10);
@@ -103,7 +105,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
         .from(piqDocumentTypesTable)
         .where(and(
           eq(piqDocumentTypesTable.id, documentTypeId),
-          eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId),
+          eq(piqDocumentTypesTable.organizationId, orgId),
         ))
         .limit(1);
       if (docType?.examplePdfContent) examplePdfContent = docType.examplePdfContent;
@@ -113,7 +115,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
     const [session] = await db
       .insert(piqAgentSessionsTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         initiatedBy: authed.piqUser.sub,
         status: "active",
       })
@@ -122,7 +124,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
     // Fire the __INIT__ turn so the agent opens with its greeting
     const { text: greeting } = await runAgentTurn({
       sessionId: session.id,
-      organizationId: authed.piqUser.organizationId ?? "",
+      organizationId: orgId ?? "",
       userMessage: "__INIT__",
       isInit: true,
       userRole: authed.piqUser.role,
@@ -144,6 +146,8 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
 router.get("/performiq/agent/sessions/:sessionId/messages", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { sessionId } = req.params;
 
     const [session] = await db
@@ -152,7 +156,7 @@ router.get("/performiq/agent/sessions/:sessionId/messages", requirePiqAuth, asyn
       .where(
         and(
           eq(piqAgentSessionsTable.id, sessionId),
-          eq(piqAgentSessionsTable.organizationId, authed.piqUser.organizationId),
+          eq(piqAgentSessionsTable.organizationId, orgId),
         ),
       )
       .limit(1);
@@ -181,6 +185,8 @@ router.post(
   requirePiqAuth,
   async (req: Request, res: Response) => {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const sessionId = String(req.params["sessionId"]);
     const { message, employeeInfo } = req.body as {
       message?: string;
@@ -205,7 +211,7 @@ router.post(
       .where(
         and(
           eq(piqAgentSessionsTable.id, sessionId),
-          eq(piqAgentSessionsTable.organizationId, authed.piqUser.organizationId),
+          eq(piqAgentSessionsTable.organizationId, orgId),
         ),
       )
       .limit(1);
@@ -220,7 +226,7 @@ router.post(
     const [orgRow] = await db
       .select({ name: organizationsTable.name })
       .from(organizationsTable)
-      .where(eq(organizationsTable.id, authed.piqUser.organizationId))
+      .where(eq(organizationsTable.id, orgId))
       .limit(1);
     if (orgRow) orgName = orgRow.name;
 
@@ -233,7 +239,7 @@ router.post(
         .from(employeesTable)
         .where(and(
           eq(employeesTable.fullName, employeeInfo.fullName),
-          eq(employeesTable.organizationId, authed.piqUser.organizationId),
+          eq(employeesTable.organizationId, orgId),
         ))
         .limit(1);
       if (empRow) {
@@ -246,7 +252,7 @@ router.post(
           .from(piqCasesTable)
           .where(and(
             eq(piqCasesTable.employeeId, empRow.id),
-            eq(piqCasesTable.organizationId, authed.piqUser.organizationId),
+            eq(piqCasesTable.organizationId, orgId),
           ))
           .orderBy(desc(piqCasesTable.createdAt))
           .limit(10);
@@ -267,7 +273,7 @@ router.post(
     try {
       const { text, draft } = await runAgentTurn({
         sessionId,
-        organizationId: authed.piqUser.organizationId ?? "",
+        organizationId: orgId ?? "",
         userMessage: message.trim(),
         userRole: authed.piqUser.role,
         employeeInfo: employeeInfo ?? undefined,
@@ -295,6 +301,8 @@ router.post(
 router.delete("/performiq/agent/sessions/:sessionId", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { sessionId } = req.params;
 
     await db
@@ -303,7 +311,7 @@ router.delete("/performiq/agent/sessions/:sessionId", requirePiqAuth, async (req
       .where(
         and(
           eq(piqAgentSessionsTable.id, sessionId),
-          eq(piqAgentSessionsTable.organizationId, authed.piqUser.organizationId),
+          eq(piqAgentSessionsTable.organizationId, orgId),
         ),
       );
 

@@ -8,7 +8,7 @@ import {
   organizationsTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { requirePiqHrAdmin, requirePiqAuth, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { requirePiqHrAdmin, requirePiqAuth, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 
 // Accept all files; validate extension manually inside handler
@@ -38,6 +38,8 @@ router.post(
   handleMulterError,
   async (req: Request, res: Response) => {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { typeId } = req.params;
     const file = req.file;
 
@@ -57,7 +59,7 @@ router.post(
       const [existing] = await db
         .select({ id: piqDocumentTypesTable.id })
         .from(piqDocumentTypesTable)
-        .where(and(eq(piqDocumentTypesTable.id, typeId), eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId)))
+        .where(and(eq(piqDocumentTypesTable.id, typeId), eq(piqDocumentTypesTable.organizationId, orgId)))
         .limit(1);
       if (!existing) {
         res.status(404).json({ error: "Document type not found" });
@@ -85,10 +87,12 @@ router.post(
 router.get("/performiq/admin/document-types", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const types = await db
       .select()
       .from(piqDocumentTypesTable)
-      .where(eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId));
+      .where(eq(piqDocumentTypesTable.organizationId, orgId));
     res.json(types);
   } catch (err) {
     logger.error({ err }, "PIQ doc types list error");
@@ -100,6 +104,8 @@ router.get("/performiq/admin/document-types", requirePiqAuth, async (req: Reques
 router.post("/performiq/admin/document-types", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { baseType, displayLabel, requiresSupervisorReview, supervisorReviewRequired, requiresHrApproval } =
       req.body as {
         baseType?: string;
@@ -117,7 +123,7 @@ router.post("/performiq/admin/document-types", requirePiqHrAdmin, async (req: Re
     const [docType] = await db
       .insert(piqDocumentTypesTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         baseType: baseType as any,
         displayLabel,
         requiresSupervisorReview: requiresSupervisorReview ?? false,
@@ -137,12 +143,14 @@ router.post("/performiq/admin/document-types", requirePiqHrAdmin, async (req: Re
 router.patch("/performiq/admin/document-types/:typeId", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { typeId } = req.params;
 
     const [existing] = await db
       .select({ id: piqDocumentTypesTable.id })
       .from(piqDocumentTypesTable)
-      .where(and(eq(piqDocumentTypesTable.id, typeId), eq(piqDocumentTypesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqDocumentTypesTable.id, typeId), eq(piqDocumentTypesTable.organizationId, orgId)))
       .limit(1);
     if (!existing) {
       res.status(404).json({ error: "Document type not found" });
@@ -169,6 +177,8 @@ router.patch("/performiq/admin/document-types/:typeId", requirePiqHrAdmin, async
 router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const policies = await db
       .select({
         id: piqPoliciesTable.id,
@@ -182,7 +192,7 @@ router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res
         createdAt: piqPoliciesTable.createdAt,
       })
       .from(piqPoliciesTable)
-      .where(eq(piqPoliciesTable.organizationId, authed.piqUser.organizationId));
+      .where(eq(piqPoliciesTable.organizationId, orgId));
     res.json(policies);
   } catch (err) {
     logger.error({ err }, "PIQ policies list error");
@@ -194,6 +204,8 @@ router.get("/performiq/admin/policies", requirePiqAuth, async (req: Request, res
 router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { title, category, content, policyNumber, effectiveDate, pdfStorageKey, pdfBase64 } = req.body as {
       title?: string;
       category?: string;
@@ -222,7 +234,7 @@ router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request,
     const [policy] = await db
       .insert(piqPoliciesTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         title,
         category,
         content: storedContent,
@@ -243,12 +255,14 @@ router.post("/performiq/admin/policies", requirePiqHrAdmin, async (req: Request,
 router.patch("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { policyId } = req.params;
 
     const [existing] = await db
       .select({ id: piqPoliciesTable.id })
       .from(piqPoliciesTable)
-      .where(and(eq(piqPoliciesTable.id, policyId), eq(piqPoliciesTable.organizationId, authed.piqUser.organizationId)))
+      .where(and(eq(piqPoliciesTable.id, policyId), eq(piqPoliciesTable.organizationId, orgId)))
       .limit(1);
     if (!existing) {
       res.status(404).json({ error: "Policy not found" });
@@ -273,12 +287,14 @@ router.patch("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (re
 router.delete("/performiq/admin/policies/:policyId", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { policyId } = req.params;
 
     await db
       .update(piqPoliciesTable)
       .set({ isActive: false, updatedAt: new Date() })
-      .where(and(eq(piqPoliciesTable.id, policyId), eq(piqPoliciesTable.organizationId, authed.piqUser.organizationId)));
+      .where(and(eq(piqPoliciesTable.id, policyId), eq(piqPoliciesTable.organizationId, orgId)));
 
     res.json({ ok: true });
   } catch (err) {
@@ -324,10 +340,12 @@ router.post(
 router.get("/performiq/admin/hr-users", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const hrUsers = await db
       .select({ id: usersTable.id, fullName: usersTable.fullName, email: usersTable.email, role: usersTable.role })
       .from(usersTable)
-      .where(and(eq(usersTable.organizationId, authed.piqUser.organizationId), eq(usersTable.isActive, true)));
+      .where(and(eq(usersTable.organizationId, orgId), eq(usersTable.isActive, true)));
 
     res.json(hrUsers.filter((u: { id: string; fullName: string | null; email: string; role: string }) => ["hr_user", "hr_admin"].includes(u.role)));
   } catch (err) {

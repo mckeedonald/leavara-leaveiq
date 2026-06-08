@@ -8,6 +8,7 @@ import {
   requireAuth,
   requireHrAccess,
   requireHrAdmin,
+  requireOrgId,
   requirePerformIq,
   signToken,
   verifyToken,
@@ -37,6 +38,6 @@ function withPiqUser(
 export const requirePiqAuth = withPiqUser(requireAuth);
 export const requirePiqHrAccess = withPiqUser(requireHrAccess);
 export const requirePiqHrAdmin = withPiqUser(requireHrAdmin);
-export { requirePerformIq };
+export { requirePerformIq, requireOrgId };
 export const signPiqToken = signToken;
 export const verifyPiqToken = verifyToken;

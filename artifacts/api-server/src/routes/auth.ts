@@ -348,7 +348,8 @@ router.post("/auth/register", async (req: Request, res: Response): Promise<void>
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       position: position.trim(),
-      role: invite.role,
+      // Map legacy invite roles ("admin"|"user") to the unified role set.
+      role: invite.role === "admin" ? "hr_admin" : "hr_user",
     })
     .returning();
 

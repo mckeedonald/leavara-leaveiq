@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db, employeesTable, employeeImportLogTable } from "@workspace/db";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { requireAuth, requireHrAdmin, type AuthenticatedRequest } from "../lib/jwtAuth.js";
 import { parse as csvParse } from "csv-parse/sync";
 
@@ -95,21 +95,21 @@ router.get("/employees/hierarchy", requireAuth, async (req: Request, res: Respon
   }
 
   // Recursive CTE to get full reporting hierarchy under this manager
-  const result = await db.execute(`
+  const result = await db.execute(sql`
     WITH RECURSIVE hierarchy AS (
       SELECT id, full_name, position, location, department, manager_id, manager_name,
              start_date, avg_hours_worked, work_email, is_active, linked_user_id, data_source
       FROM employee
-      WHERE organization_id = $1 AND manager_id = $2 AND is_active = true
+      WHERE organization_id = ${organizationId} AND manager_id = ${managerEmployee.id} AND is_active = true
       UNION ALL
       SELECT e.id, e.full_name, e.position, e.location, e.department, e.manager_id, e.manager_name,
              e.start_date, e.avg_hours_worked, e.work_email, e.is_active, e.linked_user_id, e.data_source
       FROM employee e
       INNER JOIN hierarchy h ON e.manager_id = h.id
-      WHERE e.organization_id = $1 AND e.is_active = true
+      WHERE e.organization_id = ${organizationId} AND e.is_active = true
     )
     SELECT * FROM hierarchy
-  `, [organizationId, managerEmployee.id]);
+  `);
 
   res.json({ employees: result.rows });
 });
@@ -294,7 +294,7 @@ export async function processCsvUpload(params: {
 
   // Batch updates inside a transaction
   if (toUpdate.length > 0) {
-    await db.transaction(async (tx: typeof db) => {
+    await db.transaction(async (tx) => {
       for (const { id, row } of toUpdate) {
         await tx.update(employeesTable).set({
           fullName: row.fullName,
@@ -337,7 +337,7 @@ export async function processCsvUpload(params: {
   }
 
   if (managerUpdates.length > 0) {
-    await db.transaction(async (tx: typeof db) => {
+    await db.transaction(async (tx) => {
       for (const { id, managerId } of managerUpdates) {
         await tx.update(employeesTable).set({ managerId }).where(eq(employeesTable.id, id));
       }

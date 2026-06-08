@@ -15,7 +15,7 @@ const VALID_PROVIDERS: HrisProvider[] = ["bamboohr", "workday", "adp", "rippling
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function requireAdmin(req: AuthenticatedRequest, res: Response<any>): boolean {
-  if (req.user.role !== "admin") {
+  if (req.user.role !== "hr_admin") {
     res.status(403).json({ error: "Only organization admins can manage HRIS connections." });
     return false;
   }

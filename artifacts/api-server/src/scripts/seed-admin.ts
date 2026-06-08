@@ -31,7 +31,7 @@ await db.insert(usersTable).values({
   firstName,
   lastName,
   position,
-  role: "admin",
+  role: "hr_admin",
   isSuperAdmin: true,
 });
 

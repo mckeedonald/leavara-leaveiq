@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { db, employeesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { requirePiqAuth, requirePiqHrAdmin, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
+import { requirePiqAuth, requirePiqHrAdmin, requireOrgId, type PiqAuthenticatedRequest } from "../../lib/piqJwtAuth.js";
 import { logger } from "../../lib/logger.js";
 
 const router = Router();
@@ -10,6 +10,8 @@ const router = Router();
 router.get("/performiq/employees", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { search, isActive } = req.query as { search?: string; isActive?: string };
 
     const employees = await db
@@ -28,7 +30,7 @@ router.get("/performiq/employees", requirePiqAuth, async (req: Request, res: Res
         createdAt: employeesTable.createdAt,
       })
       .from(employeesTable)
-      .where(eq(employeesTable.organizationId, authed.piqUser.organizationId));
+      .where(eq(employeesTable.organizationId, orgId));
 
     let filtered = employees;
     if (isActive !== undefined) {
@@ -56,6 +58,8 @@ router.get("/performiq/employees", requirePiqAuth, async (req: Request, res: Res
 router.get("/performiq/employees/:employeeId", requirePiqAuth, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { employeeId } = req.params;
 
     const [employee] = await db
@@ -64,7 +68,7 @@ router.get("/performiq/employees/:employeeId", requirePiqAuth, async (req: Reque
       .where(
         and(
           eq(employeesTable.id, employeeId),
-          eq(employeesTable.organizationId, authed.piqUser.organizationId),
+          eq(employeesTable.organizationId, orgId),
         ),
       )
       .limit(1);
@@ -85,6 +89,8 @@ router.get("/performiq/employees/:employeeId", requirePiqAuth, async (req: Reque
 router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { fullName, personalEmail, workEmail, position, department, location, managerId, startDate, hrisId } =
       req.body as {
         fullName?: string;
@@ -108,7 +114,7 @@ router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res:
       const [manager] = await db
         .select({ id: employeesTable.id })
         .from(employeesTable)
-        .where(and(eq(employeesTable.id, managerId), eq(employeesTable.organizationId, authed.piqUser.organizationId)))
+        .where(and(eq(employeesTable.id, managerId), eq(employeesTable.organizationId, orgId)))
         .limit(1);
       if (!manager) {
         res.status(400).json({ error: "Manager not found in this organization" });
@@ -119,7 +125,7 @@ router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res:
     const [employee] = await db
       .insert(employeesTable)
       .values({
-        organizationId: authed.piqUser.organizationId,
+        organizationId: orgId,
         fullName,
         personalEmail,
         workEmail,
@@ -144,13 +150,15 @@ router.post("/performiq/employees", requirePiqHrAdmin, async (req: Request, res:
 router.patch("/performiq/employees/:employeeId", requirePiqHrAdmin, async (req: Request, res: Response) => {
   try {
     const authed = req as PiqAuthenticatedRequest;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { employeeId } = req.params;
 
     const [existing] = await db
       .select({ id: employeesTable.id })
       .from(employeesTable)
       .where(
-        and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, authed.piqUser.organizationId)),
+        and(eq(employeesTable.id, employeeId), eq(employeesTable.organizationId, orgId)),
       )
       .limit(1);
 

@@ -184,7 +184,7 @@ router.post("/superadmin/organizations/:orgId/users", requireSuperAdmin, async (
     firstName: firstName.trim(),
     lastName: lastName.trim(),
     position: position.trim(),
-    role: role === "admin" ? "admin" : "user",
+    role: role === "admin" ? "hr_admin" : "hr_user",
   }).returning({
     id: usersTable.id,
     email: usersTable.email,
