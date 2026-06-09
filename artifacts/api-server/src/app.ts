@@ -33,6 +33,15 @@ app.use(
   }),
 );
 
+// --- Static file serving (before CORS, so assets are never blocked) ---
+if (!isDev) {
+  const frontendDist = path.resolve(
+    process.cwd(),
+    process.env["FRONTEND_DIST_PATH"] ?? "artifacts/leaveiq/dist/public",
+  );
+  app.use(express.static(frontendDist));
+}
+
 // --- CORS ---
 const ALLOWED_ORIGINS = [
   /^https?:\/\/localhost(:\d+)?$/,
@@ -112,13 +121,12 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Serve frontend in production
+// SPA fallback in production — must come after API routes
 if (!isDev) {
   const frontendDist = path.resolve(
     process.cwd(),
     process.env["FRONTEND_DIST_PATH"] ?? "artifacts/leaveiq/dist/public",
   );
-  app.use(express.static(frontendDist));
   app.use((_req: Request, res: Response) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
