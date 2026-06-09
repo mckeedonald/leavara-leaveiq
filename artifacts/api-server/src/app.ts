@@ -43,7 +43,13 @@ const ALLOWED_ORIGINS = [
   /\.picard\.replit\.dev$/,
 ];
 
+// Scope CORS to the API only. Static frontend assets are same-origin and
+// must NOT be CORS-gated: Vite tags module scripts/styles with `crossorigin`,
+// so the browser sends an Origin header on those same-origin asset fetches.
+// A global CORS mount would reject them (403) on any host not in the
+// allowlist (e.g. the *.up.railway.app preview URL), blanking the page.
 app.use(
+  "/api",
   cors({
     origin(origin, callback) {
       if (!origin || ALLOWED_ORIGINS.some((r) => r.test(origin))) {
@@ -112,8 +118,15 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// Serve frontend in production
-if (!isDev) {
+// Serve the built frontend.
+// By default this is on whenever NODE_ENV !== "development" (production),
+// because in local development Vite's dev server serves the UI on its own
+// port. But a DEPLOYED dev environment (e.g. a Railway dev service) runs only
+// this API process — there is no Vite dev server — so set SERVE_FRONTEND=true
+// there to serve the built UI while keeping NODE_ENV=development behavior
+// (relaxed CSP/HSTS/rate limits).
+const serveFrontend = process.env["SERVE_FRONTEND"] === "true" || !isDev;
+if (serveFrontend) {
   const frontendDist = path.resolve(
     process.cwd(),
     process.env["FRONTEND_DIST_PATH"] ?? "artifacts/leaveiq/dist/public",
