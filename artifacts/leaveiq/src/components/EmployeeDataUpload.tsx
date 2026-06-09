@@ -39,7 +39,7 @@ interface EmployeeDataUploadProps {
 }
 
 export function EmployeeDataUpload({
-  accentColor = "#C97E59",
+  accentColor = "#C39A4A",
   heading = "Employee Data Upload",
 }: EmployeeDataUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,8 +100,8 @@ export function EmployeeDataUpload({
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-semibold text-base" style={{ color: "#3D2010" }}>{heading}</h3>
-          <p className="text-xs mt-0.5" style={{ color: "#8C7058" }}>
+          <h3 className="font-semibold text-base" style={{ color: "#1B2430" }}>{heading}</h3>
+          <p className="text-xs mt-0.5" style={{ color: "#5A6470" }}>
             Upload a CSV file to add or update employee records. Manager relationships are resolved automatically by name.
             Upload weekly to keep data current.
           </p>
@@ -117,7 +117,7 @@ export function EmployeeDataUpload({
 
       {/* Expected columns */}
       <div className="rounded-xl p-4 text-xs" style={{ background: accentBg, border: `1px solid ${accentColor}25` }}>
-        <p className="font-semibold mb-2" style={{ color: "#3D2010" }}>Required CSV columns</p>
+        <p className="font-semibold mb-2" style={{ color: "#1B2430" }}>Required CSV columns</p>
         <div className="flex flex-wrap gap-1.5">
           {CSV_HEADERS.map((h) => (
             <span
@@ -129,7 +129,7 @@ export function EmployeeDataUpload({
             </span>
           ))}
         </div>
-        <p className="mt-2" style={{ color: "#8C7058" }}>
+        <p className="mt-2" style={{ color: "#5A6470" }}>
           Only <span className="font-semibold">employee_name</span> is required. Include <span className="font-semibold">personal_email</span> so employees can receive notices at their personal address. Include manager_name to build the reporting hierarchy.
           Date format: YYYY-MM-DD. Data is shared across Guildlight Leave and Guildlight Grow.
         </p>
@@ -144,7 +144,7 @@ export function EmployeeDataUpload({
         className="relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
         style={{
           borderColor: isDragOver ? accentColor : accentColor + "50",
-          background: isDragOver ? accentBg : "#FAFAF8",
+          background: isDragOver ? accentBg : "#FAF9F4",
         }}
       >
         <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={onFileChange} />
@@ -153,7 +153,7 @@ export function EmployeeDataUpload({
         </div>
         {selectedFile ? (
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium" style={{ color: "#3D2010" }}>{selectedFile.name}</span>
+            <span className="text-sm font-medium" style={{ color: "#1B2430" }}>{selectedFile.name}</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
@@ -164,10 +164,10 @@ export function EmployeeDataUpload({
           </div>
         ) : (
           <>
-            <p className="text-sm font-medium" style={{ color: "#3D2010" }}>
+            <p className="text-sm font-medium" style={{ color: "#1B2430" }}>
               Drop your CSV here, or <span style={{ color: accentColor }}>click to browse</span>
             </p>
-            <p className="text-xs" style={{ color: "#8C7058" }}>.csv files only</p>
+            <p className="text-xs" style={{ color: "#5A6470" }}>.csv files only</p>
           </>
         )}
       </div>

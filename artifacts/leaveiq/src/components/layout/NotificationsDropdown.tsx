@@ -114,7 +114,7 @@ export function NotificationsDropdown() {
       <button
         onClick={handleOpen}
         className="p-2 rounded-full transition-colors relative hover:bg-black/5"
-        style={{ color: "#8C7058" }}
+        style={{ color: "#5A6470" }}
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
@@ -126,11 +126,11 @@ export function NotificationsDropdown() {
       {open && (
         <div
           className="absolute right-0 mt-2 w-80 rounded-2xl border bg-white shadow-xl z-50 overflow-hidden"
-          style={{ borderColor: "#D4C9BB" }}
+          style={{ borderColor: "#E0D8C5" }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#D4C9BB", background: "#FAF9F7" }}>
-            <span className="font-semibold text-sm" style={{ color: "#3D2010" }}>Notifications</span>
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#E0D8C5", background: "#FAF8F3" }}>
+            <span className="font-semibold text-sm" style={{ color: "#1B2430" }}>Notifications</span>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
@@ -140,14 +140,14 @@ export function NotificationsDropdown() {
                   Mark all read
                 </button>
               )}
-              <button onClick={() => setOpen(false)} className="p-0.5 rounded hover:bg-black/5" style={{ color: "#8C7058" }}>
+              <button onClick={() => setOpen(false)} className="p-0.5 rounded hover:bg-black/5" style={{ color: "#5A6470" }}>
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
           {/* Body */}
-          <div className="max-h-96 overflow-y-auto divide-y" style={{ borderColor: "#EDE9E3" }}>
+          <div className="max-h-96 overflow-y-auto divide-y" style={{ borderColor: "#EAE4D6" }}>
             {loading && notifications.length === 0 && (
               <div className="py-10 text-center text-sm text-muted-foreground">Loading…</div>
             )}

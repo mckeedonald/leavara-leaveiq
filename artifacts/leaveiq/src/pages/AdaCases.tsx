@@ -22,7 +22,7 @@ interface AdaCaseSummary {
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   pending_review:     { bg: "#FFF7ED", text: "#92400E", border: "#FDE68A" },
   in_process:         { bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
-  awaiting_physician: { bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
+  awaiting_physician: { bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
   approved:           { bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
   denied:             { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
   closed:             { bg: "#F9FAFB", text: "#374151", border: "#E5E7EB" },
@@ -114,8 +114,8 @@ function CreateAdaCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         {/* Header */}
         <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#EDE9FE" }}>
-              <ShieldCheck className="w-4 h-4" style={{ color: "#7C3AED" }} />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#F2E8CE" }}>
+              <ShieldCheck className="w-4 h-4" style={{ color: "#C39A4A" }} />
             </div>
             <h2 className="text-lg font-display font-bold">New ADA Case</h2>
           </div>
@@ -220,7 +220,7 @@ function CreateAdaCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
               type="submit"
               disabled={submitting}
               className="px-5 py-2.5 font-medium text-white rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-2 text-sm hover:opacity-90"
-              style={{ background: "#7C3AED" }}
+              style={{ background: "#C39A4A" }}
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Create ADA Case
@@ -262,8 +262,8 @@ export default function AdaCases() {
     <AppLayout>
       <div className="mb-8 animate-in opacity-0 stagger-1">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#EDE9FE" }}>
-            <ShieldCheck className="w-5 h-5" style={{ color: "#7C3AED" }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#F2E8CE" }}>
+            <ShieldCheck className="w-5 h-5" style={{ color: "#C39A4A" }} />
           </div>
           <div>
             <h2 className="text-3xl font-display font-bold text-foreground">ADA Cases</h2>
@@ -301,7 +301,7 @@ export default function AdaCases() {
             <button
               onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white whitespace-nowrap shadow-sm hover:opacity-90 transition-all"
-              style={{ background: "#7C3AED" }}
+              style={{ background: "#C39A4A" }}
             >
               <Plus className="w-4 h-4" /> New ADA Case
             </button>
@@ -310,7 +310,7 @@ export default function AdaCases() {
 
         {isLoading ? (
           <div className="p-20 flex flex-col items-center justify-center text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: "#7C3AED" }} />
+            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: "#C39A4A" }} />
             <p>Loading ADA cases...</p>
           </div>
         ) : (
@@ -330,7 +330,7 @@ export default function AdaCases() {
                 {cases.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-16 text-center text-muted-foreground">
-                      <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" style={{ color: "#7C3AED" }} />
+                      <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" style={{ color: "#C39A4A" }} />
                       <p className="font-medium">No ADA cases found</p>
                       <p className="text-xs mt-1">Cases appear here when employees submit accommodation requests, or create one manually above.</p>
                     </td>
@@ -343,7 +343,7 @@ export default function AdaCases() {
                       <tr key={c.id} className="hover:bg-muted/20 transition-colors group">
                         <td className="px-6 py-4">
                           <Link href={`/leaveiq/ada-cases/${c.id}`}>
-                            <span className="font-mono font-semibold text-xs hover:underline cursor-pointer" style={{ color: "#7C3AED" }}>
+                            <span className="font-mono font-semibold text-xs hover:underline cursor-pointer" style={{ color: "#C39A4A" }}>
                               {c.caseNumber}
                             </span>
                           </Link>

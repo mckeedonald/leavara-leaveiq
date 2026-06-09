@@ -5,15 +5,15 @@ import { Eye, EyeOff } from "lucide-react";
 const API_BASE = "";
 
 const C = {
-  bg: "#F0EEE9",
+  bg: "#F4F1EA",
   card: "#FFFFFF",
-  border: "#D4C9BB",
-  terracotta: "#C97E59",
-  textDark: "#3D2010",
-  textBody: "#5C3D28",
-  textMuted: "#8C7058",
-  inputBg: "#F7F4F0",
-  inputBorder: "#C8BAA8",
+  border: "#E0D8C5",
+  terracotta: "#C39A4A",
+  textDark: "#1B2430",
+  textBody: "#2E3742",
+  textMuted: "#5A6470",
+  inputBg: "#FAF8F3",
+  inputBorder: "#D8CEB8",
   errorBg: "#FDF0EE",
   errorBorder: "#E8A898",
   errorText: "#9E4030",
@@ -68,7 +68,7 @@ export default function ResetPassword() {
   const inputClass = "w-full px-4 py-2.5 rounded-xl text-sm transition-all outline-none focus:ring-2";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8DDD4 100%)` }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8E0D2 100%)` }}>
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <img src="/leavara-logo.png" alt="Guildlight" className="h-16 w-16 object-contain mb-4" />

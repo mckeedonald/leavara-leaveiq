@@ -69,7 +69,7 @@ interface AdaCaseDetailResponse {
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   pending_review:     { bg: "#FFF7ED", text: "#92400E", border: "#FDE68A" },
   in_process:         { bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
-  awaiting_physician: { bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
+  awaiting_physician: { bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
   approved:           { bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
   denied:             { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
   closed:             { bg: "#F9FAFB", text: "#374151", border: "#E5E7EB" },
@@ -144,10 +144,10 @@ function PhysicianCertModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)" }}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#DDD6FE" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#ECE0C2" }}>
           <div className="flex items-center gap-2">
-            <Stethoscope className="w-5 h-5" style={{ color: "#7C3AED" }} />
-            <h3 className="font-semibold" style={{ color: "#4C1D95" }}>Physician Certification Request</h3>
+            <Stethoscope className="w-5 h-5" style={{ color: "#C39A4A" }} />
+            <h3 className="font-semibold" style={{ color: "#7A5E28" }}>Physician Certification Request</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">✕</button>
         </div>
@@ -183,7 +183,7 @@ function PhysicianCertModal({
             </div>
           ) : !letter ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-              <Stethoscope className="w-12 h-12" style={{ color: "#DDD6FE" }} />
+              <Stethoscope className="w-12 h-12" style={{ color: "#ECE0C2" }} />
               <p className="text-sm text-muted-foreground max-w-sm">
                 Generate an ADA-compliant physician certification request. This letter requests only functional limitations
                 — not a diagnosis — in accordance with EEOC guidance.
@@ -193,7 +193,7 @@ function PhysicianCertModal({
                 onClick={generate}
                 disabled={loading}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl text-white font-medium disabled:opacity-60"
-                style={{ background: "#7C3AED" }}
+                style={{ background: "#C39A4A" }}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                 Generate Letter
@@ -202,7 +202,7 @@ function PhysicianCertModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>
+                <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>
                   Send to (email)
                 </label>
                 <input
@@ -211,17 +211,17 @@ function PhysicianCertModal({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="employee@company.com"
                   className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200"
-                  style={{ borderColor: "#DDD6FE" }}
+                  style={{ borderColor: "#ECE0C2" }}
                 />
               </div>
               <div>
-                <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>Letter Preview</label>
+                <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>Letter Preview</label>
                 <textarea
                   value={letter}
                   onChange={(e) => setLetter(e.target.value)}
                   rows={16}
                   className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200 resize-none font-mono"
-                  style={{ borderColor: "#DDD6FE" }}
+                  style={{ borderColor: "#ECE0C2" }}
                 />
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
@@ -229,10 +229,10 @@ function PhysicianCertModal({
           )}
         </div>
 
-        <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#EDE9FE" }}>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#F2E8CE" }}>
           {sendResult ? (
             <button onClick={onClose} className="text-sm px-5 py-2 rounded-xl text-white font-medium"
-              style={{ background: "#7C3AED" }}>
+              style={{ background: "#C39A4A" }}>
               Done
             </button>
           ) : letter ? (
@@ -245,7 +245,7 @@ function PhysicianCertModal({
                 onClick={send}
                 disabled={!email.trim() || loading}
                 className="flex items-center gap-2 text-sm px-5 py-2 rounded-xl text-white font-medium disabled:opacity-50"
-                style={{ background: "#7C3AED" }}
+                style={{ background: "#C39A4A" }}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Send Physician Cert
@@ -308,50 +308,50 @@ function ScheduleFollowUpModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)" }}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#DDD6FE" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#ECE0C2" }}>
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" style={{ color: "#7C3AED" }} />
-            <h3 className="font-semibold" style={{ color: "#4C1D95" }}>Schedule Follow-Up Meeting</h3>
+            <Calendar className="w-5 h-5" style={{ color: "#C39A4A" }} />
+            <h3 className="font-semibold" style={{ color: "#7A5E28" }}>Schedule Follow-Up Meeting</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
         </div>
 
         <div className="p-6 flex flex-col gap-4">
           <div>
-            <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>Meeting Title</label>
+            <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>Meeting Title</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200"
-              style={{ borderColor: "#DDD6FE" }} />
+              style={{ borderColor: "#ECE0C2" }} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>Date</label>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>Date</label>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200"
-                style={{ borderColor: "#DDD6FE" }} />
+                style={{ borderColor: "#ECE0C2" }} />
             </div>
             <div>
-              <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>Time</label>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>Time</label>
               <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
                 className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200"
-                style={{ borderColor: "#DDD6FE" }} />
+                style={{ borderColor: "#ECE0C2" }} />
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>
+            <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>
               Attendee Emails <span className="font-normal text-muted-foreground">(comma-separated)</span>
             </label>
             <input type="text" value={extraEmails} onChange={(e) => setExtraEmails(e.target.value)}
               placeholder="employee@company.com, manager@company.com"
               className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200"
-              style={{ borderColor: "#DDD6FE" }} />
+              style={{ borderColor: "#ECE0C2" }} />
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1.5" style={{ color: "#5B21B6" }}>Meeting Notes / Agenda (optional)</label>
+            <label className="text-xs font-medium block mb-1.5" style={{ color: "#9C7A35" }}>Meeting Notes / Agenda (optional)</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
               placeholder="Topics to cover in this meeting…"
               className="w-full text-sm border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200 resize-none"
-              style={{ borderColor: "#DDD6FE" }} />
+              style={{ borderColor: "#ECE0C2" }} />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <p className="text-xs text-muted-foreground">
@@ -359,14 +359,14 @@ function ScheduleFollowUpModal({
           </p>
         </div>
 
-        <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#EDE9FE" }}>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "#F2E8CE" }}>
           <button onClick={onClose} className="text-sm px-4 py-2 rounded-xl border hover:bg-gray-50"
             style={{ borderColor: "#D1D5DB", color: "#374151" }}>Cancel</button>
           <button
             onClick={schedule}
             disabled={!date || !time || loading}
             className="flex items-center gap-2 text-sm px-5 py-2 rounded-xl text-white font-medium disabled:opacity-50"
-            style={{ background: "#7C3AED" }}
+            style={{ background: "#C39A4A" }}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
             Send Invite
@@ -417,13 +417,13 @@ function UpdateStatusDropdown({
         onClick={() => setOpen((o) => !o)}
         disabled={loading}
         className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
-        style={{ borderColor: "#DDD6FE", color: "#5B21B6" }}
+        style={{ borderColor: "#ECE0C2", color: "#9C7A35" }}
       >
         <Pencil className="w-3.5 h-3.5" /> Update Status
         <ChevronDown className="w-3.5 h-3.5" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border shadow-lg min-w-[180px] py-1" style={{ borderColor: "#DDD6FE" }}>
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl border shadow-lg min-w-[180px] py-1" style={{ borderColor: "#ECE0C2" }}>
           {statuses.map((s) => (
             <button
               key={s.value}
@@ -489,7 +489,7 @@ function EditableEmailRow({
               onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") cancel(); }}
               autoFocus
               className="text-sm border rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-violet-200 flex-1 min-w-0"
-              style={{ borderColor: "#DDD6FE" }}
+              style={{ borderColor: "#ECE0C2" }}
             />
             <button onClick={save} disabled={saving || !value.trim()}
               className="p-1 rounded-lg text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors">
@@ -579,7 +579,7 @@ export default function AdaCase() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#7C3AED" }} />
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#C39A4A" }} />
         </div>
       </AppLayout>
     );
@@ -635,7 +635,7 @@ export default function AdaCase() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-sm"
-              style={{ background: "linear-gradient(135deg, #7C3AED, #A855F7)" }}>
+              style={{ background: "linear-gradient(135deg, #C39A4A, #C9A455)" }}>
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -652,7 +652,7 @@ export default function AdaCase() {
             {/* Claim / assigned badge */}
             {adaCase.assignedToUserId ? (
               <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border"
-                style={{ background: "#EDE9FE", color: "#5B21B6", borderColor: "#DDD6FE" }}>
+                style={{ background: "#F2E8CE", color: "#9C7A35", borderColor: "#ECE0C2" }}>
                 <User className="w-3 h-3" /> Assigned to: {(adaCase as any).assignedToName ?? "HR"}
               </span>
             ) : (
@@ -660,9 +660,9 @@ export default function AdaCase() {
                 onClick={handleClaimCase}
                 disabled={isClaiming}
                 className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all disabled:opacity-50"
-                style={{ borderColor: "#DDD6FE", color: "#5B21B6", background: "#F5F3FF" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#EDE9FE"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#F5F3FF"; }}
+                style={{ borderColor: "#ECE0C2", color: "#9C7A35", background: "#FAF4E6" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#F2E8CE"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#FAF4E6"; }}
               >
                 {isClaiming ? <Loader2 className="w-3 h-3 animate-spin" /> : <User className="w-3 h-3" />}
                 {isClaiming ? "Claiming…" : "Claim Case"}
@@ -671,7 +671,7 @@ export default function AdaCase() {
             <button
               onClick={() => setShowPhysicianModal(true)}
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border font-medium transition-colors hover:bg-violet-50"
-              style={{ borderColor: "#DDD6FE", color: "#5B21B6" }}
+              style={{ borderColor: "#ECE0C2", color: "#9C7A35" }}
             >
               <Stethoscope className="w-3.5 h-3.5" />
               {adaCase.physicianCertSentAt ? "Resend Physician Cert" : "Send Physician Cert"}
@@ -679,12 +679,12 @@ export default function AdaCase() {
             <button
               onClick={() => setShowScheduleModal(true)}
               className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border font-medium transition-colors hover:bg-violet-50"
-              style={{ borderColor: "#DDD6FE", color: "#5B21B6" }}
+              style={{ borderColor: "#ECE0C2", color: "#9C7A35" }}
             >
               <Calendar className="w-3.5 h-3.5" />
               Schedule Follow-Up
               {suggestedFollowUpDate && (
-                <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full" style={{ background: "#DDD6FE", color: "#5B21B6" }}>
+                <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full" style={{ background: "#ECE0C2", color: "#9C7A35" }}>
                   {new Date(suggestedFollowUpDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
               )}
@@ -696,8 +696,8 @@ export default function AdaCase() {
 
       <div className="flex flex-col gap-6 animate-in opacity-0 stagger-2">
         {/* Case info card */}
-        <div className="bg-card border rounded-2xl p-6 shadow-sm" style={{ borderColor: "#DDD6FE" }}>
-            <h3 className="font-semibold text-sm mb-4" style={{ color: "#4C1D95" }}>Case Details</h3>
+        <div className="bg-card border rounded-2xl p-6 shadow-sm" style={{ borderColor: "#ECE0C2" }}>
+            <h3 className="font-semibold text-sm mb-4" style={{ color: "#7A5E28" }}>Case Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
               <InfoRow icon={<User className="w-4 h-4" />} label="Employee" value={employeeName} />
               {adaCase.employeeNumber && (
@@ -731,22 +731,22 @@ export default function AdaCase() {
             </div>
 
             {adaCase.functionalLimitations && (
-              <div className="mt-5 pt-5 border-t" style={{ borderColor: "#EDE9FE" }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#7C3AED" }}>Functional Limitations</p>
+              <div className="mt-5 pt-5 border-t" style={{ borderColor: "#F2E8CE" }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#C39A4A" }}>Functional Limitations</p>
                 <p className="text-sm leading-relaxed text-foreground">{adaCase.functionalLimitations}</p>
               </div>
             )}
 
             {adaCase.accommodationRequested && (
               <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#7C3AED" }}>Accommodation Requested</p>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#C39A4A" }}>Accommodation Requested</p>
                 <p className="text-sm leading-relaxed text-foreground">{adaCase.accommodationRequested}</p>
               </div>
             )}
 
             {adaCase.additionalNotes && (
               <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#7C3AED" }}>Additional Notes</p>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#C39A4A" }}>Additional Notes</p>
                 <p className="text-sm leading-relaxed text-muted-foreground">{adaCase.additionalNotes}</p>
               </div>
             )}
@@ -819,8 +819,8 @@ export default function AdaCase() {
           />
 
           {/* Quick actions — horizontal row */}
-          <div className="bg-card border rounded-2xl p-5 shadow-sm" style={{ borderColor: "#DDD6FE" }}>
-            <p className="font-semibold text-sm mb-4" style={{ color: "#4C1D95" }}>Quick Actions</p>
+          <div className="bg-card border rounded-2xl p-5 shadow-sm" style={{ borderColor: "#ECE0C2" }}>
+            <p className="font-semibold text-sm mb-4" style={{ color: "#7A5E28" }}>Quick Actions</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <QuickAction
                 icon={<Stethoscope className="w-4 h-4" />}
@@ -862,19 +862,19 @@ export default function AdaCase() {
           <AdaInteractiveLog entries={log} caseId={caseId} onRefresh={refresh} />
 
           {/* Case messaging */}
-          <div className="bg-card border rounded-2xl overflow-hidden shadow-sm" style={{ borderColor: "#DDD6FE" }}>
-            <div className="px-5 py-4 border-b flex items-center gap-2" style={{ background: "#F5F3FF", borderColor: "#DDD6FE" }}>
-              <Mail className="w-4 h-4" style={{ color: "#7C3AED" }} />
-              <span className="font-semibold text-sm" style={{ color: "#4C1D95" }}>Employee Messaging</span>
+          <div className="bg-card border rounded-2xl overflow-hidden shadow-sm" style={{ borderColor: "#ECE0C2" }}>
+            <div className="px-5 py-4 border-b flex items-center gap-2" style={{ background: "#FAF4E6", borderColor: "#ECE0C2" }}>
+              <Mail className="w-4 h-4" style={{ color: "#C39A4A" }} />
+              <span className="font-semibold text-sm" style={{ color: "#7A5E28" }}>Employee Messaging</span>
             </div>
             <div className="p-4">
               <CaseMessaging
                 fetchMessages={fetchMessages}
                 sendMessage={sendMessage}
                 viewerType="hr"
-                accentColor="#7C3AED"
-                borderColor="#DDD6FE"
-                cardBg="#FAFAFE"
+                accentColor="#C39A4A"
+                borderColor="#ECE0C2"
+                cardBg="#FAF9F4"
               />
             </div>
           </div>
@@ -900,8 +900,8 @@ function QuickAction({
   label,
   sublabel,
   onClick,
-  accent = "#5B21B6",
-  accentBg = "#F5F3FF",
+  accent = "#9C7A35",
+  accentBg = "#FAF4E6",
 }: {
   icon: React.ReactNode;
   label: string;
@@ -914,7 +914,7 @@ function QuickAction({
     <button
       onClick={onClick}
       className="flex items-center gap-3 p-3 rounded-xl border text-left w-full transition-colors hover:opacity-90"
-      style={{ borderColor: "#DDD6FE", background: accentBg }}
+      style={{ borderColor: "#ECE0C2", background: accentBg }}
     >
       <span style={{ color: accent }}>{icon}</span>
       <div>

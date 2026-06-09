@@ -23,51 +23,51 @@
 }
 
 :root {
-  /* Guildlight Palette — Cloud Dancer / Khaki / Mocha / Rose / Terracotta */
-  --background: 40 22% 93%;        /* Cloud Dancer #F0EEE9 */
-  --foreground: 22 85% 15%;        /* Text Dark #3D2010 */
+  /* Guildlight Palette — Midnight Navy / Antique Brass / Warm Ivory / Slate / Sage */
+  --background: 42 30% 94%;         /* Warm Ivory #F4F1EA */
+  --foreground: 214 28% 15%;        /* Midnight Navy #1B2430 */
 
-  --primary: 22 50% 57%;           /* Terracotta #C97E59 */
-  --primary-foreground: 0 0% 100%;
+  --primary: 40 50% 53%;            /* Antique Brass #C39A4A */
+  --primary-foreground: 214 28% 15%;/* Navy text on brass (AA: ~5.7:1) */
 
-  --secondary: 35 20% 82%;         /* Light Khaki */
-  --secondary-foreground: 22 85% 15%;
+  --secondary: 100 12% 90%;         /* Pale Sage */
+  --secondary-foreground: 214 28% 15%;
 
-  --muted: 38 22% 88%;             /* Warm muted */
-  --muted-foreground: 22 28% 48%;
+  --muted: 42 20% 90%;              /* Warm muted ivory */
+  --muted-foreground: 213 11% 40%;  /* Slate #5A6470 */
 
-  --accent: 38 22% 88%;
-  --accent-foreground: 22 85% 15%;
+  --accent: 100 12% 90%;            /* Pale Sage */
+  --accent-foreground: 214 28% 15%;
 
   --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 35 20% 80%;            /* Warm khaki border */
-  --ring: 22 50% 57%;
+  --border: 40 18% 84%;             /* Warm ivory border */
+  --ring: 40 50% 53%;               /* Brass */
 
   --card: 0 0% 100%;
-  --card-foreground: 22 85% 15%;
+  --card-foreground: 214 28% 15%;
 
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 48%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
+  --background: 214 28% 10%;        /* Deep Navy */
+  --foreground: 42 30% 94%;         /* Warm Ivory */
+  --primary: 40 50% 53%;            /* Antique Brass */
+  --primary-foreground: 214 28% 12%;
+  --secondary: 213 16% 22%;         /* Slate-navy surface */
+  --secondary-foreground: 42 30% 94%;
+  --muted: 213 16% 22%;
+  --muted-foreground: 213 11% 65%;  /* Light Slate */
+  --accent: 103 13% 30%;            /* Deep Sage */
+  --accent-foreground: 42 30% 94%;
+  --destructive: 0 62.8% 45%;
+  --destructive-foreground: 42 30% 94%;
+  --border: 213 16% 24%;
+  --ring: 40 50% 53%;
+  --card: 214 28% 13%;
+  --card-foreground: 42 30% 94%;
 }
 
 @layer base {

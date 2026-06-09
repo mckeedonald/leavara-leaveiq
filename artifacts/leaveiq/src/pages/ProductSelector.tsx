@@ -4,13 +4,13 @@ import { useAuth } from "@/lib/auth";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 const C = {
-  bg: "#F0EEE9",
+  bg: "#F4F1EA",
   card: "#FFFFFF",
-  border: "#D4C9BB",
-  terracotta: "#C97E59",
-  teal: "#2E7B7B",
-  textDark: "#3D2010",
-  textMuted: "#A07860",
+  border: "#E0D8C5",
+  terracotta: "#C39A4A",
+  teal: "#7C9273",
+  textDark: "#1B2430",
+  textMuted: "#A89066",
 };
 
 export default function ProductSelector() {
@@ -25,7 +25,7 @@ export default function ProductSelector() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8DDD4 100%)` }}
+      style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8E0D2 100%)` }}
     >
       <div className="mb-8 text-center">
         <img src="/leavara-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
@@ -67,7 +67,7 @@ export default function ProductSelector() {
           <button
             onClick={() => navigate("/performiq/dashboard")}
             className="flex-1 rounded-2xl p-8 text-left shadow-md border hover:shadow-lg transition-shadow group"
-            style={{ background: C.card, borderColor: "#C4D9D9" }}
+            style={{ background: C.card, borderColor: "#D2DBC9" }}
           >
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
@@ -75,8 +75,8 @@ export default function ProductSelector() {
             >
               <TrendingUp className="w-6 h-6" style={{ color: C.teal }} />
             </div>
-            <h2 className="text-lg font-bold mb-1" style={{ color: "#1A3333" }}>Guildlight Grow</h2>
-            <p className="text-sm" style={{ color: "#6B9090" }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: "#3A4A33" }}>Guildlight Grow</h2>
+            <p className="text-sm" style={{ color: "#8DA384" }}>
               Performance management, disciplinary documentation, and coaching workflows
             </p>
             <div

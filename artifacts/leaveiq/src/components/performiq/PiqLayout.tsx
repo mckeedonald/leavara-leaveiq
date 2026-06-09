@@ -15,15 +15,15 @@ import { cn } from "@/lib/utils";
 import { usePiqAuth, usePiqRole } from "@/lib/piqAuth";
 
 const S = {
-  sidebar: "#2E7B7B",
-  sidebarBorder: "#1F5858",
+  sidebar: "#7C9273",
+  sidebarBorder: "#54684B",
   activeItemBg: "rgba(255,255,255,0.20)",
   textOnDark: "#FFFFFF",
   textMuted: "rgba(255,255,255,0.72)",
   userCardBg: "rgba(0,0,0,0.14)",
   userCardBorder: "rgba(255,255,255,0.18)",
   headerBg: "#FFFFFF",
-  headerBorder: "#D4C9BB",
+  headerBorder: "#E0D8C5",
 };
 
 interface PiqLayoutProps {
@@ -76,7 +76,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         <div className="flex items-center gap-2">
           <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Perform<span style={{ color: "#A8D9D9" }}>IQ</span>
+            Perform<span style={{ color: "#BFCDB3" }}>IQ</span>
           </span>
         </div>
         <button
@@ -147,7 +147,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           <img src="/leavara-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Perform<span style={{ color: "#A8D9D9" }}>IQ</span>
+              Perform<span style={{ color: "#BFCDB3" }}>IQ</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMuted }}>
               Performance Management
@@ -226,8 +226,8 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           style={{ background: S.headerBg, borderBottom: `1px solid ${S.headerBorder}` }}
         >
           <div />
-          <div className="flex items-center gap-2 text-sm" style={{ color: "#8C7058" }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: "#2E7B7B" }} />
+          <div className="flex items-center gap-2 text-sm" style={{ color: "#5A6470" }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: "#7C9273" }} />
             <span className="font-medium">Guildlight Grow</span>
           </div>
         </header>

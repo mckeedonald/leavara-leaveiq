@@ -31,13 +31,13 @@ interface PiqDocumentContent {
 }
 
 const C = {
-  perf: "#2E7B7B",
+  perf: "#7C9273",
   card: "#FFFFFF",
-  border: "#C4D9D9",
-  textDark: "#1A3333",
-  textMuted: "#6B9090",
-  agentBg: "#F0F5F5",
-  userBg: "#2E7B7B",
+  border: "#D2DBC9",
+  textDark: "#3A4A33",
+  textMuted: "#8DA384",
+  agentBg: "#EEF0E9",
+  userBg: "#7C9273",
 };
 
 interface Employee {
@@ -294,7 +294,7 @@ export default function NewCase() {
                         ? C.perf
                         : STEPS.findIndex((x) => x.key === step) > i
                         ? "#D1FAE5"
-                        : "#EDF5F5",
+                        : "#ECF0E9",
                     color:
                       step === s.key
                         ? "#FFF"
@@ -495,7 +495,7 @@ export default function NewCase() {
                   {msg.role === "user" && (
                     <div
                       className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1"
-                      style={{ background: "#E0F0F0" }}
+                      style={{ background: "#E8EEE0" }}
                     >
                       <User className="w-3.5 h-3.5" style={{ color: C.perf }} />
                     </div>

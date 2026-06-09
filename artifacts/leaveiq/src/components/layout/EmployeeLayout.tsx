@@ -11,17 +11,17 @@ interface EmployeeLayoutProps {
 
 export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName }: EmployeeLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#F0EEE9" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#F4F1EA" }}>
       {/* Header */}
       <header
         className="h-16 backdrop-blur-md flex items-center px-6 gap-4 sticky top-0 z-50 shadow-sm"
-        style={{ background: "rgba(255,255,255,0.88)", borderBottom: "1px solid #D4C9BB" }}
+        style={{ background: "rgba(255,255,255,0.88)", borderBottom: "1px solid #E0D8C5" }}
       >
         {showBack && (
           <Link
             href="/"
             className="p-2 rounded-full transition-colors"
-            style={{ color: "#8C7058" }}
+            style={{ color: "#5A6470" }}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -29,8 +29,8 @@ export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName
         <div className="flex items-center gap-3">
           <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <div>
-            <h1 className="font-bold text-lg leading-none" style={{ color: "#3D2010" }}>Guildlight Leave</h1>
-            <p className="text-[10px] uppercase tracking-wider font-semibold leading-none mt-0.5" style={{ color: "#EAA292" }}>Employee Portal</p>
+            <h1 className="font-bold text-lg leading-none" style={{ color: "#1B2430" }}>Guildlight Leave</h1>
+            <p className="text-[10px] uppercase tracking-wider font-semibold leading-none mt-0.5" style={{ color: "#D9B87A" }}>Employee Portal</p>
           </div>
           {orgLogoUrl && (
             <>
@@ -43,7 +43,7 @@ export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName
           <Link
             href="/login"
             className="text-sm font-medium transition-opacity hover:opacity-80"
-            style={{ color: "#C97E59" }}
+            style={{ color: "#C39A4A" }}
           >
             HR Sign In →
           </Link>

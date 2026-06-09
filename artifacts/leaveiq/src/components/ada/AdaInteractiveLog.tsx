@@ -32,15 +32,15 @@ const ENTRY_CONFIG: Record<string, {
   hr_note:               { icon: <User className="w-4 h-4" />,          label: "HR Note",              bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
   employee_response:     { icon: <User className="w-4 h-4" />,          label: "Employee Response",    bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
   meeting_record:        { icon: <Calendar className="w-4 h-4" />,      label: "Meeting Record",       bg: "#FFF7ED", text: "#92400E", border: "#FDE68A" },
-  physician_cert_sent:   { icon: <Stethoscope className="w-4 h-4" />,   label: "Physician Cert Sent",  bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
+  physician_cert_sent:   { icon: <Stethoscope className="w-4 h-4" />,   label: "Physician Cert Sent",  bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
   physician_cert_received:{ icon: <Stethoscope className="w-4 h-4" />,  label: "Physician Cert Received", bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
   accommodation_approved:{ icon: <CheckCircle className="w-4 h-4" />,   label: "Accommodation Approved", bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
   accommodation_denied:  { icon: <XCircle className="w-4 h-4" />,       label: "Accommodation Denied", bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
   letter_sent:           { icon: <Mail className="w-4 h-4" />,          label: "Letter Sent",          bg: "#F0F9FF", text: "#075985", border: "#BAE6FD" },
   follow_up_scheduled:   { icon: <Calendar className="w-4 h-4" />,      label: "Follow-up Scheduled",  bg: "#FFF7ED", text: "#92400E", border: "#FDE68A" },
-  jan_lookup:            { icon: <ClipboardList className="w-4 h-4" />, label: "JAN Research",         bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
+  jan_lookup:            { icon: <ClipboardList className="w-4 h-4" />, label: "JAN Research",         bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
   ada_determination:     { icon: <AlertCircle className="w-4 h-4" />,   label: "ADA Determination",    bg: "#FEF3C7", text: "#92400E", border: "#FDE68A" },
-  ada_agent:             { icon: <Bot className="w-4 h-4" />,           label: "Ada Agent",            bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
+  ada_agent:             { icon: <Bot className="w-4 h-4" />,           label: "Ada Agent",            bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
 };
 
 function getConfig(entryType: string) {
@@ -97,7 +97,7 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
         <button
           onClick={() => setOpen(true)}
           className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-xl border transition-colors hover:bg-violet-50"
-          style={{ borderColor: "#DDD6FE", color: "#5B21B6" }}
+          style={{ borderColor: "#ECE0C2", color: "#9C7A35" }}
         >
           <Plus className="w-4 h-4" /> Add Log Entry
         </button>
@@ -105,16 +105,16 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
         <form
           onSubmit={handleSubmit}
           className="rounded-xl border p-4 flex flex-col gap-3"
-          style={{ borderColor: "#DDD6FE", background: "#FAFAFE" }}
+          style={{ borderColor: "#ECE0C2", background: "#FAF9F4" }}
         >
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="text-xs font-medium block mb-1" style={{ color: "#5B21B6" }}>Entry Type</label>
+              <label className="text-xs font-medium block mb-1" style={{ color: "#9C7A35" }}>Entry Type</label>
               <select
                 value={entryType}
                 onChange={(e) => setEntryType(e.target.value)}
                 className="w-full text-sm border rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-violet-200"
-                style={{ borderColor: "#DDD6FE" }}
+                style={{ borderColor: "#ECE0C2" }}
               >
                 {Object.entries(ENTRY_CONFIG).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -123,14 +123,14 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: "#5B21B6" }}>Notes</label>
+            <label className="text-xs font-medium block mb-1" style={{ color: "#9C7A35" }}>Notes</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={3}
               placeholder="Document this step in the interactive process…"
               className="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-violet-200 resize-none"
-              style={{ borderColor: "#DDD6FE" }}
+              style={{ borderColor: "#ECE0C2" }}
               autoFocus
             />
           </div>
@@ -150,7 +150,7 @@ function AddEntryForm({ caseId, onAdded }: AddEntryFormProps) {
               type="submit"
               disabled={!content.trim() || saving}
               className="text-sm px-4 py-1.5 rounded-lg font-medium text-white disabled:opacity-50 transition-opacity"
-              style={{ background: "#7C3AED" }}
+              style={{ background: "#C39A4A" }}
             >
               {saving ? "Saving…" : "Add Entry"}
             </button>
@@ -171,35 +171,35 @@ export function AdaInteractiveLog({ entries, caseId, onRefresh }: AdaInteractive
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "#DDD6FE" }}>
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "#ECE0C2" }}>
       {/* Header */}
       <button
         onClick={() => setCollapsed((c) => !c)}
         className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-violet-50/50"
-        style={{ background: "#F5F3FF", borderBottom: collapsed ? "none" : "1px solid #DDD6FE" }}
+        style={{ background: "#FAF4E6", borderBottom: collapsed ? "none" : "1px solid #ECE0C2" }}
       >
         <div className="flex items-center gap-2">
-          <ClipboardList className="w-4 h-4" style={{ color: "#7C3AED" }} />
-          <span className="font-semibold text-sm" style={{ color: "#4C1D95" }}>
+          <ClipboardList className="w-4 h-4" style={{ color: "#C39A4A" }} />
+          <span className="font-semibold text-sm" style={{ color: "#7A5E28" }}>
             Interactive Process Log
           </span>
           <span
             className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold"
-            style={{ background: "#DDD6FE", color: "#5B21B6" }}
+            style={{ background: "#ECE0C2", color: "#9C7A35" }}
           >
             {entries.length}
           </span>
         </div>
         {collapsed
-          ? <ChevronDown className="w-4 h-4" style={{ color: "#7C3AED" }} />
-          : <ChevronUp className="w-4 h-4" style={{ color: "#7C3AED" }} />
+          ? <ChevronDown className="w-4 h-4" style={{ color: "#C39A4A" }} />
+          : <ChevronUp className="w-4 h-4" style={{ color: "#C39A4A" }} />
         }
       </button>
 
       {!collapsed && (
-        <div className="p-5 flex flex-col gap-4" style={{ background: "#FAFAFE" }}>
+        <div className="p-5 flex flex-col gap-4" style={{ background: "#FAF9F4" }}>
           {entries.length === 0 ? (
-            <div className="text-center py-8 text-sm" style={{ color: "#6D28D9" }}>
+            <div className="text-center py-8 text-sm" style={{ color: "#A07E30" }}>
               <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p>No log entries yet. The interactive process log will appear here.</p>
             </div>
@@ -240,7 +240,7 @@ export function AdaInteractiveLog({ entries, caseId, onRefresh }: AdaInteractive
                         style={{
                           background: "#FFFFFF",
                           border: `1px solid ${config.border}`,
-                          color: "#1E1B4B",
+                          color: "#2A2410",
                         }}
                       >
                         {entry.content}

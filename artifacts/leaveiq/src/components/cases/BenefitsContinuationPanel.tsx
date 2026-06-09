@@ -131,7 +131,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
       {/* Header */}
       <button
         className="w-full flex items-center justify-between px-5 py-4 text-left"
-        style={{ background: "linear-gradient(135deg, #2E7B7B 0%, #1F5858 100%)" }}
+        style={{ background: "linear-gradient(135deg, #7C9273 0%, #54684B 100%)" }}
         onClick={() => setIsExpanded((v) => !v)}
       >
         <div className="flex items-center gap-2.5">
@@ -151,10 +151,10 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
           {/* Benefits input table */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold" style={{ color: "#1A3333" }}>
+              <p className="text-sm font-semibold" style={{ color: "#3A4A33" }}>
                 Continuing Benefits
               </p>
-              <p className="text-xs font-medium" style={{ color: "#2E7B7B" }}>
+              <p className="text-xs font-medium" style={{ color: "#7C9273" }}>
                 Total: ${totalMonthly.toFixed(2)}/month
               </p>
             </div>
@@ -168,10 +168,10 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
                     placeholder="Benefit name"
                     list="benefit-suggestions"
                     className="flex-1 px-3 py-2 text-sm border rounded-xl outline-none"
-                    style={{ borderColor: "#A8D5C5", color: "#1A3333", background: "#FAFFFE" }}
+                    style={{ borderColor: "#A8D5C5", color: "#3A4A33", background: "#FAFFFE" }}
                   />
                   <div className="flex items-center gap-1">
-                    <span className="text-sm" style={{ color: "#6B9090" }}>$</span>
+                    <span className="text-sm" style={{ color: "#8DA384" }}>$</span>
                     <input
                       type="number"
                       value={b.monthlyAmount}
@@ -180,9 +180,9 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
                       min="0"
                       step="0.01"
                       className="w-24 px-3 py-2 text-sm border rounded-xl outline-none"
-                      style={{ borderColor: "#A8D5C5", color: "#1A3333", background: "#FAFFFE" }}
+                      style={{ borderColor: "#A8D5C5", color: "#3A4A33", background: "#FAFFFE" }}
                     />
-                    <span className="text-xs" style={{ color: "#6B9090" }}>/mo</span>
+                    <span className="text-xs" style={{ color: "#8DA384" }}>/mo</span>
                   </div>
                   <button
                     onClick={() => removeBenefit(b.id)}
@@ -203,7 +203,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
               <button
                 onClick={() => addBenefit("")}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border transition-colors"
-                style={{ borderColor: "#A8D5C5", color: "#2E7B7B", background: "#FAFFFE" }}
+                style={{ borderColor: "#A8D5C5", color: "#7C9273", background: "#FAFFFE" }}
               >
                 <Plus className="w-3.5 h-3.5" /> Add Benefit
               </button>
@@ -214,7 +214,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
                   key={name}
                   onClick={() => addBenefit(name)}
                   className="px-3 py-1.5 text-xs rounded-xl border transition-colors"
-                  style={{ borderColor: "#A8D5C5", color: "#6B9090", background: "#FAFFFE" }}
+                  style={{ borderColor: "#A8D5C5", color: "#8DA384", background: "#FAFFFE" }}
                 >
                   + {name.split(" ")[0]}
                 </button>
@@ -228,7 +228,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
               onClick={generate}
               disabled={!canGenerate}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
-              style={{ background: "linear-gradient(135deg, #2E7B7B 0%, #1F5858 100%)" }}
+              style={{ background: "linear-gradient(135deg, #7C9273 0%, #54684B 100%)" }}
             >
               <Sparkles className="w-4 h-4" /> Generate Benefits Continuation Letter
             </button>
@@ -236,8 +236,8 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
 
           {generating && (
             <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#2E7B7B" }} />
-              <p className="text-sm" style={{ color: "#2E7B7B" }}>Generating letter…</p>
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#7C9273" }} />
+              <p className="text-sm" style={{ color: "#7C9273" }}>Generating letter…</p>
             </div>
           )}
 
@@ -274,12 +274,12 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
           {letter && !sendSuccess && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#1A3333" }}>
+                <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: "#3A4A33" }}>
                   <Edit3 className="w-3.5 h-3.5" /> Generated Letter — Review &amp; Edit
                 </p>
                 <button
                   onClick={generate}
-                  className="text-xs flex items-center gap-1" style={{ color: "#6B9090" }}
+                  className="text-xs flex items-center gap-1" style={{ color: "#8DA384" }}
                 >
                   <Sparkles className="w-3 h-3" /> Regenerate
                 </button>
@@ -289,23 +289,23 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
                 onChange={(e) => setEditedContent(e.target.value)}
                 rows={14}
                 className="w-full px-3 py-2.5 text-sm border rounded-xl outline-none resize-y font-mono leading-relaxed"
-                style={{ borderColor: "#A8D5C5", color: "#1A3333", background: "#FAFFFE" }}
+                style={{ borderColor: "#A8D5C5", color: "#3A4A33", background: "#FAFFFE" }}
               />
 
               {/* Email + send */}
               <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: "#1A3333" }}>
+                <label className="text-xs font-semibold block mb-1" style={{ color: "#3A4A33" }}>
                   Employee Email
                 </label>
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 shrink-0" style={{ color: "#6B9090" }} />
+                  <Mail className="w-4 h-4 shrink-0" style={{ color: "#8DA384" }} />
                   <input
                     type="email"
                     value={overrideEmail}
                     onChange={(e) => setOverrideEmail(e.target.value)}
                     placeholder="employee@company.com"
                     className="flex-1 text-sm border rounded-xl px-3 py-2 outline-none"
-                    style={{ borderColor: "#A8D5C5", color: "#1A3333", background: "#FAFFFE" }}
+                    style={{ borderColor: "#A8D5C5", color: "#3A4A33", background: "#FAFFFE" }}
                   />
                 </div>
               </div>
@@ -321,7 +321,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
                 onClick={sendLetter}
                 disabled={!editedContent || !overrideEmail.trim() || sending}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
-                style={{ background: "linear-gradient(135deg, #2E7B7B 0%, #1F5858 100%)" }}
+                style={{ background: "linear-gradient(135deg, #7C9273 0%, #54684B 100%)" }}
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {sending ? "Sending…" : "Send to Employee"}

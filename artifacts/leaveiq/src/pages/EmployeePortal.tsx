@@ -687,11 +687,11 @@ export default function EmployeePortal() {
               <BotAvatar />
               <div
                 className="bg-white shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5"
-                style={{ border: "1px solid #D4C9BB" }}
+                style={{ border: "1px solid #E0D8C5" }}
               >
-                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: "#C8A888" }} />
-                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:150ms]" style={{ background: "#C8A888" }} />
-                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:300ms]" style={{ background: "#C8A888" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: "#CCB888" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:150ms]" style={{ background: "#CCB888" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:300ms]" style={{ background: "#CCB888" }} />
               </div>
             </div>
           )}
@@ -722,7 +722,7 @@ export default function EmployeePortal() {
             <form
               onSubmit={(e) => { e.preventDefault(); handleTextSubmit(inputValue); }}
               className="flex items-center gap-2 bg-white rounded-2xl shadow-sm px-4 py-2 sticky bottom-0"
-              style={{ border: "1px solid #D4C9BB" }}
+              style={{ border: "1px solid #E0D8C5" }}
             >
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -731,14 +731,14 @@ export default function EmployeePortal() {
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder={inputPlaceholder()}
                 className="flex-1 text-sm bg-transparent outline-none py-1"
-                style={{ color: "#3D2010" }}
+                style={{ color: "#1B2430" }}
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
                 className="disabled:opacity-40 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-opacity hover:opacity-90"
-                style={{ background: "#C97E59" }}
+                style={{ background: "#C39A4A" }}
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -769,7 +769,7 @@ function TextareaInput({
   return (
     <div
       className="flex flex-col gap-2 bg-white rounded-2xl shadow-sm px-4 py-3 sticky bottom-0"
-      style={{ border: "1px solid #D4C9BB" }}
+      style={{ border: "1px solid #E0D8C5" }}
     >
       <textarea
         ref={inputRef}
@@ -784,18 +784,18 @@ function TextareaInput({
         placeholder={placeholder}
         rows={3}
         className="flex-1 text-sm bg-transparent outline-none resize-none py-1 w-full"
-        style={{ color: "#3D2010" }}
+        style={{ color: "#1B2430" }}
         autoFocus
       />
       <div className="flex justify-between items-center">
-        <span className="text-xs" style={{ color: "#A47864" }}>
+        <span className="text-xs" style={{ color: "#B39A6A" }}>
           {allowEmpty ? "Press Enter to submit, or skip" : "Shift+Enter for new line · Enter to submit"}
         </span>
         <button
           onClick={onSubmit}
           disabled={!value.trim() && !allowEmpty}
           className="disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-90 flex items-center gap-1.5"
-          style={{ background: "#C97E59" }}
+          style={{ background: "#C39A4A" }}
         >
           <Send className="w-3 h-3" /> Submit
         </button>
@@ -819,37 +819,37 @@ function SubmittedCard({
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3 text-center mt-2 shadow-sm"
-      style={{ background: "#FDF6F2", border: "1.5px solid #C97E5966" }}
+      style={{ background: "#FAF6EC", border: "1.5px solid #C97E5966" }}
     >
       <div className="flex items-center justify-center">
         <div
           className="w-14 h-14 rounded-full flex items-center justify-center"
           style={{ background: "#C97E5922" }}
         >
-          <CheckCircle className="w-8 h-8" style={{ color: "#C97E59" }} />
+          <CheckCircle className="w-8 h-8" style={{ color: "#C39A4A" }} />
         </div>
       </div>
-      <p className="font-bold text-lg" style={{ color: "#3D2010" }}>
+      <p className="font-bold text-lg" style={{ color: "#1B2430" }}>
         {isAda ? "Accommodation Request Submitted" : "Leave Request Submitted"}
       </p>
       <div
         className="rounded-xl px-4 py-3"
-        style={{ background: "#F5E8DF", border: "1px solid #C97E5933" }}
+        style={{ background: "#F4EEDF", border: "1px solid #C97E5933" }}
       >
-        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#A47864" }}>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#B39A6A" }}>
           Your Case Number
         </p>
-        <p className="font-mono font-bold text-xl" style={{ color: "#9E5D38" }}>
+        <p className="font-mono font-bold text-xl" style={{ color: "#9C7A35" }}>
           {caseNumber}
         </p>
       </div>
-      <p className="text-sm" style={{ color: "#5C3D28" }}>
+      <p className="text-sm" style={{ color: "#2E3742" }}>
         {isAda
           ? "HR will review your request and contact you to begin the interactive accommodation process — typically within 2–3 business days."
           : "HR will review your eligibility and contact you — typically within 2–3 business days."}
       </p>
       {email && (
-        <p className="text-xs" style={{ color: "#A47864" }}>
+        <p className="text-xs" style={{ color: "#B39A6A" }}>
           A confirmation with your secure case portal link has been sent to{" "}
           <strong>{email}</strong>. Check your inbox (and spam folder) for next steps.
         </p>
@@ -857,7 +857,7 @@ function SubmittedCard({
       <button
         onClick={onReset}
         className="mx-auto flex items-center gap-2 text-sm font-medium underline underline-offset-2 hover:opacity-70 transition-opacity"
-        style={{ color: "#A47864" }}
+        style={{ color: "#B39A6A" }}
       >
         <RotateCcw className="w-4 h-4" /> Submit another request
       </button>
@@ -870,7 +870,7 @@ function BotAvatar() {
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-      style={{ background: "#C97E59", boxShadow: "0 2px 6px #C97E5944" }}
+      style={{ background: "#C39A4A", boxShadow: "0 2px 6px #C97E5944" }}
     >
       <UserRound className="w-4 h-4 text-white" />
     </div>
@@ -896,7 +896,7 @@ function MessageBubble({
       ) : (
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-          style={{ background: "linear-gradient(135deg, #C97E59, #EAA292)" }}
+          style={{ background: "linear-gradient(135deg, #C39A4A, #D9B87A)" }}
         >
           <User className="w-4 h-4 text-white" />
         </div>
@@ -910,8 +910,8 @@ function MessageBubble({
           )}
           style={
             isBot
-              ? { background: "#FFFFFF", border: "1px solid #D4C9BB", color: "#3D2010" }
-              : { background: "#C97E59", color: "#FFFFFF" }
+              ? { background: "#FFFFFF", border: "1px solid #E0D8C5", color: "#1B2430" }
+              : { background: "#C39A4A", color: "#FFFFFF" }
           }
         >
           {renderText(message.text)}
@@ -956,14 +956,14 @@ function OptionButton({
       )}
       style={
         disabled
-          ? { background: "#F7F4F0", borderColor: "#D4C9BB", color: "#8C7058" }
-          : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#7A5540" }
+          ? { background: "#FAF8F3", borderColor: "#E0D8C5", color: "#5A6470" }
+          : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#6E5A2E" }
       }
       onMouseEnter={(e) => {
         if (!disabled) {
           const el = e.currentTarget as HTMLButtonElement;
-          el.style.background = "#C97E59";
-          el.style.borderColor = "#C97E59";
+          el.style.background = "#C39A4A";
+          el.style.borderColor = "#C39A4A";
           el.style.color = "#FFFFFF";
         }
       }}
@@ -972,7 +972,7 @@ function OptionButton({
           const el = e.currentTarget as HTMLButtonElement;
           el.style.background = "#FFFFFF";
           el.style.borderColor = "#C97E5966";
-          el.style.color = "#7A5540";
+          el.style.color = "#6E5A2E";
         }
       }}
     >

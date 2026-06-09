@@ -23,8 +23,8 @@ import { useAuth } from "@/lib/auth";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 const S = {
-  sidebar: "#C97E59",
-  sidebarBorder: "#B56A44",
+  sidebar: "#C39A4A",
+  sidebarBorder: "#A07E30",
   activeItem: "#FFFFFF",
   activeItemBg: "rgba(255,255,255,0.22)",
   activeItemBorder: "#FFFFFF",
@@ -34,13 +34,13 @@ const S = {
   logoBadgeBorder: "rgba(255,255,255,0.30)",
   userCardBg: "rgba(0,0,0,0.12)",
   userCardBorder: "rgba(255,255,255,0.20)",
-  avatarFrom: "#7A3D18",
-  avatarTo: "#EAA292",
-  adminBadge: "#FFE4D6",
+  avatarFrom: "#6E531E",
+  avatarTo: "#D9B87A",
+  adminBadge: "#F2E6C8",
 
   headerBg: "#FFFFFF",
-  headerBorder: "#D4C9BB",
-  searchBg: "#F7F4F0",
+  headerBorder: "#E0D8C5",
+  searchBg: "#FAF8F3",
 };
 
 interface AppLayoutProps {
@@ -115,7 +115,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="flex items-center gap-2">
           <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
+            Leave<span style={{ color: "#EAD6A8" }}>IQ</span>
           </span>
         </div>
         <button
@@ -191,7 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <img src="/leavara-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
+              Leave<span style={{ color: "#EAD6A8" }}>IQ</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>Leave Management</p>
           </div>
@@ -289,12 +289,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         >
           <div className="flex items-center gap-4 flex-1">
             <div className="relative max-w-md w-full hidden sm:block">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#8C7058" }} />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#5A6470" }} />
               <input
                 type="text"
                 placeholder="Search cases by employee or case number..."
                 className="w-full pl-9 pr-4 py-2 text-sm rounded-full outline-none transition-all focus:ring-2"
-                style={{ background: S.searchBg, border: "1px solid #D4C9BB", color: "#3D2010", "--tw-ring-color": "#C97E5933" } as React.CSSProperties}
+                style={{ background: S.searchBg, border: "1px solid #E0D8C5", color: "#1B2430", "--tw-ring-color": "#C97E5933" } as React.CSSProperties}
               />
             </div>
           </div>
@@ -303,7 +303,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Link
               href="/leaveiq/account"
               className="p-2 rounded-full transition-colors inline-flex hover:bg-black/5"
-              style={{ color: "#8C7058" }}
+              style={{ color: "#5A6470" }}
               title="Account Settings"
             >
               <Settings className="w-5 h-5" />

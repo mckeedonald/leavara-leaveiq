@@ -4,20 +4,20 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { BarChart2, Clock, CheckCircle2, AlertTriangle, FileText, Users } from "lucide-react";
 
 const C = {
-  perf: "#2E7B7B",
-  perfLight: "#EBF5F5",
+  perf: "#7C9273",
+  perfLight: "#ECF0E9",
   card: "#FFFFFF",
-  border: "#C4D9D9",
-  textDark: "#1A3333",
-  textMuted: "#6B9090",
-  agentBg: "#F0EEE9",
+  border: "#D2DBC9",
+  textDark: "#3A4A33",
+  textMuted: "#8DA384",
+  agentBg: "#F4F1EA",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "#93C5FD",
   supervisor_review: "#FCD34D",
   manager_revision: "#F87171",
-  hr_approval: "#A78BFA",
+  hr_approval: "#D2B36A",
   delivery: "#34D399",
   closed: "#6B7280",
   cancelled: "#D1D5DB",
@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const BASE_TYPE_COLORS: Record<string, string> = {
-  coaching: "#2E7B7B",
+  coaching: "#7C9273",
   written_warning: "#B45309",
   final_warning: "#B91C1C",
 };
@@ -46,8 +46,8 @@ const BASE_TYPE_LABELS: Record<string, string> = {
 };
 
 const CHART_COLORS = [
-  "#2E7B7B", "#B45309", "#B91C1C", "#7C3AED", "#065F46",
-  "#1D4ED8", "#6D28D9", "#0891B2", "#4338CA", "#B91C1C",
+  "#7C9273", "#B45309", "#B91C1C", "#C39A4A", "#065F46",
+  "#1D4ED8", "#A07E30", "#0891B2", "#9C7A35", "#B91C1C",
 ];
 
 interface CaseSummary {

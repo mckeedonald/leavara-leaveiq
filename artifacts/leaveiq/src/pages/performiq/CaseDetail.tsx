@@ -38,19 +38,19 @@ interface PiqDocumentContent {
 }
 
 const C = {
-  perf: "#2E7B7B",
+  perf: "#7C9273",
   card: "#FFFFFF",
-  border: "#C4D9D9",
-  textDark: "#1A3333",
-  textMuted: "#6B9090",
-  agentBg: "#F0EEE9",
+  border: "#D2DBC9",
+  textDark: "#3A4A33",
+  textMuted: "#8DA384",
+  agentBg: "#F4F1EA",
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: "Draft",              color: "#6B9090", bg: "#EDF1F8" },
+  draft:             { label: "Draft",              color: "#8DA384", bg: "#EDF1F8" },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7" },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2" },
-  hr_approval:       { label: "HR Approval",        color: "#7C3AED", bg: "#EDE9FE" },
+  hr_approval:       { label: "HR Approval",        color: "#C39A4A", bg: "#F2E8CE" },
   delivery:          { label: "Ready to Deliver",   color: "#065F46", bg: "#D1FAE5" },
   closed:            { label: "Closed",             color: "#374151", bg: "#F3F4F6" },
   cancelled:         { label: "Cancelled",          color: "#6B7280", bg: "#F3F4F6" },
@@ -287,7 +287,7 @@ export default function PiqCaseDetail() {
   }
 
   const { case: c, employee, docType, workflowSteps, history } = caseData;
-  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#6B9090", bg: "#EDF1F8" };
+  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#8DA384", bg: "#EDF1F8" };
 
   const canEdit = (isManager && ["draft", "manager_revision"].includes(c.status)) || isHr || isSupervisor;
   // HR admins can also submit/progress draft cases (e.g. when they created the case or are covering)

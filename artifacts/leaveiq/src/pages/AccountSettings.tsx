@@ -33,7 +33,7 @@ function SectionCard({
 
 function SuccessBanner({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm border" style={{ background: "#FDF6F0", borderColor: "#C97E5966", color: "#9E5D38" }}>
+    <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm border" style={{ background: "#FAF6EC", borderColor: "#C97E5966", color: "#9C7A35" }}>
       <CheckCircle className="w-4 h-4 shrink-0" />
       {message}
     </div>
@@ -193,12 +193,12 @@ export default function AccountSettings() {
 
   const roleBadge =
     user?.role === "hr_admin" ? (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border" style={{ background: "#F5E8DF", borderColor: "#C97E5966", color: "#9E5D38" }}>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border" style={{ background: "#F4EEDF", borderColor: "#C97E5966", color: "#9C7A35" }}>
         <Shield className="w-3 h-3" />
         Administrator
       </span>
     ) : (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 border border-stone-200 text-[#A47864]">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 border border-stone-200 text-[#B39A6A]">
         <User className="w-3 h-3" />
         HR User
       </span>
@@ -349,10 +349,10 @@ export default function AccountSettings() {
                   { label: "Contains a letter", ok: /[a-zA-Z]/.test(newPassword) },
                 ].map(({ label, ok }) => (
                   <div key={label} className="flex items-center gap-2 text-xs">
-                    <span style={ok ? { color: "#C97E59" } : undefined} className={ok ? "" : "text-muted-foreground"}>
+                    <span style={ok ? { color: "#C39A4A" } : undefined} className={ok ? "" : "text-muted-foreground"}>
                       {ok ? "✓" : "○"}
                     </span>
-                    <span style={ok ? { color: "#9E5D38" } : undefined} className={ok ? "" : "text-muted-foreground"}>{label}</span>
+                    <span style={ok ? { color: "#9C7A35" } : undefined} className={ok ? "" : "text-muted-foreground"}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -423,11 +423,11 @@ export default function AccountSettings() {
                   </div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "#F5E8DF" }}>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "#F4EEDF" }}>
                       {logoLoading ? (
-                        <Upload className="w-6 h-6 animate-bounce" style={{ color: "#C97E59" }} />
+                        <Upload className="w-6 h-6 animate-bounce" style={{ color: "#C39A4A" }} />
                       ) : (
-                        <Image className="w-6 h-6" style={{ color: "#C97E59" }} />
+                        <Image className="w-6 h-6" style={{ color: "#C39A4A" }} />
                       )}
                     </div>
                     <div>
@@ -483,8 +483,8 @@ export default function AccountSettings() {
                 <p className="text-sm font-medium text-foreground">Signed in as</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
               </div>
-              <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border" style={{ color: "#9E5D38", background: "#FDF6F0", borderColor: "#C97E5966" }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#C97E59" }} />
+              <span className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border" style={{ color: "#9C7A35", background: "#FAF6EC", borderColor: "#C97E5966" }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#C39A4A" }} />
                 Active
               </span>
             </div>

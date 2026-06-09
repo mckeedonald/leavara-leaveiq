@@ -130,10 +130,10 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
           {/* Employee Search / Autofill */}
           <div className="rounded-xl border bg-slate-50/50 p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
-              <UserRound className="w-4 h-4 text-[#C97E59]" />
+              <UserRound className="w-4 h-4 text-[#C39A4A]" />
               <span className="text-sm font-semibold text-slate-700">Employee Information</span>
               {employees.length > 0 && (
-                <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[#9E5D38] bg-[#F5E8DF] px-2 py-0.5 rounded-full">
+                <span className="ml-auto flex items-center gap-1 text-[10px] font-medium text-[#9C7A35] bg-[#F4EEDF] px-2 py-0.5 rounded-full">
                   <Sparkles className="w-3 h-3" />
                   {employees.length} employees loaded
                 </span>
@@ -174,7 +174,7 @@ export function CreateCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                       >
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                          style={{ background: "#C97E59" }}
+                          style={{ background: "#C39A4A" }}
                         >
                           {emp.fullName.split(" ").map((p) => p[0]).slice(0, 2).join("")}
                         </div>

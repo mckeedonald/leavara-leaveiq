@@ -6,10 +6,10 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, AlertTriangle, Loader2, PenLine, FileText } from "lucide-react";
 
 const C = {
-  perf: "#2E7B7B",
-  dark: "#1A3333",
-  muted: "#6B9090",
-  border: "#C4D9D9",
+  perf: "#7C9273",
+  dark: "#3A4A33",
+  muted: "#8DA384",
+  border: "#D2DBC9",
   bg: "#F7FAFA",
 };
 

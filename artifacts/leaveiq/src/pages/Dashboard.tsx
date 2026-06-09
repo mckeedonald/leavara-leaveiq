@@ -65,7 +65,7 @@ export default function Dashboard() {
         <MetricCard
           title="Total Cases"
           value={stats.total}
-          icon={<Users className="w-5 h-5 text-[#C97E59]" />}
+          icon={<Users className="w-5 h-5 text-[#C39A4A]" />}
           trend={caseTrend.label ?? undefined}
           href="/leaveiq/cases"
         />
@@ -85,7 +85,7 @@ export default function Dashboard() {
         <MetricCard
           title="Recently Closed"
           value={stats.closed}
-          icon={<CheckCircle2 className="w-5 h-5 text-[#A47864]" />}
+          icon={<CheckCircle2 className="w-5 h-5 text-[#B39A6A]" />}
           href="/leaveiq/cases?state=CLOSED"
         />
       </div>
@@ -176,7 +176,7 @@ function MetricCard({ title, value, icon, trend, trendDirection = "neutral", hig
       ? { color: "#166534", background: "#dcfce7" }
       : trendDirection === "down"
       ? { color: "#991b1b", background: "#fee2e2" }
-      : { color: "#9E5D38", background: "#F5E8DF" };
+      : { color: "#9C7A35", background: "#F4EEDF" };
 
   const inner = (
     <>

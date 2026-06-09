@@ -6,11 +6,11 @@ import { useLocation } from "wouter";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#2E7B7B",
+  perf: "#7C9273",
   card: "#FFFFFF",
-  border: "#C4D9D9",
-  textDark: "#1A3333",
-  textMuted: "#6B9090",
+  border: "#D2DBC9",
+  textDark: "#3A4A33",
+  textMuted: "#8DA384",
 };
 
 interface Employee {
@@ -192,7 +192,7 @@ export default function PiqEmployees() {
                         style={
                           e.isActive
                             ? { borderColor: "#FCA5A5", color: "#B91C1C", background: "#FEF2F2" }
-                            : { borderColor: C.border, color: C.perf, background: "#EBF5F5" }
+                            : { borderColor: C.border, color: C.perf, background: "#ECF0E9" }
                         }
                       >
                         {togglingId === e.id ? (

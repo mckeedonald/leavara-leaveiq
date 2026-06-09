@@ -250,7 +250,7 @@ export default function CaseDetail() {
               {caseData.intermittent && <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs font-semibold">Intermittent</span>}
               {/* Assignment indicator */}
               {(caseData as { assignedToUserId?: string | null }).assignedToUserId ? (
-                <span className="flex items-center gap-1.5 bg-[#F5E8DF] text-[#9E5D38] px-2 py-0.5 rounded text-xs font-semibold">
+                <span className="flex items-center gap-1.5 bg-[#F4EEDF] text-[#9C7A35] px-2 py-0.5 rounded text-xs font-semibold">
                   <User className="w-3 h-3" /> Assigned to: {(caseData as any).assignedToName ?? "Unknown"}
                 </span>
               ) : (
@@ -264,9 +264,9 @@ export default function CaseDetail() {
                   onClick={handleClaimCase}
                   disabled={isClaiming}
                   className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50"
-                  style={{ borderColor: "#C97E59", color: "#9E5D38", background: "#FDF6F0" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#F5E8DF"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#FDF6F0"; }}
+                  style={{ borderColor: "#C39A4A", color: "#9C7A35", background: "#FAF6EC" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#F4EEDF"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#FAF6EC"; }}
                 >
                   {isClaiming ? "Claiming…" : "Claim Case"}
                 </button>
@@ -288,9 +288,9 @@ export default function CaseDetail() {
               <button
                 onClick={() => setActiveModal("ANALYZE")}
                 className="border px-5 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 text-sm"
-                style={{ borderColor: "#C97E59", color: "#9E5D38", background: "#FDF6F0" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#F5E8DF"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#FDF6F0"; }}
+                style={{ borderColor: "#C39A4A", color: "#9C7A35", background: "#FAF6EC" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#F4EEDF"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#FAF6EC"; }}
               >
                 <RefreshCw className="w-4 h-4" /> Override Analysis
               </button>
@@ -306,9 +306,9 @@ export default function CaseDetail() {
                 <button
                   onClick={handleDraftNoticeClick}
                   className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
-                  style={{ background: "#A47864" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#9E5D38")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#A47864")}
+                  style={{ background: "#B39A6A" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#9C7A35")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#B39A6A")}
                 >
                   <Sparkles className="w-4 h-4" /> Draft Notices with AI
                 </button>
@@ -329,9 +329,9 @@ export default function CaseDetail() {
                 <button
                   onClick={handleDraftNoticeClick}
                   className="flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition-all"
-                  style={{ background: "#A47864" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#9E5D38")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#A47864")}
+                  style={{ background: "#B39A6A" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#9C7A35")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#B39A6A")}
                 >
                   <Sparkles className="w-4 h-4" /> Draft Notices with AI
                 </button>
@@ -420,7 +420,7 @@ export default function CaseDetail() {
               <div className="bg-card border shadow-sm rounded-2xl overflow-hidden">
                 <div className="bg-slate-50 border-b p-6 flex items-center justify-between">
                   <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-[#C97E59]" />
+                    <Activity className="w-5 h-5 text-[#C39A4A]" />
                     Eligibility Analysis
                   </h3>
                   <div className="text-sm text-muted-foreground flex items-center gap-1">
@@ -458,18 +458,18 @@ export default function CaseDetail() {
                         key={p.program}
                         className={cn(
                           "flex items-center justify-between p-4 rounded-xl border transition-colors",
-                          p.eligible ? "border-[#C97E5966] bg-[#FDF6F0]/50" : "border-slate-200 bg-slate-50/50",
+                          p.eligible ? "border-[#C97E5966] bg-[#FAF6EC]/50" : "border-slate-200 bg-slate-50/50",
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          {p.eligible ? <CheckCircle className="w-5 h-5 text-[#C97E59]" /> : <XCircle className="w-5 h-5 text-slate-400" />}
+                          {p.eligible ? <CheckCircle className="w-5 h-5 text-[#C39A4A]" /> : <XCircle className="w-5 h-5 text-slate-400" />}
                           <div>
                             <p className="font-bold text-foreground">{p.program}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{p.reason}</p>
                           </div>
                         </div>
                         {p.eligible && p.entitlementWeeks && (
-                          <span className="text-xs font-bold uppercase px-2 py-1 rounded-md" style={{ color: "#9E5D38", background: "#F5E8DF" }}>
+                          <span className="text-xs font-bold uppercase px-2 py-1 rounded-md" style={{ color: "#9C7A35", background: "#F4EEDF" }}>
                             {p.entitlementWeeks} Weeks
                           </span>
                         )}
@@ -533,7 +533,7 @@ export default function CaseDetail() {
             {/* HR Decisions */}
             <div className="bg-card border shadow-sm rounded-2xl p-6">
               <h3 className="font-display font-bold text-lg border-b pb-3 mb-4 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-[#C97E59]" />
+                <ShieldAlert className="w-5 h-5 text-[#C39A4A]" />
                 HR Decisions
               </h3>
               {decisions.length === 0 ? (
@@ -543,7 +543,7 @@ export default function CaseDetail() {
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {decisions.map((d: any) => (
                     <div key={d.id} className="relative pl-6 pb-4 border-l-2 border-slate-200 last:border-0 last:pb-0">
-                      <div className="absolute w-3 h-3 rounded-full -left-[7px] top-1 ring-4 ring-white" style={{ background: "#C97E59" }} />
+                      <div className="absolute w-3 h-3 rounded-full -left-[7px] top-1 ring-4 ring-white" style={{ background: "#C39A4A" }} />
                       <div className="bg-slate-50 border rounded-lg p-3">
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-bold text-sm">{
@@ -683,7 +683,7 @@ function DeleteCaseModal({ isOpen, caseNumber, caseId, onClose, onDeleted }: Del
           This case will be marked as deleted. It will no longer appear in the active case list but will remain in the database for auditing purposes.
         </p>
         <div className="mb-4">
-          <label className="block text-sm font-semibold mb-1.5" style={{ color: "#3D2010" }}>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: "#1B2430" }}>
             Reason for deletion <span className="text-red-500">*</span>
           </label>
           <textarea

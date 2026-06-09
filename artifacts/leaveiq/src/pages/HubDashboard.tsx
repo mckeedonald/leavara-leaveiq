@@ -16,22 +16,22 @@ import {
 
 /* ── Brand tokens ───────────────────────────────────────────────── */
 const C = {
-  bg:           "#F0EEE9",
+  bg:           "#F4F1EA",
   card:         "#FFFFFF",
-  border:       "#D4C9BB",
-  textDark:     "#3D2010",
-  textBody:     "#5C3D28",
-  textMuted:    "#8C7058",
+  border:       "#E0D8C5",
+  textDark:     "#1B2430",
+  textBody:     "#2E3742",
+  textMuted:    "#5A6470",
   // Guildlight Leave
-  leave:        "#C97E59",
-  leaveDark:    "#9E5D38",
-  leaveBg:      "#FDF6F0",
-  leaveBorder:  "#E8C9B0",
+  leave:        "#C39A4A",
+  leaveDark:    "#9C7A35",
+  leaveBg:      "#FAF6EC",
+  leaveBorder:  "#E6CC98",
   // Guildlight Grow
-  perf:         "#2E7B7B",
-  perfDark:     "#1E5555",
-  perfBg:       "#EBF5F5",
-  perfBorder:   "#A8CFCF",
+  perf:         "#7C9273",
+  perfDark:     "#54684B",
+  perfBg:       "#ECF0E9",
+  perfBorder:   "#BFCDB3",
 };
 
 /* ── API types ─────────────────────────────────────────────────── */

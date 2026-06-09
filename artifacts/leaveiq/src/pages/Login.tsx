@@ -4,20 +4,20 @@ import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 const C = {
-  bg: "#F0EEE9",
+  bg: "#F4F1EA",
   card: "#FFFFFF",
-  border: "#D4C9BB",
-  mocha: "#A47864",
-  mochaDark: "#7A5540",
-  terracotta: "#C97E59",
-  terracottaHover: "#B36A44",
-  rose: "#EAA292",
-  textDark: "#3D2010",
-  textBody: "#5C3D28",
-  textMuted: "#8C7058",
-  inputBg: "#F7F4F0",
-  inputBorder: "#C8BAA8",
-  focusRing: "#C97E59",
+  border: "#E0D8C5",
+  mocha: "#B39A6A",
+  mochaDark: "#6E5A2E",
+  terracotta: "#C39A4A",
+  terracottaHover: "#A07E30",
+  rose: "#D9B87A",
+  textDark: "#1B2430",
+  textBody: "#2E3742",
+  textMuted: "#5A6470",
+  inputBg: "#FAF8F3",
+  inputBorder: "#D8CEB8",
+  focusRing: "#C39A4A",
   errorBg: "#FDF0EE",
   errorBorder: "#E8A898",
   errorText: "#9E4030",
@@ -70,7 +70,7 @@ export default function Login() {
   const inputClass = "w-full px-4 py-2.5 rounded-xl text-sm transition-all outline-none focus:ring-2";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8DDD4 100%)` }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8E0D2 100%)` }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">

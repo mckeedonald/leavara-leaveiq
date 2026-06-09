@@ -4,15 +4,15 @@ import { useListCases, LeaveState, type LeaveCase } from "@workspace/api-client-
 import { BarChart2, TrendingUp, Clock, CheckCircle2, Users, FileText } from "lucide-react";
 
 const PALETTE = {
-  primary: "#C97E59",
-  primaryLight: "#FDEBD9",
-  teal: "#2E7B7B",
-  tealLight: "#EBF5F5",
+  primary: "#C39A4A",
+  primaryLight: "#F5E8CE",
+  teal: "#7C9273",
+  tealLight: "#ECF0E9",
   card: "#FFFFFF",
-  border: "#E8DDD4",
-  bg: "#FAF8F5",
-  textDark: "#3D2010",
-  textMuted: "#8C7058",
+  border: "#E8E0D2",
+  bg: "#FAF8F3",
+  textDark: "#1B2430",
+  textMuted: "#5A6470",
 };
 
 const STATE_LABELS: Record<string, string> = {
@@ -27,13 +27,13 @@ const STATE_COLORS: Record<string, string> = {
   INTAKE: "#93C5FD",
   ELIGIBILITY_ANALYSIS: "#FCD34D",
   HR_REVIEW_QUEUE: "#F97316",
-  NOTICE_DRAFTED: "#A78BFA",
+  NOTICE_DRAFTED: "#D2B36A",
   CLOSED: "#34D399",
 };
 
 const REASON_COLORS = [
-  "#C97E59", "#2E7B7B", "#7C3AED", "#B45309", "#065F46",
-  "#1D4ED8", "#B91C1C", "#4338CA", "#0891B2", "#6D28D9",
+  "#C39A4A", "#7C9273", "#C39A4A", "#B45309", "#065F46",
+  "#1D4ED8", "#B91C1C", "#9C7A35", "#0891B2", "#A07E30",
 ];
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: typeof BarChart2; color: string }) {
@@ -154,7 +154,7 @@ export default function Analytics() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard label="Total Cases" value={cases.length} icon={FileText} color={PALETTE.primary} />
               <StatCard label="Active Cases" value={activeCases.length} icon={Clock} color="#F97316" />
-              <StatCard label="Awaiting HR Review" value={hrReview.length} icon={Users} color="#7C3AED" />
+              <StatCard label="Awaiting HR Review" value={hrReview.length} icon={Users} color="#C39A4A" />
               <StatCard label="Avg. Close Time" value={avgClose !== null ? `${avgClose}d` : "—"} icon={CheckCircle2} color={PALETTE.teal} />
             </div>
 

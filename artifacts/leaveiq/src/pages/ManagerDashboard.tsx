@@ -5,21 +5,21 @@ import { Users, CalendarDays, Clock } from "lucide-react";
 import { format, parseISO, isWithinInterval, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 
 const S = {
-  bg: "#F0EEE9",
+  bg: "#F4F1EA",
   card: "#FFFFFF",
-  border: "#D4C9BB",
-  terracotta: "#C97E59",
-  textDark: "#3D2010",
-  textMid: "#7A5540",
-  textMuted: "#A07860",
+  border: "#E0D8C5",
+  terracotta: "#C39A4A",
+  textDark: "#1B2430",
+  textMid: "#6E5A2E",
+  textMuted: "#A89066",
 };
 
 const LEAVE_TYPE_COLORS: Record<string, string> = {
-  CFRA: "#C97E59",
-  FMLA: "#A47864",
-  PDL: "#E8872A",
-  COMPANY_PERSONAL: "#9E5D38",
-  OTHER: "#7A5540",
+  CFRA: "#C39A4A",
+  FMLA: "#B39A6A",
+  PDL: "#D4A02E",
+  COMPANY_PERSONAL: "#9C7A35",
+  OTHER: "#6E5A2E",
 };
 
 const STATE_LABELS: Record<string, string> = {
