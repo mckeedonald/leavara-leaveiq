@@ -1,5 +1,5 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
-import cors from "cors";
+import cors, { type CorsRequest, type CorsOptions } from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import cron from "node-cron";
@@ -56,41 +56,39 @@ const ALLOWED_ORIGINS = [
 // allowlist (e.g. the *.up.railway.app preview URL), blanking the page.
 app.use(
   "/api",
-  cors({
-    origin(origin, callback) {
-      // No Origin header → server-to-server, curl, or same-origin GET; allow.
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-      // Same-origin requests: the browser sends an Origin that matches the
-      // host the page was served from. Allow without consulting the allowlist
-      // so that any deployment URL works automatically.
+  cors((req: CorsRequest, callback: (err: Error | null, options?: CorsOptions) => void) => {
+    const origin = req.headers.origin;
+    let allowed = false;
+
+    if (!origin) {
+      // No Origin header (server-to-server, curl, same-origin GET) — allow.
+      allowed = true;
+    } else {
+      // Always allow same-origin: the frontend is served from this same host,
+      // so its API calls must work on whatever domain we're deployed on
+      // (*.up.railway.app, guildlight.co, etc). We compare the request's
+      // Origin host to its own Host header — the cors delegate form is what
+      // gives us access to req here. The allowlist is only for genuine
+      // CROSS-origin callers.
+      let sameOrigin = false;
       try {
-        const originHost = new URL(origin).host;
-        // req is not in scope here; we rely on the allowlist for cross-origin
-        // and let same-origin fall through via the host comparison below.
-        // Because we can't access req.headers.host inside the cors callback,
-        // we treat any origin whose host exactly matches a known-good pattern
-        // as same-origin. True same-origin requests (no Origin header) are
-        // already handled above; what reaches here is always cross-origin.
-        void originHost; // used implicitly via ALLOWED_ORIGINS test below
+        sameOrigin = new URL(origin).host === req.headers.host;
       } catch {
-        // Malformed Origin — block it.
-        logger.warn({ origin }, "CORS blocked request with malformed origin");
-        callback(new Error("Not allowed by CORS"));
-        return;
+        sameOrigin = false; // malformed Origin header
       }
-      if (ALLOWED_ORIGINS.some((r) => r.test(origin))) {
-        callback(null, true);
-      } else {
-        logger.warn({ origin }, "CORS blocked request from disallowed origin");
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+      allowed = sameOrigin || ALLOWED_ORIGINS.some((r) => r.test(origin));
+    }
+
+    if (!allowed) {
+      logger.warn({ origin, host: req.headers.host }, "CORS blocked request from disallowed origin");
+    }
+
+    callback(null, {
+      origin: allowed,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    });
   }),
 );
 
