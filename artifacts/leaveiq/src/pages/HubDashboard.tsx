@@ -217,7 +217,7 @@ export default function HubDashboard() {
         style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.border}` }}
       >
         <div className="flex items-center gap-2.5">
-          <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+          <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-bold text-lg tracking-tight" style={{ color: C.textDark }}>Guildlight</span>
         </div>
         <button

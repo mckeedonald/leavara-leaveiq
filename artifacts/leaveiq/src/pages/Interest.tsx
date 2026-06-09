@@ -139,7 +139,7 @@ export default function Interest() {
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: C.terracotta + "20" }}>
             <CheckCircle2 className="w-10 h-10" style={{ color: C.terracotta }} />
           </div>
-          <img src="/leavara-logo.png" alt="Guildlight" className="h-10 w-10 object-contain mx-auto mb-3" />
+          <img src="/guildlight-logo.png" alt="Guildlight" className="h-10 w-10 object-contain mx-auto mb-3" />
           <h1 className="text-2xl font-bold mb-3" style={{ color: C.textDark }}>Thank You!</h1>
           <p className="text-base mb-2" style={{ color: C.textBody }}>
             We've received your interest in{" "}
@@ -166,7 +166,7 @@ export default function Interest() {
       <header className="sticky top-0 z-50 border-b shadow-sm" style={{ background: `${C.bg}f5`, borderColor: C.khaki }}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+            <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
             <span className="font-bold text-lg" style={{ color: C.textDark }}>
               Guildlight <span style={{ color: C.terracottaDk }}>Guildlight Leave</span>
             </span>
@@ -185,7 +185,7 @@ export default function Interest() {
       <main className="flex-1 flex items-start justify-center px-6 py-14">
         <div className="w-full max-w-xl">
           <div className="mb-8">
-            <img src="/leavara-logo.png" alt="Guildlight" className="h-12 w-12 object-contain mb-4" />
+            <img src="/guildlight-logo.png" alt="Guildlight" className="h-12 w-12 object-contain mb-4" />
             <h1 className="text-3xl font-bold mb-2" style={{ color: C.textDark }}>Get Started with Guildlight</h1>
             <p style={{ color: C.textBody }}>
               Tell us a bit about your organization and the products you're interested in — we'll reach out to walk you through what's right for your team.

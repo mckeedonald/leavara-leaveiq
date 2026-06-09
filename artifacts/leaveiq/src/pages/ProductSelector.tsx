@@ -28,7 +28,7 @@ export default function ProductSelector() {
       style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8E0D2 100%)` }}
     >
       <div className="mb-8 text-center">
-        <img src="/leavara-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
+        <img src="/guildlight-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
         <h1 className="text-2xl font-bold" style={{ color: C.textDark }}>
           Welcome, {user.firstName}
         </h1>
