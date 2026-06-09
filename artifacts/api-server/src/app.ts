@@ -42,11 +42,6 @@ const ALLOWED_ORIGINS = [
   /^https?:\/\/[a-z0-9-]+\.guildlight\.co$/,
   /\.replit\.dev$/,
   /\.picard\.replit\.dev$/,
-  // --- TEMPORARY (demo) — REMOVE once guildlight.co DNS is live ---
-  /\.up\.railway\.app$/,
-  /^https?:\/\/leavara\.net$/,
-  /^https?:\/\/[a-z0-9-]+\.leavara\.net$/,
-  // --- END TEMPORARY ---
 ];
 
 // Scope CORS to the API only. Static frontend assets are same-origin and
