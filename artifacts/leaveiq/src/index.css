@@ -160,6 +160,36 @@
   border-color: #b68b5e;
 }
 
+/* ----------------------------------------------------------------------- */
+/* Midnight Navy — dominant dark surfaces (nav rail, hero bands)            */
+/* ----------------------------------------------------------------------- */
+
+/* Deep navy rail with a subtle top sheen — for sidebars. */
+.navy-rail {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 16%),
+    linear-gradient(160deg, #1f3147 0%, #18263a 45%, #142032 100%);
+  background-color: #18263a;
+}
+
+/* Richer navy band — for page-top hero banners over ivory content. */
+.navy-hero {
+  background-image:
+    linear-gradient(135deg, #1f3147 0%, #18263a 55%, #122033 100%);
+  background-color: #18263a;
+  color: #f7f4ee;
+}
+
+/* Shiny-bronze active nav pill (reuses the btn-bronze sheen, sized for nav rows). */
+.nav-pill-bronze {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 46%),
+    linear-gradient(180deg, #c4985f 0%, #b68b5e 52%, #9a7448 100%);
+  background-color: #b68b5e;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset, 0 4px 12px -6px rgba(0,0,0,0.5);
+  color: #18263a !important;
+}
+
 /* Soft premium elevation for cards on ivory. */
 .shadow-premium {
   box-shadow:

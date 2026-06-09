@@ -293,8 +293,8 @@ function GuildlightGrowIllustration() {
 
 /* ─── Landing ───────────────────────────────────────────────────── */
 const HERO_LINE1 = "Smarter HR,";
-const HERO_LINE2 = "Start to Finish.";
-const HERO_SUB = "Two intelligent platforms. One connected HR experience. Built for the teams that keep your people moving.";
+const HERO_LINE2 = "Guided Start to Finish.";
+const HERO_SUB = "Organizations are communities of people working together — Guildlight is the beacon that guides them. Two intelligent platforms, one connected HR experience.";
 
 export default function Landing() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -394,35 +394,34 @@ export default function Landing() {
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EDE7D9 60%, ${C.bg} 100%)` }}>
+      <section className="navy-hero relative overflow-hidden">
         <div className="absolute top-[-80px] right-[-80px] w-[500px] h-[500px] rounded-full blur-[110px] pointer-events-none"
-          style={{ background: C.terracotta + "1a" }} />
+          style={{ background: "#E8CDA133" }} />
         <div className="absolute bottom-[-60px] left-[-60px] w-[350px] h-[350px] rounded-full blur-[90px] pointer-events-none"
-          style={{ background: C.perf + "15" }} />
+          style={{ background: "#B68B5E22" }} />
 
         <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16">
           {/* Platform badge */}
           <div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-semibold"
-              style={{ background: C.bgCard, borderColor: C.khaki, color: C.textMuted }}>
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: C.terracotta }} />
-              Intelligent HR Platform · Two Products, One Platform
+              style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)", color: "#C8CDD3" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#E8CDA1" }} />
+              Illuminating the path for people and organizations.
             </div>
           </div>
 
           {/* Headline */}
           <div className="text-center mb-6">
-            <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-0" style={{ color: C.textDark, minHeight: "6rem" }}>
+            <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-0" style={{ color: "#F7F4EE", minHeight: "6rem" }}>
               {line1}
               {line2 && (
-                <> <span style={{ color: C.terracottaDk }}>{line2}</span></>
+                <> <span className="text-bronze-shine">{line2}</span></>
               )}
-              <Cursor visible={!headingDone} />
+              <Cursor visible={!headingDone} color="#E8CDA1" />
             </h1>
             <p className="text-lg mt-4 max-w-2xl mx-auto leading-relaxed"
-              style={{ color: C.textBody, minHeight: "4rem" }}>
-              {sub}<Cursor visible={headingDone && !subDone} color={C.perf} />
+              style={{ color: "#C8CDD3", minHeight: "4rem" }}>
+              {sub}<Cursor visible={headingDone && !subDone} color="#E8CDA1" />
             </p>
           </div>
 
@@ -430,14 +429,14 @@ export default function Landing() {
           <div className="flex flex-wrap justify-center gap-3 mb-10"
             style={{ opacity: headingDone ? 1 : 0, transition: "opacity 0.5s" }}>
             <a href="#leaveiq"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:shadow-md"
-              style={{ background: C.terracotta + "15", borderColor: C.terracotta + "50", color: C.terracottaDk }}>
-              📅 Guildlight Leave — Smart Leave Management
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:-translate-y-0.5"
+              style={{ background: "rgba(232,205,161,0.14)", borderColor: "#E8CDA1", color: "#F7F4EE", boxShadow: "0 0 0 1px rgba(232,205,161,0.5), 0 4px 16px -6px rgba(232,205,161,0.35)" }}>
+              Guildlight Leave — Smart Leave Management
             </a>
             <a href="#performiq"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:shadow-md"
-              style={{ background: C.perf + "12", borderColor: C.perf + "50", color: C.perfDark }}>
-              📋 Guildlight Grow — AI Performance Documentation
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:-translate-y-0.5"
+              style={{ background: "rgba(232,205,161,0.14)", borderColor: "#E8CDA1", color: "#F7F4EE", boxShadow: "0 0 0 1px rgba(232,205,161,0.5), 0 4px 16px -6px rgba(232,205,161,0.35)" }}>
+              Guildlight Grow — AI Performance Documentation
             </a>
           </div>
 
@@ -445,13 +444,13 @@ export default function Landing() {
           <div className="flex flex-wrap justify-center gap-3 mb-16"
             style={{ opacity: subDone ? 1 : 0, transition: "opacity 0.5s" }}>
             <Link href="/interest"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
-              style={{ background: C.terracotta }}>
+              className="btn-bronze inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+              style={{ color: "#18263A" }}>
               Get Started <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/leave/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm border hover:opacity-80 transition-opacity"
-              style={{ borderColor: C.khaki, color: C.textBody, background: C.bgCard }}>
+              style={{ borderColor: "rgba(255,255,255,0.25)", color: "#F7F4EE", background: "rgba(255,255,255,0.06)" }}>
               Sign In to Your Platform
             </Link>
           </div>
@@ -463,8 +462,8 @@ export default function Landing() {
                 <button key={p} onClick={() => setActiveProduct(p)}
                   className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
                   style={activeProduct === p
-                    ? { background: p === "leaveiq" ? C.terracotta : C.perfDark, color: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }
-                    : { background: C.bgCard, color: C.textMuted, border: `1px solid ${C.khaki}` }
+                    ? { background: "#B68B5E", color: "#18263A", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }
+                    : { background: "rgba(255,255,255,0.06)", color: "#C8CDD3", border: "1px solid rgba(255,255,255,0.18)" }
                   }>
                   {p === "leaveiq" ? "Guildlight Leave Preview" : "Guildlight Grow Preview"}
                 </button>
@@ -675,8 +674,8 @@ export default function Landing() {
           <h2 className="text-3xl font-bold mb-2" style={{ color: C.textOnDark }}>
             Why HR Teams Choose Guildlight
           </h2>
-          <p className="mb-12 text-sm max-w-lg mx-auto" style={{ color: C.khaki }}>
-            The beacon that guides the guild. We built Guildlight because HR teams deserve tools as smart as the people they support.
+          <p className="mb-12 text-sm max-w-xl mx-auto" style={{ color: C.khaki }}>
+            Organizations are communities of people working together. We built Guildlight to be the beacon that guides them — tools as smart as the people they support.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
@@ -748,7 +747,7 @@ export default function Landing() {
             Ready to Transform HR at Your Organization?
           </h2>
           <p className="mb-8 text-sm" style={{ color: C.bg + "cc" }}>
-            Tell us about your team and we'll get you set up with the products that fit.
+            Navigate people decisions with confidence. Tell us about your team and we'll get you set up with the products that fit.
           </p>
           <Link href="/interest"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg"
@@ -766,7 +765,7 @@ export default function Landing() {
             <img src="/guildlight-logo.png" alt="Guildlight" className="h-5 w-5 object-contain" />
             <span className="font-semibold">Guildlight</span>
             <span style={{ color: C.khaki }}>·</span>
-            <span style={{ color: C.khaki }}>Guildlight Leave &amp; Guildlight Grow</span>
+            <span style={{ color: C.khaki }}>Guiding every people journey.</span>
           </div>
           <span style={{ color: C.khaki }}>© {new Date().getFullYear()} Guildlight, LLC · All rights reserved.</span>
           <div className="flex gap-5" style={{ color: C.khaki }}>

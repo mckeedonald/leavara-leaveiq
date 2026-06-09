@@ -46,14 +46,14 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 animate-in opacity-0 stagger-1">
+      <div className="navy-hero rounded-2xl shadow-premium px-6 py-6 flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 animate-in opacity-0 stagger-1">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Dashboard</h2>
-          <p className="text-muted-foreground mt-1">Overview of all active leave cases</p>
+          <h2 className="text-3xl font-display font-bold" style={{ color: "#F7F4EE" }}>Dashboard</h2>
+          <p className="mt-1" style={{ color: "#C8CDD3" }}>Overview of all active leave cases</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+          className="btn-bronze text-primary-foreground px-5 py-2.5 rounded-xl font-medium hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           New Case

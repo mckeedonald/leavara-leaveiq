@@ -23,9 +23,9 @@ import { useAuth } from "@/lib/auth";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 const S = {
-  sidebar: "#B68B5E",
-  sidebarBorder: "#8E6A45",
-  activeItem: "#FFFFFF",
+  sidebar: "#18263A",
+  sidebarBorder: "#2A3A4C",
+  activeItem: "#18263A",
   activeItemBg: "rgba(255,255,255,0.22)",
   activeItemBorder: "#FFFFFF",
   textOnDark: "#FFFFFF",
@@ -109,7 +109,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {/* Mobile top bar */}
       <div
-        className="bronze-rail md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
+        className="navy-rail md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
         style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile nav overlay */}
       {mobileNavOpen && (
         <div
-          className="bronze-rail md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
+          className="navy-rail md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
         >
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
             {navItems.filter((item) => item.show).map((item) => {
@@ -142,12 +142,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                   onClick={() => setMobileNavOpen(false)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium text-sm",
-                    isActive ? "shadow-sm" : "hover:opacity-90"
+                    isActive ? "nav-pill-bronze shadow-sm" : "hover:opacity-90"
                   )}
                   style={
                     isActive
-                      ? { background: S.activeItemBg, color: S.textOnDark, borderLeft: `3px solid ${S.activeItem}` }
-                      : { color: S.textMutedDark, paddingLeft: "calc(0.75rem + 3px)" }
+                      ? { color: S.activeItem }
+                      : { color: S.textMutedDark }
                   }
                 >
                   <item.icon className="w-5 h-5" style={{ color: isActive ? S.activeItem : S.textMutedDark }} />
@@ -182,7 +182,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Sidebar — desktop only */}
       <aside
-        className="bronze-rail hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
+        className="navy-rail hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
         style={{ borderRight: `1px solid ${S.sidebarBorder}` }}
       >
         {/* Logo */}
@@ -224,12 +224,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm",
-                    isActive ? "shadow-sm" : "hover:opacity-90"
+                    isActive ? "nav-pill-bronze shadow-sm" : "hover:opacity-90"
                   )}
                   style={
                     isActive
-                      ? { background: S.activeItemBg, color: S.textOnDark, borderLeft: `3px solid ${S.activeItem}` }
-                      : { color: S.textMutedDark, paddingLeft: "calc(0.75rem + 3px)" }
+                      ? { color: S.activeItem }
+                      : { color: S.textMutedDark }
                   }
                 >
                   <item.icon

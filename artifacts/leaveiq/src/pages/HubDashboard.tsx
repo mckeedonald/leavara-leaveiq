@@ -213,17 +213,17 @@ export default function HubDashboard() {
     <div className="min-h-screen flex flex-col" style={{ background: C.bg }}>
       {/* Top bar */}
       <header
-        className="h-16 sticky top-0 z-50 flex items-center justify-between px-6 shadow-sm"
-        style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.border}` }}
+        className="navy-hero h-16 sticky top-0 z-50 flex items-center justify-between px-6 shadow-sm"
+        style={{ borderBottom: "1px solid #2A3A4C" }}
       >
         <div className="flex items-center gap-2.5">
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-lg tracking-tight" style={{ color: C.textDark }}>Guildlight</span>
+          <span className="font-bold text-lg tracking-tight" style={{ color: "#F7F4EE" }}>Guildlight</span>
         </div>
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
-          style={{ color: C.textMuted }}
+          style={{ color: "#C8CDD3" }}
         >
           <LogOut className="w-4 h-4" /> Sign out
         </button>
@@ -232,11 +232,11 @@ export default function HubDashboard() {
       {/* Page */}
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12">
         {/* Welcome */}
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold mb-1" style={{ color: C.textDark }}>
+        <div className="navy-hero rounded-2xl shadow-premium px-8 py-10 mb-10 text-center">
+          <h1 className="text-4xl font-bold mb-1" style={{ color: "#F7F4EE" }}>
             Welcome back{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="text-base" style={{ color: C.textMuted }}>
+          <p className="text-base" style={{ color: "#C8CDD3" }}>
             Here's what's happening across your HR platform today.
           </p>
         </div>

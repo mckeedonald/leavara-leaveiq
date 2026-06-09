@@ -27,12 +27,12 @@ export default function ProductSelector() {
       className="min-h-screen flex flex-col items-center justify-center p-6"
       style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EBE3D4 100%)` }}
     >
-      <div className="mb-8 text-center">
+      <div className="navy-hero rounded-2xl shadow-premium px-10 py-8 mb-8 text-center w-full max-w-xl">
         <img src="/guildlight-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
-        <h1 className="text-2xl font-bold" style={{ color: C.textDark }}>
+        <h1 className="text-2xl font-bold" style={{ color: "#F7F4EE" }}>
           Welcome, {user.firstName}
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+        <p className="text-sm mt-1" style={{ color: "#C8CDD3" }}>
           Select a product to continue
         </p>
       </div>
