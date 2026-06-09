@@ -9,6 +9,7 @@
     "start": "node --enable-source-maps --env-file-if-exists=.env ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "seed-admin": "tsx --env-file-if-exists=.env src/scripts/seed-admin.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
     "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts",
     "reset-superadmin-password": "tsx --env-file-if-exists=.env src/scripts/reset-superadmin-password.ts",
     "backfill-encryption": "tsx --env-file-if-exists=.env src/scripts/backfillEncryption.ts",
