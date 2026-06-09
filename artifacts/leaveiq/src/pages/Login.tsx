@@ -74,7 +74,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <img src="/leavara-logo.png" alt="Guildlight" className="h-16 w-16 object-contain mb-4" />
+          <img src="/guildlight-logo.png" alt="Guildlight" className="h-16 w-16 object-contain mb-4" />
           <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Guildlight</h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>HR Decision Support Platform</p>
         </div>
