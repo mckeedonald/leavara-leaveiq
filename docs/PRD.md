@@ -1,7 +1,7 @@
-# Leavara Platform — Product Requirements Document
+# Guildlight Platform — Product Requirements Document
 **Version 1.0 | Last Updated: 2026-05-21**
 
-> **Living Document Notice:** This PRD is the authoritative product definition for the Leavara platform and its products — LeaveIQ and PerformIQ. It is updated as features are designed, built, or changed. Sections marked `[Planned]` describe intended future functionality. Sections marked `[Built]` reflect what is implemented and deployed.
+> **Living Document Notice:** This PRD is the authoritative product definition for the Guildlight platform and its products — Guildlight Leave and Guildlight Grow. It is updated as features are designed, built, or changed. Sections marked `[Planned]` describe intended future functionality. Sections marked `[Built]` reflect what is implemented and deployed.
 
 ---
 
@@ -13,8 +13,8 @@
 4. [Users, Personas, and Jobs to Be Done](#4-users-personas-and-jobs-to-be-done)
 5. [Product Scope by Version](#5-product-scope-by-version)
 6. [Information Architecture and Navigation](#6-information-architecture-and-navigation)
-7. [LeaveIQ — Functional Requirements](#7-leaveiq--functional-requirements)
-8. [PerformIQ — Functional Requirements](#8-performiq--functional-requirements)
+7. [Guildlight Leave — Functional Requirements](#7-leaveiq--functional-requirements)
+8. [Guildlight Grow — Functional Requirements](#8-performiq--functional-requirements)
 9. [Platform-Wide Functional Requirements](#9-platform-wide-functional-requirements)
 10. [Non-Functional Requirements](#10-non-functional-requirements)
 11. [Data Model](#11-data-model)
@@ -34,11 +34,11 @@
 
 ## 1. Executive Summary
 
-Leavara is a B2B HR software company building AI-augmented tools that help HR professionals manage workforce compliance, leave administration, and employee performance. The Leavara platform currently consists of two products — **LeaveIQ** and **PerformIQ** — served under a unified multi-tenant SaaS architecture with a shared employee data layer.
+Guildlight is a B2B HR software company building AI-augmented tools that help HR professionals manage workforce compliance, leave administration, and employee performance. The Guildlight platform currently consists of two products — **Guildlight Leave** and **Guildlight Grow** — served under a unified multi-tenant SaaS architecture with a shared employee data layer.
 
-**LeaveIQ** is a leave and accommodation management system that automates the FMLA, ADA, and state leave compliance workflow. It provides an AI assistant (Ava) that drafts notices, analyzes medical certifications, determines eligibility, and generates required employer documentation. Employees submit requests through a conversational portal. HR manages cases in a structured case management interface.
+**Guildlight Leave** is a leave and accommodation management system that automates the FMLA, ADA, and state leave compliance workflow. It provides an AI assistant (Ave) that drafts notices, analyzes medical certifications, determines eligibility, and generates required employer documentation. Employees submit requests through a conversational portal. HR manages cases in a structured case management interface.
 
-**PerformIQ** is a performance management system that helps HR and managers document performance concerns, generate formal documentation, route it through a review-and-sign workflow, and close cases with a complete audit trail. It includes an AI agent that leverages uploaded company policies to draft performance improvement plans, coaching notes, and other formal documents.
+**Guildlight Grow** is a performance management system that helps HR and managers document performance concerns, generate formal documentation, route it through a review-and-sign workflow, and close cases with a complete audit trail. It includes an AI agent that leverages uploaded company policies to draft performance improvement plans, coaching notes, and other formal documents.
 
 Both products are deployed as a single frontend application with a shared Express API backend and a PostgreSQL database managed via Drizzle ORM. The platform is hosted on Railway with Cloudflare R2 for file storage and Resend for transactional email.
 
@@ -46,9 +46,9 @@ Both products are deployed as a single frontend application with a shared Expres
 
 ## 2. Product Vision and Decision Value
 
-### LeaveIQ
+### Guildlight Leave
 
-HR administrators spend 40–60% of their time on compliance paperwork for leave cases — drafting FMLA eligibility notices, designation letters, obtaining medical certifications, and managing state leave programs in parallel. Small and mid-sized employers (50–2,000 employees) rarely have dedicated leave specialists. LeaveIQ eliminates the compliance research burden by embedding legal and regulatory knowledge directly into the workflow via the Ava AI assistant.
+HR administrators spend 40–60% of their time on compliance paperwork for leave cases — drafting FMLA eligibility notices, designation letters, obtaining medical certifications, and managing state leave programs in parallel. Small and mid-sized employers (50–2,000 employees) rarely have dedicated leave specialists. Guildlight Leave eliminates the compliance research burden by embedding legal and regulatory knowledge directly into the workflow via the Ave AI assistant.
 
 **Decision value:**
 - HR can process a complete FMLA case in under 15 minutes from intake to notice delivery
@@ -56,9 +56,9 @@ HR administrators spend 40–60% of their time on compliance paperwork for leave
 - Employees receive timely, professional communication rather than ad-hoc emails
 - Organizations maintain a complete, searchable audit trail for every case
 
-### PerformIQ
+### Guildlight Grow
 
-Performance documentation is frequently inconsistent, legally risky, and time-consuming. Managers avoid difficult conversations because documenting them correctly feels like legal work. PerformIQ gives HR a structured, AI-assisted workflow to produce consistent, policy-aligned performance documentation and route it through a compliant review and signature process.
+Performance documentation is frequently inconsistent, legally risky, and time-consuming. Managers avoid difficult conversations because documenting them correctly feels like legal work. Guildlight Grow gives HR a structured, AI-assisted workflow to produce consistent, policy-aligned performance documentation and route it through a compliant review and signature process.
 
 **Decision value:**
 - Managers produce documentation faster with fewer errors
@@ -70,20 +70,20 @@ Performance documentation is frequently inconsistent, legally risky, and time-co
 
 ## 3. Company and Market Context
 
-**Company:** Leavara  
+**Company:** Guildlight  
 **Stage:** Early-stage SaaS  
 **Target market:** SMB and mid-market employers in the United States, 50–2,000 employees  
 **Primary buyers:** HR Directors, VP HR, CHRO  
 **Primary users:** HR Administrators, HR Generalists, and (for portal) employees  
 **Regulatory focus:** FMLA (Federal), ADA (Federal), CFRA/HFWA/PFML (state-level), employer obligations under 29 CFR Part 825
 
-Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike generic HR platforms that surface forms and checklists, LeaveIQ's Ava assistant actively generates employer-side documentation with specific regulatory citations. This is the core IP.
+Guildlight is differentiated by its opinionated, compliance-first AI layer. Unlike generic HR platforms that surface forms and checklists, Guildlight Leave's Ave assistant actively generates employer-side documentation with specific regulatory citations. This is the core IP.
 
 ---
 
 ## 4. Users, Personas, and Jobs to Be Done
 
-### 4.1 HR Administrator (LeaveIQ)
+### 4.1 HR Administrator (Guildlight Leave)
 
 **Who:** An HR professional with administrative responsibility for leave management at the organization. May be the only HR person at a small company or a specialist at a larger one.
 
@@ -99,7 +99,7 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ---
 
-### 4.2 HR User (LeaveIQ)
+### 4.2 HR User (Guildlight Leave)
 
 **Who:** An HR coordinator or generalist without full administrative rights. Can view and work cases but cannot configure the organization.
 
@@ -110,7 +110,7 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ---
 
-### 4.3 Employee (LeaveIQ Portal)
+### 4.3 Employee (Guildlight Leave Portal)
 
 **Who:** Any employee submitting a leave or accommodation request.
 
@@ -124,7 +124,7 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ---
 
-### 4.4 HR Administrator (PerformIQ)
+### 4.4 HR Administrator (Guildlight Grow)
 
 **Who:** HR professional managing the performance documentation workflow.
 
@@ -137,7 +137,7 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ---
 
-### 4.5 Manager / Supervisor (PerformIQ)
+### 4.5 Manager / Supervisor (Guildlight Grow)
 
 **Who:** People manager involved in a performance case.
 
@@ -150,12 +150,12 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ### 4.6 Super Administrator (Platform)
 
-**Who:** Leavara internal staff managing the SaaS infrastructure.
+**Who:** Guildlight internal staff managing the SaaS infrastructure.
 
 **Primary jobs:**
 - Create and configure organizations
-- Enable/disable products (LeaveIQ, PerformIQ) per organization
-- Create initial admin users and PerformIQ users
+- Enable/disable products (Guildlight Leave, Guildlight Grow) per organization
+- Create initial admin users and Guildlight Grow users
 - View and export audit logs per organization
 - Manage knowledge base documents per organization
 - Access this PRD and platform documentation
@@ -164,43 +164,43 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ## 5. Product Scope by Version
 
-### 5.1 LeaveIQ — Built (v1)
+### 5.1 Guildlight Leave — Built (v1)
 
 - [Built] Multi-tenant case management: FMLA leave cases and ADA accommodation cases
 - [Built] Employee portal — conversational intake (chatbot flow, no login required)
-- [Built] Ava AI assistant — eligibility analysis, notice drafting, designation letters, certification requests
+- [Built] Ave AI assistant — eligibility analysis, notice drafting, designation letters, certification requests
 - [Built] Medical certification generation as PDF, delivery to employee, portal upload return
 - [Built] Interactive case messaging between HR and employee
 - [Built] Case documents panel — generated docs, employee uploads, accessible via portal
 - [Built] Audit log per organization — filterable, exportable CSV
-- [Built] AI session history per case — full history of Ava recommendations and feedback
+- [Built] AI session history per case — full history of Ave recommendations and feedback
 - [Built] Ada ADA assistant — accommodation interactive process, physician certification, interactive log
 - [Built] State disability and paid leave program information embedded in notices (CA, NY, NJ, WA, MA, CO, OR, CT, RI, HI, DC)
 - [Built] Case status lifecycle (open → in review → designation pending → closed)
 - [Built] Calendar invite support for leave start/end
 - [Built] HR Admin audit log page at `/leaveiq/audit`
 
-### 5.2 LeaveIQ — Planned
+### 5.2 Guildlight Leave — Planned
 
 - [Planned] Employee ID lookup auto-fill during portal intake (simplified: no public endpoint, employee enters their own data)
-- [Planned] Unified employee page (LeaveIQ color palette, shared across products)
+- [Planned] Unified employee page (Guildlight Leave color palette, shared across products)
 - [Planned] HRIS integration configuration moved to super admin only
 - [Planned] Import log and CSV error reporting for employee uploads
 - [Planned] Mobile-responsive navigation (hamburger menu on small screens)
 - [Planned] Run Analysis modal auto-pull employee data from case record
 
-### 5.3 PerformIQ — Built (v1)
+### 5.3 Guildlight Grow — Built (v1)
 
 - [Built] Multi-tenant case management for performance cases
 - [Built] PIQ agent — AI assistant using uploaded org policies to generate documents
 - [Built] PDF policy upload — policies stored in R2 and passed to Claude as native PDF document blocks
 - [Built] Workflow steps — configurable review/approval stages per case
 - [Built] Document management — multiple document versions per case
-- [Built] PerformIQ-specific user authentication (separate from LeaveIQ auth)
+- [Built] Guildlight Grow-specific user authentication (separate from Guildlight Leave auth)
 - [Built] Admin settings — document types, workflow templates, policy management
 - [Built] Audit log per org via `piq_audit_log`
 
-### 5.4 PerformIQ — Planned
+### 5.4 Guildlight Grow — Planned
 
 - [Planned] E-signature workflow (employee signs via secure token link, manager signs in-platform, final signed PDF generated)
 - [Planned] Employee signing page at `/performiq/sign`
@@ -220,7 +220,7 @@ Leavara is differentiated by its opinionated, compliance-first AI layer. Unlike 
 
 ## 6. Information Architecture and Navigation
 
-### 6.1 LeaveIQ Navigation (Authenticated HR Users)
+### 6.1 Guildlight Leave Navigation (Authenticated HR Users)
 
 ```
 Dashboard          /leaveiq/dashboard
@@ -228,7 +228,7 @@ Dashboard          /leaveiq/dashboard
   Case Detail      /leaveiq/cases/:caseId
   ADA Cases        /leaveiq/ada-cases
   ADA Case Detail  /leaveiq/ada-cases/:caseId
-  Employees        /leaveiq/employees   ← unified, shared with PerformIQ
+  Employees        /leaveiq/employees   ← unified, shared with Guildlight Grow
   Audit Log        /leaveiq/audit       (HR Admin only)
   Org Settings     /leaveiq/settings    (HR Admin only)
   Knowledge Base   /leaveiq/knowledge   (HR Admin only)
@@ -242,7 +242,7 @@ Portal Return    /leaveiq/portal?token={accessToken}
 Document Sign    (token-based, via email link)
 ```
 
-### 6.3 PerformIQ Navigation (Authenticated PIQ Users)
+### 6.3 Guildlight Grow Navigation (Authenticated PIQ Users)
 
 ```
 Dashboard          /performiq/dashboard
@@ -268,7 +268,7 @@ Super Admin      /leaveiq/superadmin
 
 ---
 
-## 7. LeaveIQ — Functional Requirements
+## 7. Guildlight Leave — Functional Requirements
 
 ### 7.1 Case Management
 
@@ -296,7 +296,7 @@ Super Admin      /leaveiq/superadmin
 - Portal can accept: completed medical certifications, supporting documents
 - Access token scoped to a single case; expires on use or after 90 days
 
-### 7.3 Ava AI Assistant
+### 7.3 Ave AI Assistant
 
 - Available on every leave case via the AI Assistant Panel
 - Analyzes case data to produce: eligibility determination, designation recommendation, required notice types
@@ -337,7 +337,7 @@ Super Admin      /leaveiq/superadmin
 
 ---
 
-## 8. PerformIQ — Functional Requirements
+## 8. Guildlight Grow — Functional Requirements
 
 ### 8.1 Case Management
 
@@ -387,7 +387,7 @@ Super Admin      /leaveiq/superadmin
 - Document type configuration (name, description, workflow template)
 - Workflow step templates (step name, order, required signers)
 - Policy management (add/edit/delete text and PDF policies)
-- PerformIQ user management (separate user table: `piq_users`)
+- Guildlight Grow user management (separate user table: `piq_users`)
 
 ---
 
@@ -395,7 +395,7 @@ Super Admin      /leaveiq/superadmin
 
 ### 9.1 Employee Data Management
 
-- Unified `employee` table shared by LeaveIQ and PerformIQ
+- Unified `employee` table shared by Guildlight Leave and Guildlight Grow
 - Fields: employee_id (HR identifier), full_name, position, location, department, manager_id (self-referential), manager_name, start_date, avg_hours_worked, work_email, personal_email, is_active, linked_user_id, data_source (hris/csv/manual), hris_id
 - Employees uploaded via CSV; upsert by employee_id (or full_name if no ID)
 - Manager relationships resolved in second pass after all employees inserted
@@ -413,12 +413,12 @@ Super Admin      /leaveiq/superadmin
 
 ### 9.3 User Management
 
-**LeaveIQ Users** (`users` table):
+**Guildlight Leave Users** (`users` table):
 - Roles: `admin` (HR Admin), `user` (HR User)
 - Authentication: email + password (bcrypt), JWT with 7-day expiry
 - Invite flow: super admin or HR Admin creates user → welcome email with temporary password sent via Resend
 
-**PerformIQ Users** (`piq_users` table — separate):
+**Guildlight Grow Users** (`piq_users` table — separate):
 - Roles: `hr_admin`, `hr_user`, `manager`, `supervisor`, `system_admin`
 - Authentication: separate JWT, same bcrypt approach
 - Created by super admin in organization panel
@@ -433,15 +433,15 @@ Super Admin      /leaveiq/superadmin
   - Notice delivery (employee) — with case documents attached
   - Medical certification request (employee) — with PDF cert attached
   - Calendar invite (leave start/end)
-  - E-signature request (employee, PerformIQ) [Planned]
-  - E-signature completion (HR, PerformIQ) [Planned]
+  - E-signature request (employee, Guildlight Grow) [Planned]
+  - E-signature completion (HR, Guildlight Grow) [Planned]
 
 ### 9.5 File Storage
 
 - Cloudflare R2 used for all binary file storage
 - Storage key patterns:
   - Medical certifications: `orgs/{orgId}/cases/{caseId}/docs/{uuid}.pdf`
-  - PerformIQ policies: `piq-policies/{orgId}/{uuid}.pdf`
+  - Guildlight Grow policies: `piq-policies/{orgId}/{uuid}.pdf`
   - Case documents (employee uploads): `orgs/{orgId}/cases/{caseId}/uploads/{uuid}`
 - Files referenced by storage key in DB; signed URLs generated on demand
 - 10 MB upload limit enforced server-side
@@ -491,8 +491,8 @@ Super Admin      /leaveiq/superadmin
 | Table | Description |
 |-------|-------------|
 | `organizations` | Tenant table; has_leave_iq, has_perform_iq flags |
-| `users` | LeaveIQ HR users (admin/user role) |
-| `employee` | Shared employee roster (LeaveIQ + PerformIQ) |
+| `users` | Guildlight Leave HR users (admin/user role) |
+| `employee` | Shared employee roster (Guildlight Leave + Guildlight Grow) |
 | `leave_cases` | FMLA/state/personal leave cases |
 | `ada_cases` | ADA accommodation request cases |
 | `case_documents` | Documents per case (generated + uploaded) |
@@ -502,11 +502,11 @@ Super Admin      /leaveiq/superadmin
 | `audit_log` | All significant events; metadata jsonb; org-scoped index |
 | `ada_interactive_log` | Ada agent conversation entries per ADA case |
 
-### 11.2 PerformIQ Tables
+### 11.2 Guildlight Grow Tables
 
 | Table | Description |
 |-------|-------------|
-| `piq_users` | PerformIQ-specific user records |
+| `piq_users` | Guildlight Grow-specific user records |
 | `piq_cases` | Performance management cases |
 | `piq_documents` | Documents per PIQ case |
 | `piq_document_history` | Version history per PIQ document |
@@ -559,7 +559,7 @@ employee (many) → (1) employee [manager_id self-referential]
 
 ## 12. AI Features
 
-### 12.1 Ava — LeaveIQ Leave Assistant
+### 12.1 Ave — Guildlight Leave Leave Assistant
 
 - **Model:** Claude (Anthropic), accessed via `@anthropic-ai/sdk`
 - **System prompt location:** `artifacts/api-server/src/lib/aiRecommendation.ts`
@@ -567,8 +567,8 @@ employee (many) → (1) employee [manager_id self-referential]
 - **Input context:** Case data, employee info, leave reason, dates, state of employment
 - **Output:** Structured JSON: `{ action, confidenceScore, reasoning, noticeTypes[], notices[{ type, content }] }`
 - **Notice types generated:** FMLA_ELIGIBILITY_NOTICE, FMLA_DESIGNATION_NOTICE, MEDICAL_CERTIFICATION_REQUEST, RETURN_TO_WORK, EXTENSION_NOTICE
-- **State programs:** Ava injects state disability/paid leave program details when employee state is known (CA SDI, NY DBL/PFL, NJ TDI/FLI, WA PFML, MA PFML, CO FAMLI, OR PFMLI, CT PFMLI, RI TDI/TCI, HI TDI, DC PFML)
-- **Feedback loop:** HR can provide feedback text; re-submitted to Ava for revision; feedback stored in audit log metadata
+- **State programs:** Ave injects state disability/paid leave program details when employee state is known (CA SDI, NY DBL/PFL, NJ TDI/FLI, WA PFML, MA PFML, CO FAMLI, OR PFMLI, CT PFMLI, RI TDI/TCI, HI TDI, DC PFML)
+- **Feedback loop:** HR can provide feedback text; re-submitted to Ave for revision; feedback stored in audit log metadata
 - **Session history:** All AI turns and notice sends stored in `audit_log` with full metadata; surfaced in AiAssistantPanel session history
 
 ### 12.2 Ada — ADA Accommodation Assistant
@@ -581,7 +581,7 @@ employee (many) → (1) employee [manager_id self-referential]
 - **Physician cert:** Generated as PDF (`buildMedCertPdf` in `lib/pdfUtils.ts`), sent as email attachment, returned by employee via portal
 - **Conversation persistence:** Each agent turn logged to `ada_interactive_log` as two entries: `hr_message` and `ada_response` (with metadata); AdaAgentPanel restores full history on mount
 
-### 12.3 PIQ Agent — PerformIQ Assistant
+### 12.3 PIQ Agent — Guildlight Grow Assistant
 
 - **Model:** Claude (Anthropic)
 - **System prompt location:** `artifacts/api-server/src/lib/piqAgent.ts`
@@ -681,7 +681,7 @@ leavara-leaveiq/
 
 ### 15.1 Authentication and Authorization
 
-- JWT-based; separate tokens for LeaveIQ users and PerformIQ users
+- JWT-based; separate tokens for Guildlight Leave users and Guildlight Grow users
 - `isSuperAdmin` claim on JWT gates `/api/superadmin/*` endpoints
 - `organizationId` claim on JWT; all queries filtered by it server-side
 - Employee portal uses case-scoped access tokens (UUID); not JWT
@@ -710,8 +710,8 @@ leavara-leaveiq/
 
 - REST conventions; `GET`, `POST`, `PATCH`, `DELETE`
 - All API routes prefixed `/api/`
-- LeaveIQ routes: `/api/cases`, `/api/ada/cases`, `/api/employees`, `/api/admin/*`, `/api/org/*`
-- PerformIQ routes: `/api/piq/*` and `/api/performiq/*`
+- Guildlight Leave routes: `/api/cases`, `/api/ada/cases`, `/api/employees`, `/api/admin/*`, `/api/org/*`
+- Guildlight Grow routes: `/api/piq/*` and `/api/performiq/*`
 - Super admin routes: `/api/superadmin/*`
 - Public portal routes: `/api/portal/*` (token-authenticated)
 - Error responses: `{ error: "Human-readable message" }` with appropriate HTTP status
@@ -725,7 +725,7 @@ leavara-leaveiq/
 
 ### v1.0 — Current
 
-All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functional end-to-end. AI assistants (Ava, Ada, PIQ Agent) operational. Employee portal live. Super admin panel operational.
+All "Built" items from Section 5. Core Guildlight Leave and Guildlight Grow workflows functional end-to-end. AI assistants (Ave, Ada, PIQ Agent) operational. Employee portal live. Super admin panel operational.
 
 ### v1.1 — In Progress
 
@@ -735,12 +735,12 @@ All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functiona
 - ADA case email on creation
 - ADA messaging 404 fix (support ADA case IDs in caseMessages handler)
 - Employee portal simplified (no public lookup endpoint)
-- PerformIQ e-signature workflow
+- Guildlight Grow e-signature workflow
 
 ### v1.2 — Planned
 
 - Run analysis auto-pull employee data in AnalyzeCaseModal
-- Disability pay replacement info in Ava notices (already built — state programs section)
+- Disability pay replacement info in Ave notices (already built — state programs section)
 - ADA physician cert as PDF with autofill + portal return instructions
 - Med cert timing fix (not in case docs until sent to employee)
 - Claim case for ADA accommodation cases
@@ -750,7 +750,7 @@ All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functiona
 - SSO / SAML integration
 - Automated HRIS sync (scheduled pull vs manual trigger)
 - Reporting and analytics dashboard (leave utilization, case volume trends, time-to-close)
-- Multi-product dashboard (single login for LeaveIQ + PerformIQ)
+- Multi-product dashboard (single login for Guildlight Leave + Guildlight Grow)
 - Custom notice templates per organization
 - API access for enterprise integrations
 - White-label / branded portal per organization
@@ -764,7 +764,7 @@ All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functiona
 
 1. **HIPAA compliance path:** At what employee count / ACV threshold does a BAA become necessary? Should medical certification content be encrypted at the application layer before DB write?
 
-2. **Multi-product auth:** LeaveIQ and PerformIQ currently have separate user tables and JWT flows. Should v1.2 unify them into a single login with product-level permission flags?
+2. **Multi-product auth:** Guildlight Leave and Guildlight Grow currently have separate user tables and JWT flows. Should v1.2 unify them into a single login with product-level permission flags?
 
 3. **HRIS sync schedule:** Once HRIS config moves to super admin, should HR admins be able to trigger manual syncs from the employee page, or super admin only?
 
@@ -772,9 +772,9 @@ All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functiona
 
 5. **ADA interactive process:** Does the Ada assistant need to explicitly guide HR through the interactive process timeline (e.g., deadline tracking for good-faith interactive process obligations)?
 
-6. **PerformIQ e-signature legal validity:** Does the typed-name / canvas signature satisfy e-sign requirements (ESIGN Act / UETA)? Should we add explicit consent capture language?
+6. **Guildlight Grow e-signature legal validity:** Does the typed-name / canvas signature satisfy e-sign requirements (ESIGN Act / UETA)? Should we add explicit consent capture language?
 
-7. **Intermittent leave tracking:** LeaveIQ tracks intermittent leave hours per case. Should there be a reporting view that shows running totals against approved hours?
+7. **Intermittent leave tracking:** Guildlight Leave tracks intermittent leave hours per case. Should there be a reporting view that shows running totals against approved hours?
 
 8. **Notification center:** Should there be an in-app notification system (bell icon) for case updates, upcoming deadlines, and certification overdue alerts?
 
@@ -782,36 +782,53 @@ All "Built" items from Section 5. Core LeaveIQ and PerformIQ workflows functiona
 
 ## Appendix A — Color Palette and Design System
 
-### LeaveIQ Brand Colors
+### Guildlight Brand Palette
+
+Five core brand colors. "The beacon that guides the guild."
 
 ```
-terracotta:   #C97E59   (primary sidebar, buttons, accents)
-terracottaDk: #9E5D38   (hover states, active)
-mocha:        #A47864   (secondary text, borders)
-mochaDeep:    #7A5540   (dark text on light backgrounds)
-rose:         #EAA292   (soft accent, avatar gradients)
-roseDark:     #C4705E   (rose hover)
-bgWarm:       #F0EEE9   (page background)
-bgCard:       #FAF8F5   (card backgrounds)
-textDark:     #3D2010   (primary body text)
-textBody:     #5C3D28   (secondary body text)
-textMuted:    #8C7058   (placeholder, caption text)
-textOnDark:   #F0EEE9   (text on terracotta backgrounds)
+Midnight Navy:   #1B2430   (primary text, dark surfaces, foreground)
+Antique Brass:   #C39A4A   (primary accent — sidebar, buttons, links)
+Warm Ivory:      #F4F1EA   (page background)
+Slate:           #5A6470   (secondary/muted text, captions)
+Sage:            #7C9273   (Guildlight Leave product accent)
 ```
 
-### PerformIQ Accent Colors
+Accessibility note: Antique Brass is an accent, not a body-text color on light
+backgrounds. Use Midnight Navy or Slate for body copy. Primary buttons use Navy
+text on Brass (contrast ≈ 5.7:1, WCAG AA).
+
+### Guildlight Leave — Brand Colors
 
 ```
-perf:         #2E7B7B   (primary teal)
-perfLight:    #5BA8A8   (teal hover)
-perfDark:     #1E5555   (teal active)
-perfBg:       #EBF5F5   (teal light background)
+brass:        #C39A4A   (primary sidebar, buttons, accents)
+brassDk:      #9C7A35   (hover states, active)
+slateWarm:    #B39A6A   (secondary text, borders)
+slateDeep:    #6E5A2E   (dark text on light backgrounds)
+sageAccent:   #D9B87A   (soft accent, avatar gradients)
+sageAccentDk: #B58A48   (accent hover)
+bgWarm:       #F4F1EA   (page background — Warm Ivory)
+bgCard:       #FAF8F3   (card backgrounds)
+textDark:     #1B2430   (primary body text — Midnight Navy)
+textBody:     #2E3742   (secondary body text)
+textMuted:    #5A6470   (placeholder, caption text — Slate)
+textOnDark:   #F4F1EA   (text on dark/brass backgrounds)
+```
+
+### Guildlight Grow — Accent Colors
+
+```
+perf:         #7C9273   (primary — Sage)
+perfLight:    #A3B89B   (sage hover)
+perfDark:     #54684B   (sage active)
+perfBg:       #ECF0E9   (sage light background)
 ```
 
 ### Typography
 
-- Font stack: System UI (`-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`)
-- No custom webfonts currently loaded
+- Display font: **Plus Jakarta Sans** (headings, weights 600–800)
+- Body font: **Inter** (body, weights 400/500/600/700)
+- Loaded via Google Fonts in `index.html`
 - Heading weights: 600–700
 - Body: 400 (regular), 500 (medium emphasis)
 
@@ -824,11 +841,11 @@ perfBg:       #EBF5F5   (teal light background)
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret for signing LeaveIQ JWTs |
-| `PIQ_JWT_SECRET` | Secret for signing PerformIQ JWTs |
+| `JWT_SECRET` | Secret for signing Guildlight Leave JWTs |
+| `PIQ_JWT_SECRET` | Secret for signing Guildlight Grow JWTs |
 | `RESEND_API_KEY` | Resend email service API key |
 | `RESEND_FROM_EMAIL` | Sender address for all transactional emails |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude (Ava, Ada, PIQ agent) |
+| `ANTHROPIC_API_KEY` | Anthropic API key for Claude (Ave, Ada, PIQ agent) |
 | `R2_ACCOUNT_ID` | Cloudflare R2 account ID |
 | `R2_ACCESS_KEY_ID` | R2 access key |
 | `R2_SECRET_ACCESS_KEY` | R2 secret key |
@@ -884,5 +901,5 @@ Recommended columns:
 
 | Date | Version | Change |
 |------|---------|--------|
-| 2026-05-21 | 1.0 | Initial PRD created; covers LeaveIQ v1, PerformIQ v1, planned v1.1–v2.0 features, data model, AI architecture, deployment, security |
-| 2026-05-21 | 1.1 | Employee management overhaul: unified `/leaveiq/employees` page (LeaveIQ palette, shared by both products); batch CSV upload (fixes 1789-row timeout); `employee_import_log` table; CSV error report; HRIS configuration moved to Super Admin panel; HRIS removed from HR Admin nav |
+| 2026-05-21 | 1.0 | Initial PRD created; covers Guildlight Leave v1, Guildlight Grow v1, planned v1.1–v2.0 features, data model, AI architecture, deployment, security |
+| 2026-05-21 | 1.1 | Employee management overhaul: unified `/leaveiq/employees` page (Guildlight Leave palette, shared by both products); batch CSV upload (fixes 1789-row timeout); `employee_import_log` table; CSV error report; HRIS configuration moved to Super Admin panel; HRIS removed from HR Admin nav |

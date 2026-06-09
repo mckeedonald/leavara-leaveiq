@@ -17,10 +17,10 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Build**: esbuild (CJS bundle)
 - **Frontend**: React + Vite + Tailwind CSS + shadcn/ui
 
-## Application: Leavara LeaveIQ
+## Application: Guildlight Leave
 
 California Leave of Absence (LOA) decision-support **multi-tenant SaaS** for HR teams.
-Marketing landing page at `leavara.net`. Each customer company gets a dedicated portal at `<slug>.leavara.net`.
+Marketing landing page at `guildlight.co`. Each customer company gets a dedicated portal at `<slug>.guildlight.co`.
 
 ### Key Features
 - Multi-tenant: all data scoped to `organization` — companies are isolated by `organization_id`
@@ -31,17 +31,17 @@ Marketing landing page at `leavara.net`. Each customer company gets a dedicated 
 - Full audit trail
 - JWT auth (8hr expiry); token includes `organizationId`
 - Invite-based enrollment; invites scoped to issuing organization
-- Interest intake form at `/interest` — submissions emailed to `donnie@leavara.net`
+- Interest intake form at `/interest` — submissions emailed to `donnie@guildlight.co`
 
 ### Super Admin
-- `admin@leavara.net` is the Leavara platform super admin (`is_super_admin=true`, `organization_id=NULL`)
+- `admin@guildlight.co` is the Guildlight platform super admin (`is_super_admin=true`, `organization_id=NULL`)
 - Super admin logs in → redirected to `/superadmin` (not `/dashboard`)
 - Super admin can: manage all organizations, toggle org active status, create new organizations, view/restore soft-deleted cases, manage users across all tenants
 - API routes under `/api/superadmin/*` require `requireSuperAdmin` middleware
 - JWT payload includes `isSuperAdmin` flag; AppLayout shows only "Super Admin" nav item for super admins
 
 ### First Organization
-- **Soapy Joe's Car Wash** — slug: `soapyjoes`, portal: `soapyjoes.leavara.net`
+- **Soapy Joe's Car Wash** — slug: `soapyjoes`, portal: `soapyjoes.guildlight.co`
 - Org admin: created via super admin panel
 
 ### Palette (warm)
@@ -55,7 +55,7 @@ Marketing landing page at `leavara.net`. Each customer company gets a dedicated 
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
 │   ├── api-server/         # Express API server
-│   └── leaveiq/            # React + Vite frontend (LeaveIQ UI)
+│   └── leaveiq/            # React + Vite frontend (Guildlight Leave UI)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -88,7 +88,7 @@ artifacts-monorepo/
 - `GET /api/auth/invite/validate?token=xxx`
 - `POST /api/auth/register` — register from invite token (assigns org from invite)
 - `POST /api/cases?org=<slug>` — employee portal case intake (org resolved from slug)
-- `POST /api/interest` — company interest form → emails donnie@leavara.net
+- `POST /api/interest` — company interest form → emails donnie@guildlight.co
 
 ### Authenticated (JWT required)
 - `GET /api/auth/me` — current user profile
@@ -111,13 +111,13 @@ artifacts-monorepo/
 - Shared database, shared schema with `organization_id` row-level isolation
 - JWT payload includes `{ sub, email, role, organizationId }`
 - HR routes enforce org-scoped queries via the JWT's `organizationId`
-- Employee portal detects org from subdomain (`slug.leavara.net`) or `?org=<slug>` query param (dev)
-- Phase 2 (planned): Leavara super-admin panel to provision orgs
+- Employee portal detects org from subdomain (`slug.guildlight.co`) or `?org=<slug>` query param (dev)
+- Phase 2 (planned): Guildlight super-admin panel to provision orgs
 - Phase 3 (planned): Stripe billing per org
 
 ## Subdomain Routing (Production)
 
-- DNS: `*.leavara.net` → Replit deployment
+- DNS: `*.guildlight.co` → Replit deployment
 - App reads `window.location.hostname`, extracts subdomain as org slug
 - Dev fallback: `?org=soapyjoes` query param on employee portal
 
