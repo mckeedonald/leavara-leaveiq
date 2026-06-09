@@ -204,7 +204,7 @@ export default function HubDashboard() {
 
   function handleLogout() {
     logout();
-    navigate("/leaveiq/login");
+    navigate("/leave/login");
   }
 
   const firstName = user?.firstName ?? "";
@@ -253,7 +253,7 @@ export default function HubDashboard() {
               accentBg={C.leaveBg}
               accentBorder={C.leaveBorder}
               icon={<CalendarDays className="w-5 h-5" />}
-              href="/leaveiq/dashboard"
+              href="/leave/dashboard"
               loading={leaveLoading}
               stats={[
                 { label: "Total Cases",       value: leaveTotal,    icon: <FolderOpen className="w-4 h-4" /> },
@@ -274,7 +274,7 @@ export default function HubDashboard() {
               accentBg={C.perfBg}
               accentBorder={C.perfBorder}
               icon={<TrendingUp className="w-5 h-5" />}
-              href="/performiq/dashboard"
+              href="/grow/dashboard"
               loading={perfLoading}
               stats={[
                 { label: "Active Cases",    value: perfActive,  icon: <FolderOpen className="w-4 h-4" /> },

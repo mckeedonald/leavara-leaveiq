@@ -97,7 +97,7 @@ function CreateAdaCaseModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
       });
       queryClient.invalidateQueries({ queryKey: ["ada-cases"] });
       onClose();
-      navigate(`/leaveiq/ada-cases/${result.case.id}`);
+      navigate(`/leave/ada-cases/${result.case.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create case. Please try again.");
     } finally {
@@ -342,7 +342,7 @@ export default function AdaCases() {
                     return (
                       <tr key={c.id} className="hover:bg-muted/20 transition-colors group">
                         <td className="px-6 py-4">
-                          <Link href={`/leaveiq/ada-cases/${c.id}`}>
+                          <Link href={`/leave/ada-cases/${c.id}`}>
                             <span className="font-mono font-semibold text-xs hover:underline cursor-pointer" style={{ color: "#C39A4A" }}>
                               {c.caseNumber}
                             </span>

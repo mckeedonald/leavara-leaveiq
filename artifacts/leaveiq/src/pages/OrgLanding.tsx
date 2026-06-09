@@ -23,7 +23,7 @@ export default function OrgLanding() {
               subtitle="Leave Management"
               accentColor="#C39A4A"
               primaryLabel="Request Leave"
-              primaryHref="/leaveiq/request"
+              primaryHref="/leave/request"
             />
             <ProductInfoCard
               title="Guildlight Grow"
@@ -35,7 +35,7 @@ export default function OrgLanding() {
           </div>
 
           {/* Single sign-in button for the whole org */}
-          <Link href="/leaveiq/login">
+          <Link href="/leave/login">
             <a
               className="flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-semibold text-base transition-all hover:opacity-90 active:scale-[0.98] shadow-md"
               style={{ background: "#C39A4A", color: "#FFFFFF" }}
@@ -66,7 +66,7 @@ export default function OrgLanding() {
 
             <div className="w-full flex flex-col gap-3">
               {products[0] !== "performiq" && (
-                <Link href="/leaveiq/request">
+                <Link href="/leave/request">
                   <a
                     className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold text-base transition-all hover:opacity-90 active:scale-[0.98] shadow-sm"
                     style={{ background: "#C39A4A", color: "#FFFFFF" }}
@@ -77,7 +77,7 @@ export default function OrgLanding() {
                 </Link>
               )}
 
-              <Link href="/leaveiq/login">
+              <Link href="/leave/login">
                 <a
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold text-base transition-all hover:bg-[#F4EEDF] active:scale-[0.98] border"
                   style={{ background: "#FFFFFF", color: "#1B2430", borderColor: "#C97E5966" }}

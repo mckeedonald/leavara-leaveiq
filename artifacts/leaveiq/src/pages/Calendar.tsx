@@ -189,7 +189,7 @@ function LeaveCalendarTab({
                   </p>
                 </div>
                 <div className="flex-1 relative h-10 mx-1">
-                  <Link href={`/leaveiq/cases/${c.caseId}`}>
+                  <Link href={`/leave/cases/${c.caseId}`}>
                     <div
                       className="absolute top-1 h-8 rounded-lg flex items-center px-2 overflow-hidden cursor-pointer transition-opacity hover:opacity-80"
                       style={{
@@ -306,7 +306,7 @@ function AccommodationsCalendarTab({
                   </p>
                 </div>
                 <div className="flex-1 relative h-10 mx-1">
-                  <Link href={`/leaveiq/ada-cases/${acc.caseId}`}>
+                  <Link href={`/leave/ada-cases/${acc.caseId}`}>
                     <div
                       className="absolute top-1 h-8 rounded-lg flex items-center px-2 overflow-hidden cursor-pointer transition-opacity hover:opacity-80"
                       style={{

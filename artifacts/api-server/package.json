@@ -11,6 +11,7 @@
     "seed-admin": "tsx --env-file-if-exists=.env src/scripts/seed-admin.ts",
     "db:seed": "tsx --env-file-if-exists=.env src/scripts/seed.ts",
     "set-superadmin": "tsx --env-file-if-exists=.env src/scripts/set-superadmin.ts",
+    "set-superadmin-email": "tsx --env-file-if-exists=.env src/scripts/set-superadmin-email.ts",
     "reset-superadmin-password": "tsx --env-file-if-exists=.env src/scripts/reset-superadmin-password.ts",
     "backfill-encryption": "tsx --env-file-if-exists=.env src/scripts/backfillEncryption.ts",
     "run-retention": "tsx --env-file-if-exists=.env src/scripts/runRetention.ts"

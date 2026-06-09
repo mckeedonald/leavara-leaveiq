@@ -258,7 +258,7 @@ router.post("/cases", async (req, res): Promise<void> => {
           expiresAt: null,
         });
 
-        const magicLinkUrl = `${getAppUrl()}/leaveiq/portal?token=${token}`;
+        const magicLinkUrl = `${getAppUrl()}/leave/portal?token=${token}`;
         await sendMagicLinkEmail(resolvedEmail, newCase.caseNumber, magicLinkUrl);
         logger.info({ caseId: newCase.id }, "Confirmation/magic-link email sent");
       } catch (err) {

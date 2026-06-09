@@ -93,7 +93,7 @@ export default function PiqCaseList() {
             </p>
           </div>
           <Link
-            href="/performiq/cases/new"
+            href="/grow/cases/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             style={{ background: C.perf }}
           >
@@ -162,7 +162,7 @@ export default function PiqCaseList() {
                   return (
                     <Link
                       key={c.id}
-                      href={`/performiq/cases/${c.id}`}
+                      href={`/grow/cases/${c.id}`}
                       className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-blue-50 transition-colors"
                     >
                       <div className="col-span-1">

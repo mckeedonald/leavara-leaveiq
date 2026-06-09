@@ -246,7 +246,7 @@ router.post(
 
       // Generate employee access token
       const employeeAccessToken = crypto.randomBytes(32).toString("hex");
-      const signUrl = `${getAppUrl()}/performiq/sign?token=${employeeAccessToken}`;
+      const signUrl = `${getAppUrl()}/grow/sign?token=${employeeAccessToken}`;
 
       // Create (or replace) signature record
       await db.delete(piqSignaturesTable).where(

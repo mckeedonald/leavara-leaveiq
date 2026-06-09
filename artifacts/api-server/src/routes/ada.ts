@@ -393,7 +393,7 @@ router.post("/ada/cases/:caseId/physician-cert", requireAuth, async (req: Reques
     // Build portal return instructions (appended to cert before PDF generation)
     const appUrl = getAppUrl();
     const portalUrl = adaCase.accessToken
-      ? `${appUrl}/leaveiq/portal?token=${adaCase.accessToken}`
+      ? `${appUrl}/leave/portal?token=${adaCase.accessToken}`
       : null;
     const returnInstructions = [
       "",

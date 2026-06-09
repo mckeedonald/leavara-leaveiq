@@ -35,7 +35,7 @@ export default function PiqLogin() {
     setError(null);
     try {
       await login(email, password);
-      navigate("/performiq/dashboard");
+      navigate("/grow/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
@@ -56,7 +56,7 @@ export default function PiqLogin() {
             <TrendingUp className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>
-            Perform<span style={{ color: C.perf }}>IQ</span>
+            Guildlight <span style={{ color: C.perf }}>Grow</span>
           </h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>
             Smart Performance Management · by Guildlight
@@ -129,7 +129,7 @@ export default function PiqLogin() {
               </div>
               <div className="mt-2 text-right">
                 <Link
-                  href="/performiq/forgot-password"
+                  href="/grow/forgot-password"
                   className="text-xs font-medium transition-colors hover:opacity-80"
                   style={{ color: C.perf }}
                 >

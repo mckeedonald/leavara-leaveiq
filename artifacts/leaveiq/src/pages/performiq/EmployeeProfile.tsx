@@ -166,7 +166,7 @@ export default function PiqEmployeeProfile() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6" style={{ color: C.textMuted }}>
           <button
-            onClick={() => navigate("/performiq/employees")}
+            onClick={() => navigate("/grow/employees")}
             className="hover:opacity-70 flex items-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" /> Employees
@@ -311,7 +311,7 @@ export default function PiqEmployeeProfile() {
                   return (
                     <button
                       key={c.id}
-                      onClick={() => navigate(`/performiq/cases/${c.id}`)}
+                      onClick={() => navigate(`/grow/cases/${c.id}`)}
                       className="w-full flex items-center gap-4 px-6 py-4 hover:bg-teal-50/40 transition-colors text-left"
                     >
                       <div className="flex-1 min-w-0">

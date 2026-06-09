@@ -362,7 +362,7 @@ export default function Landing() {
 
           {/* Sign in + CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/leaveiq/login" className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-70 transition-opacity"
+            <Link href="/leave/login" className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-70 transition-opacity"
               style={{ color: C.textBody }}>
               Sign In
             </Link>
@@ -383,7 +383,7 @@ export default function Landing() {
             <a href="#leaveiq" onClick={() => setMobileOpen(false)}>Guildlight Leave</a>
             <a href="#performiq" onClick={() => setMobileOpen(false)}>Guildlight Grow</a>
             <a href="#why-guildlight" onClick={() => setMobileOpen(false)}>Why Guildlight</a>
-            <Link href="/leaveiq/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
+            <Link href="/leave/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
             <Link href="/interest" onClick={() => setMobileOpen(false)}
               className="text-center py-2.5 rounded-lg font-semibold text-white"
               style={{ background: C.terracotta }}>
@@ -449,7 +449,7 @@ export default function Landing() {
               style={{ background: C.terracotta }}>
               Get Started <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/leaveiq/login"
+            <Link href="/leave/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm border hover:opacity-80 transition-opacity"
               style={{ borderColor: C.khaki, color: C.textBody, background: C.bgCard }}>
               Sign In to Your Platform
@@ -567,7 +567,7 @@ export default function Landing() {
                   </div>
                 ))}
                 <div className="pt-4 flex gap-3 flex-wrap">
-                  <Link href="/leaveiq/login"
+                  <Link href="/leave/login"
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                     style={{ background: C.perfDark }}>
                     Sign In to Guildlight Grow <ArrowRight className="w-4 h-4" />
@@ -721,12 +721,12 @@ export default function Landing() {
             One login gives you access to all the Guildlight products your organization has activated.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/leaveiq/login"
+            <Link href="/leave/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
               style={{ background: C.terracotta }}>
               Sign In to Guildlight Leave <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/leaveiq/login"
+            <Link href="/leave/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
               style={{ background: C.perfDark }}>
               Sign In to Guildlight Grow <ArrowRight className="w-4 h-4" />
@@ -770,7 +770,7 @@ export default function Landing() {
           </div>
           <span style={{ color: C.khaki }}>© {new Date().getFullYear()} Guildlight, LLC · All rights reserved.</span>
           <div className="flex gap-5" style={{ color: C.khaki }}>
-            <Link href="/leaveiq/login" className="hover:opacity-70 transition-opacity">Sign In</Link>
+            <Link href="/leave/login" className="hover:opacity-70 transition-opacity">Sign In</Link>
             <Link href="/interest" className="hover:opacity-70 transition-opacity">Get Started</Link>
           </div>
         </div>

@@ -239,7 +239,7 @@ export default function NewCase() {
           initialDraft: draft,
         }),
       });
-      navigate(`/performiq/cases/${newCase.id}`);
+      navigate(`/grow/cases/${newCase.id}`);
     } catch {
       setError("Failed to create case. Please try again.");
       setSaving(false);

@@ -151,7 +151,7 @@ export default function PiqEmployees() {
                 <div key={e.id} className="flex items-center gap-4 px-6 py-4 hover:bg-teal-50/40 transition-colors">
                   {/* Clickable area — navigates to employee profile */}
                   <button
-                    onClick={() => navigate(`/performiq/employees/${e.id}`)}
+                    onClick={() => navigate(`/grow/employees/${e.id}`)}
                     className="flex items-center gap-4 flex-1 min-w-0 text-left"
                   >
                     <div

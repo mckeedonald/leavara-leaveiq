@@ -61,7 +61,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   const [location] = useLocation();
 
   if (isLoading) return null;
-  if (!user) return <Redirect to={`/leaveiq/login?redirect=${encodeURIComponent(location)}`} />;
+  if (!user) return <Redirect to={`/leave/login?redirect=${encodeURIComponent(location)}`} />;
   return <Component />;
 }
 
@@ -70,17 +70,17 @@ function SuperAdminRoute({ component: Component }: { component: React.ComponentT
   const [location] = useLocation();
 
   if (isLoading) return null;
-  if (!user) return <Redirect to={`/leaveiq/login?redirect=${encodeURIComponent(location)}`} />;
-  if (!user.isSuperAdmin) return <Redirect to="/leaveiq/dashboard" />;
+  if (!user) return <Redirect to={`/leave/login?redirect=${encodeURIComponent(location)}`} />;
+  if (!user.isSuperAdmin) return <Redirect to="/leave/dashboard" />;
   return <Component />;
 }
 
 function GuestRoute({ component: Component }: { component: React.ComponentType }) {
   const { user } = useAuth();
-  if (user?.isSuperAdmin) return <Redirect to="/leaveiq/superadmin" />;
+  if (user?.isSuperAdmin) return <Redirect to="/leave/superadmin" />;
   if (user?.hasLeaveIq && user?.hasPerformIq) return <Redirect to="/hub" />;
-  if (user?.hasPerformIq) return <Redirect to="/performiq/dashboard" />;
-  if (user) return <Redirect to="/leaveiq/dashboard" />;
+  if (user?.hasPerformIq) return <Redirect to="/grow/dashboard" />;
+  if (user) return <Redirect to="/leave/dashboard" />;
   return <Component />;
 }
 
@@ -88,13 +88,13 @@ function PiqProtectedRoute({ component: Component }: { component: React.Componen
   const { user, isLoading } = usePiqAuth();
   const [location] = useLocation();
   if (isLoading) return null;
-  if (!user) return <Redirect to={`/performiq/login?redirect=${encodeURIComponent(location)}`} />;
+  if (!user) return <Redirect to={`/grow/login?redirect=${encodeURIComponent(location)}`} />;
   return <Component />;
 }
 
 function PiqGuestRoute({ component: Component }: { component: React.ComponentType }) {
   const { user } = usePiqAuth();
-  if (user) return <Redirect to="/performiq/dashboard" />;
+  if (user) return <Redirect to="/grow/dashboard" />;
   return <Component />;
 }
 
@@ -115,8 +115,8 @@ function Router() {
       <Route path="/interest" component={Interest} />
 
       {/* Guildlight Leave employee routes */}
-      <Route path="/leaveiq/request" component={EmployeePortal} />
-      <Route path="/leaveiq/portal" component={EmployeePortalCase} />
+      <Route path="/leave/request" component={EmployeePortal} />
+      <Route path="/leave/portal" component={EmployeePortalCase} />
 
       {/* Hub — unified landing for orgs with both products */}
       <Route path="/hub" component={() => <ProtectedRoute component={HubDashboard} />} />
@@ -125,57 +125,57 @@ function Router() {
       <Route path="/product-select" component={() => <Redirect to="/hub" />} />
 
       {/* Guildlight Leave HR routes */}
-      <Route path="/leaveiq/login" component={() => <GuestRoute component={Login} />} />
-      <Route path="/leaveiq/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
-      <Route path="/leaveiq/reset-password" component={ResetPassword} />
-      <Route path="/leaveiq/register" component={Register} />
-      <Route path="/leaveiq/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/leaveiq/manager" component={() => <ProtectedRoute component={ManagerDashboard} />} />
-      <Route path="/leaveiq/cases" component={() => <ProtectedRoute component={Cases} />} />
-      <Route path="/leaveiq/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
-      <Route path="/leaveiq/users" component={() => <ProtectedRoute component={Users} />} />
-      <Route path="/leaveiq/account" component={() => <ProtectedRoute component={AccountSettings} />} />
-      <Route path="/leaveiq/calendar" component={() => <ProtectedRoute component={Calendar} />} />
-      <Route path="/leaveiq/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
-      <Route path="/leaveiq/analytics" component={() => <ProtectedRoute component={Analytics} />} />
-      <Route path="/leaveiq/audit" component={() => <ProtectedRoute component={AdminAudit} />} />
-      <Route path="/leaveiq/employees" component={() => <ProtectedRoute component={Employees} />} />
-      <Route path="/leaveiq/ada-cases" component={() => <ProtectedRoute component={AdaCases} />} />
-      <Route path="/leaveiq/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
-      <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
+      <Route path="/leave/login" component={() => <GuestRoute component={Login} />} />
+      <Route path="/leave/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
+      <Route path="/leave/reset-password" component={ResetPassword} />
+      <Route path="/leave/register" component={Register} />
+      <Route path="/leave/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/leave/manager" component={() => <ProtectedRoute component={ManagerDashboard} />} />
+      <Route path="/leave/cases" component={() => <ProtectedRoute component={Cases} />} />
+      <Route path="/leave/cases/:caseId" component={() => <ProtectedRoute component={CaseDetail} />} />
+      <Route path="/leave/users" component={() => <ProtectedRoute component={Users} />} />
+      <Route path="/leave/account" component={() => <ProtectedRoute component={AccountSettings} />} />
+      <Route path="/leave/calendar" component={() => <ProtectedRoute component={Calendar} />} />
+      <Route path="/leave/hris-settings" component={() => <ProtectedRoute component={HrisSettings} />} />
+      <Route path="/leave/analytics" component={() => <ProtectedRoute component={Analytics} />} />
+      <Route path="/leave/audit" component={() => <ProtectedRoute component={AdminAudit} />} />
+      <Route path="/leave/employees" component={() => <ProtectedRoute component={Employees} />} />
+      <Route path="/leave/ada-cases" component={() => <ProtectedRoute component={AdaCases} />} />
+      <Route path="/leave/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
+      <Route path="/leave/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
       {/* Guildlight Grow public routes — no auth required */}
-      <Route path="/performiq/sign" component={SignDocument} />
+      <Route path="/grow/sign" component={SignDocument} />
 
       {/* Guildlight Grow routes — login redirects to unified portal */}
-      <Route path="/performiq/login" component={() => <Redirect to="/leaveiq/login" />} />
-      <Route path="/performiq/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
-      <Route path="/performiq/analytics" component={() => <PiqProtectedRoute component={PiqAnalytics} />} />
-      <Route path="/performiq/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
-      <Route path="/performiq/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />
-      <Route path="/performiq/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
-      <Route path="/performiq/employees/:employeeId" component={() => <PiqProtectedRoute component={PiqEmployeeProfile} />} />
-      <Route path="/performiq/employees" component={() => <PiqProtectedRoute component={PiqEmployees} />} />
-      <Route path="/performiq/admin/settings" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
-      <Route path="/performiq/admin/policies" component={() => <Redirect to="/performiq/admin/settings" />} />
-      <Route path="/performiq/admin/document-types" component={() => <Redirect to="/performiq/admin/settings" />} />
-      <Route path="/performiq/admin/users" component={() => <Redirect to="/performiq/admin/settings" />} />
+      <Route path="/grow/login" component={() => <Redirect to="/leave/login" />} />
+      <Route path="/grow/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
+      <Route path="/grow/analytics" component={() => <PiqProtectedRoute component={PiqAnalytics} />} />
+      <Route path="/grow/cases/new" component={() => <PiqProtectedRoute component={NewCase} />} />
+      <Route path="/grow/cases/:caseId" component={() => <PiqProtectedRoute component={PiqCaseDetail} />} />
+      <Route path="/grow/cases" component={() => <PiqProtectedRoute component={PiqCaseList} />} />
+      <Route path="/grow/employees/:employeeId" component={() => <PiqProtectedRoute component={PiqEmployeeProfile} />} />
+      <Route path="/grow/employees" component={() => <PiqProtectedRoute component={PiqEmployees} />} />
+      <Route path="/grow/admin/settings" component={() => <PiqProtectedRoute component={PiqAdminSettings} />} />
+      <Route path="/grow/admin/policies" component={() => <Redirect to="/grow/admin/settings" />} />
+      <Route path="/grow/admin/document-types" component={() => <Redirect to="/grow/admin/settings" />} />
+      <Route path="/grow/admin/users" component={() => <Redirect to="/grow/admin/settings" />} />
 
       {/* Backward-compat redirects — keep old paths alive */}
-      <Route path="/request" component={() => <NavRedirect to="/leaveiq/request" />} />
-      <Route path="/portal" component={() => <NavRedirect to={`/leaveiq/portal${window.location.search}`} />} />
-      <Route path="/login" component={() => <NavRedirect to="/leaveiq/login" />} />
-      <Route path="/forgot-password" component={() => <NavRedirect to="/leaveiq/forgot-password" />} />
-      <Route path="/reset-password" component={() => <NavRedirect to={`/leaveiq/reset-password${window.location.search}`} />} />
-      <Route path="/register" component={() => <NavRedirect to={`/leaveiq/register${window.location.search}`} />} />
-      <Route path="/dashboard" component={() => <NavRedirect to="/leaveiq/dashboard" />} />
-      <Route path="/cases" component={() => <NavRedirect to="/leaveiq/cases" />} />
-      <Route path="/cases/:caseId">{(params: { caseId: string }) => <NavRedirect to={`/leaveiq/cases/${params.caseId}`} />}</Route>
-      <Route path="/users" component={() => <NavRedirect to="/leaveiq/users" />} />
-      <Route path="/account" component={() => <NavRedirect to="/leaveiq/account" />} />
-      <Route path="/calendar" component={() => <NavRedirect to="/leaveiq/calendar" />} />
-      <Route path="/hris-settings" component={() => <NavRedirect to="/leaveiq/hris-settings" />} />
-      <Route path="/superadmin" component={() => <NavRedirect to="/leaveiq/superadmin" />} />
+      <Route path="/request" component={() => <NavRedirect to="/leave/request" />} />
+      <Route path="/portal" component={() => <NavRedirect to={`/leave/portal${window.location.search}`} />} />
+      <Route path="/login" component={() => <NavRedirect to="/leave/login" />} />
+      <Route path="/forgot-password" component={() => <NavRedirect to="/leave/forgot-password" />} />
+      <Route path="/reset-password" component={() => <NavRedirect to={`/leave/reset-password${window.location.search}`} />} />
+      <Route path="/register" component={() => <NavRedirect to={`/leave/register${window.location.search}`} />} />
+      <Route path="/dashboard" component={() => <NavRedirect to="/leave/dashboard" />} />
+      <Route path="/cases" component={() => <NavRedirect to="/leave/cases" />} />
+      <Route path="/cases/:caseId">{(params: { caseId: string }) => <NavRedirect to={`/leave/cases/${params.caseId}`} />}</Route>
+      <Route path="/users" component={() => <NavRedirect to="/leave/users" />} />
+      <Route path="/account" component={() => <NavRedirect to="/leave/account" />} />
+      <Route path="/calendar" component={() => <NavRedirect to="/leave/calendar" />} />
+      <Route path="/hris-settings" component={() => <NavRedirect to="/leave/hris-settings" />} />
+      <Route path="/superadmin" component={() => <NavRedirect to="/leave/superadmin" />} />
 
       <Route component={NotFound} />
     </Switch>

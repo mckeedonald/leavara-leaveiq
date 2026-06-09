@@ -41,7 +41,7 @@ export default function Login() {
       const loggedInUser = await login(email, password);
 
       if (loggedInUser.isSuperAdmin) {
-        navigate("/leaveiq/superadmin");
+        navigate("/leave/superadmin");
         return;
       }
 
@@ -53,8 +53,8 @@ export default function Login() {
       const dest = hasBoth
         ? "/product-select"
         : loggedInUser.hasPerformIq
-          ? "/performiq/dashboard"
-          : "/leaveiq/dashboard";
+          ? "/grow/dashboard"
+          : "/leave/dashboard";
 
       if (isRootDomain && loggedInUser.organizationSlug) {
         window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.guildlight.co${dest}`;
@@ -136,7 +136,7 @@ export default function Login() {
                 </button>
               </div>
               <div className="mt-2 text-right">
-                <Link href="/leaveiq/forgot-password" className="text-xs font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+                <Link href="/leave/forgot-password" className="text-xs font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                   Forgot Password?
                 </Link>
               </div>
@@ -155,7 +155,7 @@ export default function Login() {
           <div className="mt-6 pt-5 text-center" style={{ borderTop: `1px solid ${C.border}` }}>
             <p className="text-sm" style={{ color: C.textMuted }}>
               New user?{" "}
-              <Link href="/leaveiq/register" className="font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
+              <Link href="/leave/register" className="font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                 Enroll here
               </Link>
             </p>

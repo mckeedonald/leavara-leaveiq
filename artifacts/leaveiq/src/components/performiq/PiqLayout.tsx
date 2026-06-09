@@ -38,15 +38,15 @@ export function PiqLayout({ children }: PiqLayoutProps) {
 
   function handleLogout() {
     logout();
-    navigate("/performiq/login");
+    navigate("/grow/login");
   }
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/performiq/dashboard", show: true },
-    { icon: FolderOpen, label: "Cases", href: "/performiq/cases", show: true },
-    { icon: TrendingUp, label: "Analytics", href: "/performiq/analytics", show: true },
-    { icon: Users, label: "Employees", href: "/performiq/employees", show: isHr },
-    { icon: Settings, label: "Admin Settings", href: "/performiq/admin/settings", show: isHrAdmin },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/grow/dashboard", show: true },
+    { icon: FolderOpen, label: "Cases", href: "/grow/cases", show: true },
+    { icon: TrendingUp, label: "Analytics", href: "/grow/analytics", show: true },
+    { icon: Users, label: "Employees", href: "/grow/employees", show: isHr },
+    { icon: Settings, label: "Admin Settings", href: "/grow/admin/settings", show: isHrAdmin },
   ].filter((i) => i.show);
 
   const initials = user
@@ -76,7 +76,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         <div className="flex items-center gap-2">
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Perform<span style={{ color: "#BFCDB3" }}>IQ</span>
+            Guildlight <span style={{ color: "#BFCDB3" }}>Grow</span>
           </span>
         </div>
         <button
@@ -97,7 +97,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location === item.href || location.startsWith(item.href + "/") ||
-                (item.href === "/performiq/admin/settings" && location.startsWith("/performiq/admin/"));
+                (item.href === "/grow/admin/settings" && location.startsWith("/grow/admin/"));
               return (
                 <Link
                   key={item.href}
@@ -147,7 +147,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Perform<span style={{ color: "#BFCDB3" }}>IQ</span>
+              Guildlight <span style={{ color: "#BFCDB3" }}>Grow</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMuted }}>
               Performance Management
@@ -169,7 +169,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         <nav className="flex-1 px-4 space-y-1 mt-4 pb-4">
           {navItems.map((item) => {
             const isActive = location === item.href || location.startsWith(item.href + "/") ||
-              (item.href === "/performiq/admin/settings" && location.startsWith("/performiq/admin/"));
+              (item.href === "/grow/admin/settings" && location.startsWith("/grow/admin/"));
             return (
               <Link
                 key={item.href}

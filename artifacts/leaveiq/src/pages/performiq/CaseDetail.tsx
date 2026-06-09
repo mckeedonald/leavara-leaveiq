@@ -301,7 +301,7 @@ export default function PiqCaseDetail() {
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm mb-6" style={{ color: C.textMuted }}>
-          <button onClick={() => navigate("/performiq/cases")} className="hover:opacity-70 flex items-center gap-1">
+          <button onClick={() => navigate("/grow/cases")} className="hover:opacity-70 flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" /> Cases
           </button>
           <ChevronRight className="w-4 h-4" />

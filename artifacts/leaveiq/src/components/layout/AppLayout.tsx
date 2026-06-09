@@ -78,22 +78,22 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = isSuperAdmin
     ? [
-        { icon: ShieldAlert, label: "Super Admin", href: "/leaveiq/superadmin", show: true },
+        { icon: ShieldAlert, label: "Super Admin", href: "/leave/superadmin", show: true },
       ]
     : isManager
     ? [
-        { icon: CalendarDays, label: "Team Leave", href: "/leaveiq/manager", show: true },
+        { icon: CalendarDays, label: "Team Leave", href: "/leave/manager", show: true },
       ]
     : [
-        { icon: LayoutDashboard, label: "Dashboard", href: "/leaveiq/dashboard", show: true },
-        { icon: Files, label: "Leave Cases", href: "/leaveiq/cases", show: true },
-        { icon: ShieldCheck, label: "ADA Cases", href: "/leaveiq/ada-cases", show: true },
-        { icon: TrendingUp, label: "Analytics", href: "/leaveiq/analytics", show: true },
-        { icon: ClipboardList, label: "Audit Log", href: "/leaveiq/audit", show: isHrAdmin },
-        { icon: CalendarDays, label: "Leave Calendar", href: "/leaveiq/calendar", show: true },
-        { icon: MessageSquare, label: "Employee Portal", href: "/leaveiq/request", show: true },
-        { icon: Users, label: "Employees", href: "/leaveiq/employees", show: isHrAdmin || isHrUser },
-        { icon: UserPlus, label: "Team Members", href: "/leaveiq/users", show: isHrAdmin },
+        { icon: LayoutDashboard, label: "Dashboard", href: "/leave/dashboard", show: true },
+        { icon: Files, label: "Leave Cases", href: "/leave/cases", show: true },
+        { icon: ShieldCheck, label: "ADA Cases", href: "/leave/ada-cases", show: true },
+        { icon: TrendingUp, label: "Analytics", href: "/leave/analytics", show: true },
+        { icon: ClipboardList, label: "Audit Log", href: "/leave/audit", show: isHrAdmin },
+        { icon: CalendarDays, label: "Leave Calendar", href: "/leave/calendar", show: true },
+        { icon: MessageSquare, label: "Employee Portal", href: "/leave/request", show: true },
+        { icon: Users, label: "Employees", href: "/leave/employees", show: isHrAdmin || isHrUser },
+        { icon: UserPlus, label: "Team Members", href: "/leave/users", show: isHrAdmin },
       ];
 
   const initials = user
@@ -102,7 +102,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   function handleLogout() {
     logout();
-    navigate("/leaveiq/login");
+    navigate("/leave/login");
   }
 
   return (
@@ -115,7 +115,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="flex items-center gap-2">
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Leave<span style={{ color: "#EAD6A8" }}>IQ</span>
+            Guildlight <span style={{ color: "#EAD6A8" }}>Leave</span>
           </span>
         </div>
         <button
@@ -191,7 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Leave<span style={{ color: "#EAD6A8" }}>IQ</span>
+              Guildlight <span style={{ color: "#EAD6A8" }}>Leave</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>Leave Management</p>
           </div>
@@ -246,7 +246,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* User card */}
         <div className="p-4 mt-auto">
           <div className="rounded-2xl p-4 border" style={{ background: S.userCardBg, borderColor: S.userCardBorder }}>
-            <Link href="/leaveiq/account" className="flex items-center gap-3 mb-3 group cursor-pointer">
+            <Link href="/leave/account" className="flex items-center gap-3 mb-3 group cursor-pointer">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md shrink-0"
                 style={{ background: `linear-gradient(135deg, ${S.avatarFrom}, ${S.avatarTo})` }}
@@ -301,7 +301,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center gap-3">
             <NotificationsDropdown />
             <Link
-              href="/leaveiq/account"
+              href="/leave/account"
               className="p-2 rounded-full transition-colors inline-flex hover:bg-black/5"
               style={{ color: "#5A6470" }}
               title="Account Settings"

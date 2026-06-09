@@ -87,7 +87,7 @@ export default function PiqDashboard() {
             </p>
           </div>
           <Link
-            href="/performiq/cases/new"
+            href="/grow/cases/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ background: C.perf }}
           >
@@ -98,22 +98,22 @@ export default function PiqDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link href="/performiq/cases" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+          <Link href="/grow/cases" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
             <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Active Cases</p>
             <p className="text-3xl font-bold" style={{ color: C.perf }}>{activeCases.length}</p>
             <p className="text-xs mt-1" style={{ color: C.textMuted }}>in progress</p>
           </Link>
-          <Link href="/performiq/cases?status=draft" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+          <Link href="/grow/cases?status=draft" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
             <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Needs Your Action</p>
             <p className="text-3xl font-bold" style={{ color: "#B45309" }}>{pendingAction.length}</p>
             <p className="text-xs mt-1" style={{ color: C.textMuted }}>draft or revision needed</p>
           </Link>
-          <Link href="/performiq/cases?status=supervisor_review" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+          <Link href="/grow/cases?status=supervisor_review" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
             <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>In Review</p>
             <p className="text-3xl font-bold" style={{ color: "#C39A4A" }}>{inReview.length}</p>
             <p className="text-xs mt-1" style={{ color: C.textMuted }}>with supervisor or HR</p>
           </Link>
-          <Link href="/performiq/cases?status=closed" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
+          <Link href="/grow/cases?status=closed" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
             <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>Closed</p>
             <p className="text-3xl font-bold" style={{ color: "#065F46" }}>{closed.length}</p>
             <p className="text-xs mt-1" style={{ color: C.textMuted }}>completed this year</p>
@@ -124,7 +124,7 @@ export default function PiqDashboard() {
         <div className="rounded-2xl border overflow-hidden" style={{ background: C.card, borderColor: C.border }}>
           <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
             <h2 className="font-semibold" style={{ color: C.textDark }}>Recent Cases</h2>
-            <Link href="/performiq/cases" className="text-xs font-medium hover:opacity-80" style={{ color: C.perf }}>
+            <Link href="/grow/cases" className="text-xs font-medium hover:opacity-80" style={{ color: C.perf }}>
               View all <ArrowRight className="w-3 h-3 inline" />
             </Link>
           </div>
@@ -139,7 +139,7 @@ export default function PiqDashboard() {
                 Start a new case to begin the documentation process.
               </p>
               <Link
-                href="/performiq/cases/new"
+                href="/grow/cases/new"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
                 style={{ background: C.perf }}
               >
@@ -154,7 +154,7 @@ export default function PiqDashboard() {
                 return (
                   <Link
                     key={c.id}
-                    href={`/performiq/cases/${c.id}`}
+                    href={`/grow/cases/${c.id}`}
                     className="flex items-center gap-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                   >
                     <div className="flex-1 min-w-0">

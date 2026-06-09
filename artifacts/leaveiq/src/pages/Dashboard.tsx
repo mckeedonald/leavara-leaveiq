@@ -67,26 +67,26 @@ export default function Dashboard() {
           value={stats.total}
           icon={<Users className="w-5 h-5 text-[#C39A4A]" />}
           trend={caseTrend.label ?? undefined}
-          href="/leaveiq/cases"
+          href="/leave/cases"
         />
         <MetricCard
           title="Pending HR Review"
           value={stats.pendingHr}
           icon={<AlertCircle className="w-5 h-5 text-amber-500" />}
           highlight={stats.pendingHr > 0}
-          href="/leaveiq/cases?state=HR_REVIEW_QUEUE"
+          href="/leave/cases?state=HR_REVIEW_QUEUE"
         />
         <MetricCard
           title="In Analysis"
           value={stats.inAnalysis}
           icon={<Clock className="w-5 h-5 text-amber-500" />}
-          href="/leaveiq/cases?state=ELIGIBILITY_ANALYSIS"
+          href="/leave/cases?state=ELIGIBILITY_ANALYSIS"
         />
         <MetricCard
           title="Recently Closed"
           value={stats.closed}
           icon={<CheckCircle2 className="w-5 h-5 text-[#B39A6A]" />}
-          href="/leaveiq/cases?state=CLOSED"
+          href="/leave/cases?state=CLOSED"
         />
       </div>
 

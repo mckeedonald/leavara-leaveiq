@@ -34,7 +34,7 @@ export default function GuildlightGrowDashboard() {
 
         {/* Back link */}
         <button
-          onClick={() => navigate("/leaveiq/dashboard")}
+          onClick={() => navigate("/leave/dashboard")}
           className="flex items-center gap-2 text-sm font-medium mb-8 transition-opacity hover:opacity-70"
           style={{ color: C.perf }}
         >
@@ -51,7 +51,7 @@ export default function GuildlightGrowDashboard() {
             Coming Soon
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-3" style={{ color: C.textDark }}>
-            Perform<span style={{ color: C.perf }}>IQ</span>
+            Guildlight <span style={{ color: C.perf }}>Grow</span>
           </h1>
           <p className="text-lg" style={{ color: C.textBody }}>
             Smart performance management — built for modern HR teams.

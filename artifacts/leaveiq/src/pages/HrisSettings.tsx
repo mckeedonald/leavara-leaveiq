@@ -9,7 +9,7 @@ import { useLocation } from "wouter";
 export default function HrisSettings() {
   const [, navigate] = useLocation();
   useEffect(() => {
-    navigate("/leaveiq/employees");
+    navigate("/leave/employees");
   }, [navigate]);
   return null;
 }

@@ -18,7 +18,7 @@ export default function ProductSelector() {
   const [, navigate] = useLocation();
 
   if (!user) {
-    navigate("/leaveiq/login");
+    navigate("/leave/login");
     return null;
   }
 
@@ -40,7 +40,7 @@ export default function ProductSelector() {
       <div className="flex flex-col sm:flex-row gap-5 w-full max-w-xl">
         {user.hasLeaveIq && (
           <button
-            onClick={() => navigate("/leaveiq/dashboard")}
+            onClick={() => navigate("/leave/dashboard")}
             className="flex-1 rounded-2xl p-8 text-left shadow-md border hover:shadow-lg transition-shadow group"
             style={{ background: C.card, borderColor: C.border }}
           >
@@ -65,7 +65,7 @@ export default function ProductSelector() {
 
         {user.hasPerformIq && (
           <button
-            onClick={() => navigate("/performiq/dashboard")}
+            onClick={() => navigate("/grow/dashboard")}
             className="flex-1 rounded-2xl p-8 text-left shadow-md border hover:shadow-lg transition-shadow group"
             style={{ background: C.card, borderColor: "#D2DBC9" }}
           >
@@ -90,7 +90,7 @@ export default function ProductSelector() {
       </div>
 
       <button
-        onClick={() => { logout(); navigate("/leaveiq/login"); }}
+        onClick={() => { logout(); navigate("/leave/login"); }}
         className="mt-8 text-xs hover:opacity-70 transition-opacity"
         style={{ color: C.textMuted }}
       >

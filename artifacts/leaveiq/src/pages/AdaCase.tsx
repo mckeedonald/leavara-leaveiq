@@ -591,7 +591,7 @@ export default function AdaCase() {
         <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
           <AlertTriangle className="w-10 h-10 text-red-500" />
           <p className="font-semibold text-lg">Case not found</p>
-          <Link href="/leaveiq/ada-cases">
+          <Link href="/leave/ada-cases">
             <button className="text-sm px-4 py-2 rounded-xl border hover:bg-gray-50">← Back to ADA Cases</button>
           </Link>
         </div>
@@ -627,7 +627,7 @@ export default function AdaCase() {
       )}
 
       <div className="mb-6 animate-in opacity-0 stagger-1">
-        <Link href="/leaveiq/ada-cases">
+        <Link href="/leave/ada-cases">
           <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
             <ArrowLeft className="w-4 h-4" /> Back to ADA Cases
           </button>
