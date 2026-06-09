@@ -3,8 +3,22 @@
 
 -- 1. leave_case.organization_id NOT NULL
 --    Any row with NULL organization_id has no tenant owner and must be removed first.
+--    case_notice references leave_case with ON DELETE NO ACTION, so we must remove
+--    those child rows explicitly before we can delete the orphaned leave_case rows.
+--    (case_document, case_access_token, and hr_decision use ON DELETE CASCADE and
+--    will be cleaned up automatically.)
+BEGIN;
+
+DELETE FROM "case_notice"
+WHERE "leave_case_id" IN (
+    SELECT "id" FROM "leave_case" WHERE "organization_id" IS NULL
+);
+
 DELETE FROM "leave_case" WHERE "organization_id" IS NULL;
+
 ALTER TABLE "leave_case" ALTER COLUMN "organization_id" SET NOT NULL;
+
+COMMIT;
 
 -- 2. audit_log.organization_id NOT NULL
 --    Back-fill existing rows from the parent case they reference.
