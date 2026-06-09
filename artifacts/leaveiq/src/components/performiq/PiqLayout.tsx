@@ -15,15 +15,15 @@ import { cn } from "@/lib/utils";
 import { usePiqAuth, usePiqRole } from "@/lib/piqAuth";
 
 const S = {
-  sidebar: "#7C9273",
-  sidebarBorder: "#54684B",
+  sidebar: "#B68B5E",
+  sidebarBorder: "#6B5230",
   activeItemBg: "rgba(255,255,255,0.20)",
   textOnDark: "#FFFFFF",
   textMuted: "rgba(255,255,255,0.72)",
   userCardBg: "rgba(0,0,0,0.14)",
   userCardBorder: "rgba(255,255,255,0.18)",
   headerBg: "#FFFFFF",
-  headerBorder: "#E0D8C5",
+  headerBorder: "#E6DECF",
 };
 
 interface PiqLayoutProps {
@@ -67,16 +67,16 @@ export function PiqLayout({ children }: PiqLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: "#F4F6FB" }}>
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: "#F7F4EE" }}>
       {/* Mobile top bar */}
       <div
-        className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
-        style={{ background: S.sidebar, borderBottom: `1px solid ${S.sidebarBorder}` }}
+        className="bronze-rail md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
+        style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Guildlight <span style={{ color: "#BFCDB3" }}>Grow</span>
+            Guildlight <span style={{ color: "#E4CBA0" }}>Grow</span>
           </span>
         </div>
         <button
@@ -91,8 +91,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
       {/* Mobile nav overlay */}
       {mobileNavOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
-          style={{ background: S.sidebar }}
+          className="bronze-rail md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
         >
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
             {navItems.map((item) => {
@@ -139,15 +138,15 @@ export function PiqLayout({ children }: PiqLayoutProps) {
 
       {/* Sidebar — desktop only */}
       <aside
-        className="hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
-        style={{ background: S.sidebar, borderRight: `1px solid ${S.sidebarBorder}` }}
+        className="bronze-rail hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
+        style={{ borderRight: `1px solid ${S.sidebarBorder}` }}
       >
         {/* Brand */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Guildlight <span style={{ color: "#BFCDB3" }}>Grow</span>
+              Guildlight <span style={{ color: "#E4CBA0" }}>Grow</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMuted }}>
               Performance Management
@@ -226,8 +225,8 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           style={{ background: S.headerBg, borderBottom: `1px solid ${S.headerBorder}` }}
         >
           <div />
-          <div className="flex items-center gap-2 text-sm" style={{ color: "#5A6470" }}>
-            <span className="w-2 h-2 rounded-full" style={{ background: "#7C9273" }} />
+          <div className="flex items-center gap-2 text-sm" style={{ color: "#5D6875" }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: "#B68B5E" }} />
             <span className="font-medium">Guildlight Grow</span>
           </div>
         </header>

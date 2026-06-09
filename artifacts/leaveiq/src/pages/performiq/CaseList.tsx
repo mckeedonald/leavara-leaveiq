@@ -6,12 +6,12 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#7C9273",
+  perf: "#B68B5E",
   card: "#FFFFFF",
-  border: "#D2DBC9",
-  textDark: "#3A4A33",
-  textMuted: "#8DA384",
-  bg: "#F4F1EA",
+  border: "#E8DBC4",
+  textDark: "#5E4A2E",
+  textMuted: "#C6A074",
+  bg: "#F7F4EE",
 };
 
 interface CaseSummary {
@@ -39,17 +39,17 @@ const ALL_STATUSES = [
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft:             { label: "Draft",              color: "#8DA384", bg: "#EDF1F8" },
+  draft:             { label: "Draft",              color: "#C6A074", bg: "#EDF1F8" },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7" },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2" },
-  hr_approval:       { label: "HR Approval",        color: "#C39A4A", bg: "#F2E8CE" },
+  hr_approval:       { label: "HR Approval",        color: "#B68B5E", bg: "#F1E7CF" },
   delivery:          { label: "Ready to Deliver",   color: "#065F46", bg: "#D1FAE5" },
   closed:            { label: "Closed",             color: "#374151", bg: "#F3F4F6" },
   cancelled:         { label: "Cancelled",          color: "#6B7280", bg: "#F3F4F6" },
 };
 
 const BASE_TYPE_COLOR: Record<string, string> = {
-  coaching:        "#7C9273",
+  coaching:        "#B68B5E",
   written_warning: "#B45309",
   final_warning:   "#B91C1C",
 };
@@ -157,7 +157,7 @@ export default function PiqCaseList() {
               </div>
               <div className="divide-y" style={{ borderColor: C.border }}>
                 {filtered.map((c) => {
-                  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#8DA384", bg: "#EDF1F8" };
+                  const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#C6A074", bg: "#EDF1F8" };
                   const baseColor = BASE_TYPE_COLOR[c.docBaseType] ?? C.perf;
                   return (
                     <Link

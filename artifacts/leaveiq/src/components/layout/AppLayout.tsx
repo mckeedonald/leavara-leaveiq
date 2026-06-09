@@ -23,8 +23,8 @@ import { useAuth } from "@/lib/auth";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 
 const S = {
-  sidebar: "#C39A4A",
-  sidebarBorder: "#A07E30",
+  sidebar: "#B68B5E",
+  sidebarBorder: "#8E6A45",
   activeItem: "#FFFFFF",
   activeItemBg: "rgba(255,255,255,0.22)",
   activeItemBorder: "#FFFFFF",
@@ -34,13 +34,13 @@ const S = {
   logoBadgeBorder: "rgba(255,255,255,0.30)",
   userCardBg: "rgba(0,0,0,0.12)",
   userCardBorder: "rgba(255,255,255,0.20)",
-  avatarFrom: "#6E531E",
-  avatarTo: "#D9B87A",
-  adminBadge: "#F2E6C8",
+  avatarFrom: "#5E4A2E",
+  avatarTo: "#D9B381",
+  adminBadge: "#F1E7CF",
 
   headerBg: "#FFFFFF",
-  headerBorder: "#E0D8C5",
-  searchBg: "#FAF8F3",
+  headerBorder: "#E6DECF",
+  searchBg: "#FCFAF6",
 };
 
 interface AppLayoutProps {
@@ -109,13 +109,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {/* Mobile top bar */}
       <div
-        className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
-        style={{ background: S.sidebar, borderBottom: `1px solid ${S.sidebarBorder}` }}
+        className="bronze-rail md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
+        style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
-            Guildlight <span style={{ color: "#EAD6A8" }}>Leave</span>
+            Guildlight <span style={{ color: "#E4CBA0" }}>Leave</span>
           </span>
         </div>
         <button
@@ -130,8 +130,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile nav overlay */}
       {mobileNavOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
-          style={{ background: S.sidebar }}
+          className="bronze-rail md:hidden fixed inset-0 z-40 flex flex-col pt-[52px]"
         >
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
             {navItems.filter((item) => item.show).map((item) => {
@@ -183,15 +182,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Sidebar — desktop only */}
       <aside
-        className="hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
-        style={{ background: S.sidebar, borderRight: `1px solid ${S.sidebarBorder}` }}
+        className="bronze-rail hidden md:flex w-64 flex-col shrink-0 md:h-screen sticky top-0 z-50"
+        style={{ borderRight: `1px solid ${S.sidebarBorder}` }}
       >
         {/* Logo */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
           <img src="/guildlight-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
-              Guildlight <span style={{ color: "#EAD6A8" }}>Leave</span>
+              Guildlight <span style={{ color: "#E4CBA0" }}>Leave</span>
             </h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: S.textMutedDark }}>Leave Management</p>
           </div>
@@ -289,12 +288,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         >
           <div className="flex items-center gap-4 flex-1">
             <div className="relative max-w-md w-full hidden sm:block">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#5A6470" }} />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#5D6875" }} />
               <input
                 type="text"
                 placeholder="Search cases by employee or case number..."
                 className="w-full pl-9 pr-4 py-2 text-sm rounded-full outline-none transition-all focus:ring-2"
-                style={{ background: S.searchBg, border: "1px solid #E0D8C5", color: "#1B2430", "--tw-ring-color": "#C97E5933" } as React.CSSProperties}
+                style={{ background: S.searchBg, border: "1px solid #E6DECF", color: "#18263A", "--tw-ring-color": "#C97E5933" } as React.CSSProperties}
               />
             </div>
           </div>
@@ -303,7 +302,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Link
               href="/leave/account"
               className="p-2 rounded-full transition-colors inline-flex hover:bg-black/5"
-              style={{ color: "#5A6470" }}
+              style={{ color: "#5D6875" }}
               title="Account Settings"
             >
               <Settings className="w-5 h-5" />

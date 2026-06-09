@@ -4,20 +4,20 @@ import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 const C = {
-  bg: "#F4F1EA",
+  bg: "#F7F4EE",
   card: "#FFFFFF",
-  border: "#E0D8C5",
+  border: "#E6DECF",
   mocha: "#B39A6A",
-  mochaDark: "#6E5A2E",
-  terracotta: "#C39A4A",
-  terracottaHover: "#A07E30",
-  rose: "#D9B87A",
-  textDark: "#1B2430",
-  textBody: "#2E3742",
-  textMuted: "#5A6470",
-  inputBg: "#FAF8F3",
-  inputBorder: "#D8CEB8",
-  focusRing: "#C39A4A",
+  mochaDark: "#5E4A2E",
+  terracotta: "#B68B5E",
+  terracottaHover: "#8E6A45",
+  rose: "#D9B381",
+  textDark: "#18263A",
+  textBody: "#2A3A4C",
+  textMuted: "#5D6875",
+  inputBg: "#FCFAF6",
+  inputBorder: "#DBD2BD",
+  focusRing: "#B68B5E",
   errorBg: "#FDF0EE",
   errorBorder: "#E8A898",
   errorText: "#9E4030",
@@ -70,7 +70,7 @@ export default function Login() {
   const inputClass = "w-full px-4 py-2.5 rounded-xl text-sm transition-all outline-none focus:ring-2";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8E0D2 100%)` }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EBE3D4 100%)` }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
@@ -145,8 +145,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 px-4 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-opacity mt-2 text-sm hover:opacity-90"
-              style={{ background: C.terracotta }}
+              className="btn-bronze w-full py-2.5 px-4 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-xl mt-2 text-sm"
             >
               {isLoading ? "Signing in…" : "Sign In"}
             </button>

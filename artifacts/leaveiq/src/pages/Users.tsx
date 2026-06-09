@@ -23,7 +23,7 @@ function RoleBadge({ role }: { role: string }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
       isAdmin
-        ? "bg-[#F4EEDF] text-[#9C7A35] border-[#C97E5966]"
+        ? "bg-[#F5EFE2] text-[#8E6A45] border-[#C97E5966]"
         : isManager
         ? "bg-blue-50 text-blue-700 border-blue-200"
         : "bg-stone-100 text-[#B39A6A] border-stone-200"
@@ -140,7 +140,7 @@ export default function Users() {
           <button
             onClick={() => { setShowAddUser((v) => !v); setAddUserError(null); }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-colors"
-            style={{ background: "#C39A4A" }}
+            style={{ background: "#B68B5E" }}
           >
             <Plus className="w-4 h-4" /> Add User
           </button>
@@ -230,7 +230,7 @@ export default function Users() {
                   type="submit"
                   disabled={addUserLoading}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-60 transition-colors"
-                  style={{ background: "#C39A4A" }}
+                  style={{ background: "#B68B5E" }}
                 >
                   {addUserLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                   Create User
@@ -276,7 +276,7 @@ export default function Users() {
             </button>
           </form>
           {inviteSuccess && (
-            <p className="mt-3 text-sm flex items-center gap-1.5" style={{ color: "#9C7A35" }}>
+            <p className="mt-3 text-sm flex items-center gap-1.5" style={{ color: "#8E6A45" }}>
               <CheckCircle2 className="w-4 h-4" />
               Invitation sent to {inviteEmail || "the user"}
             </p>
@@ -299,7 +299,7 @@ export default function Users() {
             <div className="divide-y divide-border">
               {(data?.users ?? []).map((u) => (
                 <div key={u.id} className="px-6 py-4 flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0" style={{ background: "linear-gradient(135deg, #D4A02E 0%, #C39A4A 100%)" }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0" style={{ background: "linear-gradient(135deg, #C49A5E 0%, #B68B5E 100%)" }}>
                     {u.firstName[0]}{u.lastName[0]}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -320,12 +320,12 @@ export default function Users() {
                     className="ml-2 text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     {u.isActive ? (
-                      <ToggleRight className="w-6 h-6" style={{ color: "#C39A4A" }} />
+                      <ToggleRight className="w-6 h-6" style={{ color: "#B68B5E" }} />
                     ) : (
                       <ToggleLeft className="w-6 h-6 text-slate-400" />
                     )}
                   </button>
-                  <span className={`text-xs font-medium ${u.isActive ? "" : "text-slate-400"}`} style={u.isActive ? { color: "#C39A4A" } : undefined}>
+                  <span className={`text-xs font-medium ${u.isActive ? "" : "text-slate-400"}`} style={u.isActive ? { color: "#B68B5E" } : undefined}>
                     {u.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>

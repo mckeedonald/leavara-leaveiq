@@ -15,19 +15,19 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 const S = {
-  bg: "#F4F1EA",
+  bg: "#F7F4EE",
   card: "#FFFFFF",
-  border: "#E0D8C5",
-  terracotta: "#C39A4A",
-  darkTerra: "#9C7A35",
+  border: "#E6DECF",
+  terracotta: "#B68B5E",
+  darkTerra: "#8E6A45",
   mocha: "#B39A6A",
-  amber: "#D4A02E",
-  textDark: "#1B2430",
-  textMid: "#6E5A2E",
+  amber: "#C49A5E",
+  textDark: "#18263A",
+  textMid: "#5E4A2E",
   textMuted: "#A89066",
   red: "#DC2626",
   green: "#16A34A",
-  headerBg: "#C39A4A",
+  headerBg: "#B68B5E",
 };
 
 type Tab = "organizations" | "cases" | "users" | "audit" | "employees" | "prd";
@@ -792,7 +792,7 @@ function OrgDetailPanel({
               key: "hasPerformIq" as const,
               label: "Guildlight Grow",
               description: "Performance management, disciplinary documents, coaching workflows, and e-signatures.",
-              color: "#7C9273",
+              color: "#B68B5E",
               enabled: org.hasPerformIq,
             },
           ].map(({ key, label, description, color, enabled }) => (
@@ -926,13 +926,13 @@ function OrganizationsTab() {
 }
 
 const STATE_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  INTAKE: { bg: "#F4F0E5", text: "#6E5A2E", label: "Intake" },
+  INTAKE: { bg: "#F4F0E5", text: "#5E4A2E", label: "Intake" },
   ELIGIBILITY_ANALYSIS: { bg: "#FEF3C7", text: "#92400E", label: "Eligibility" },
   HR_REVIEW_QUEUE: { bg: "#FEF3C7", text: "#92400E", label: "HR Review" },
   NOTICE_DRAFTED: { bg: "#FFEDD5", text: "#5C3D1A", label: "Notice Drafted" },
   APPROVED: { bg: "#D4F4DC", text: "#166534", label: "Approved" },
   DENIED: { bg: "#FEE2E2", text: "#991B1B", label: "Denied" },
-  CLOSED: { bg: "#F4F0E5", text: "#6E5A2E", label: "Closed" },
+  CLOSED: { bg: "#F4F0E5", text: "#5E4A2E", label: "Closed" },
   CANCELLED: { bg: "#FEE2E2", text: "#991B1B", label: "Cancelled" },
 };
 
@@ -1018,7 +1018,7 @@ function CasesTab({ organizations }: { organizations: Organization[] }) {
             </thead>
             <tbody>
               {cases.map((c, i) => {
-                const stateInfo = STATE_COLORS[c.state] ?? { bg: "#F4F0E5", text: "#6E5A2E", label: c.state };
+                const stateInfo = STATE_COLORS[c.state] ?? { bg: "#F4F0E5", text: "#5E4A2E", label: c.state };
                 return (
                   <tr key={c.id} style={i > 0 ? { borderTop: `1px solid ${S.border}` } : {}}>
                     <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: S.textDark }}>{c.caseNumber}</td>
@@ -1379,7 +1379,7 @@ export default function SuperAdmin() {
     <AppLayout>
     <div>
       {/* Super Admin Header */}
-      <div className="px-6 py-5 mb-6 rounded-2xl shadow-sm" style={{ background: `linear-gradient(135deg, #6E531E, #C39A4A)` }}>
+      <div className="px-6 py-5 mb-6 rounded-2xl shadow-sm" style={{ background: `linear-gradient(135deg, #5E4A2E, #B68B5E)` }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)" }}>
             <ShieldAlert className="w-5 h-5 text-white" />
@@ -1552,7 +1552,7 @@ export default function SuperAdmin() {
                       onDrop={e => { e.preventDefault(); setEmpDragOver(false); const f = e.dataTransfer.files[0]; if (f?.name.endsWith(".csv")) { setEmpFile(f); setEmpResult(null); setEmpUploadError(null); } }}
                       onClick={() => empFileRef.current?.click()}
                       className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer transition-all"
-                      style={{ borderColor: empDragOver ? S.terracotta : "#EDDDB8", background: empDragOver ? "#FAF6EC" : "#FAF9F4" }}
+                      style={{ borderColor: empDragOver ? S.terracotta : "#EBDCC0", background: empDragOver ? "#FBF7EF" : "#FBFAF5" }}
                     >
                       <input ref={empFileRef} type="file" accept=".csv" className="hidden"
                         onChange={e => { const f = e.target.files?.[0]; if (f) { setEmpFile(f); setEmpResult(null); setEmpUploadError(null); } e.target.value = ""; }} />
@@ -1590,7 +1590,7 @@ export default function SuperAdmin() {
                             const blob = new Blob([empResult.errorCsv!], { type: "text/csv" });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement("a"); a.href = url; a.download = "import_errors.csv"; a.click(); URL.revokeObjectURL(url);
-                          }} className="flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg font-medium border" style={{ borderColor: "#EDDDB8", color: S.darkTerra, background: "#FAF6EC" }}>
+                          }} className="flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg font-medium border" style={{ borderColor: "#EBDCC0", color: S.darkTerra, background: "#FBF7EF" }}>
                             <Download className="w-3 h-3" /> Download error report
                           </button>
                         )}
@@ -1682,7 +1682,7 @@ export default function SuperAdmin() {
                               <button key={p.value} type="button"
                                 onClick={() => { setHrisProvider(p.value); setHrisCreds({}); }}
                                 className="px-3 py-2 rounded-lg border text-xs font-medium text-left transition-all"
-                                style={hrisProvider === p.value ? { borderColor: S.terracotta, background: "#FAF6EC", color: S.darkTerra } : { borderColor: S.border, color: S.textMid }}>
+                                style={hrisProvider === p.value ? { borderColor: S.terracotta, background: "#FBF7EF", color: S.darkTerra } : { borderColor: S.border, color: S.textMid }}>
                                 {p.label}
                               </button>
                             ))}
@@ -1719,7 +1719,7 @@ export default function SuperAdmin() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold" style={{ color: S.textDark }}>Product Requirements Document</h2>
-              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#FEF3E8", color: S.terracotta, border: `1px solid #EDDDB8` }}>
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "#FEF3E8", color: S.terracotta, border: `1px solid #EBDCC0` }}>
                 Living Document
               </span>
             </div>
@@ -1749,13 +1749,13 @@ export default function SuperAdmin() {
                         <h1 style={{ fontSize: "1.6rem", fontWeight: 700, color: S.textDark, marginTop: "2rem", marginBottom: "0.75rem", paddingBottom: "0.5rem", borderBottom: `2px solid ${S.terracotta}` }}>{children}</h1>
                       ),
                       h2: ({ children }) => (
-                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: S.textDark, marginTop: "2rem", marginBottom: "0.5rem", paddingBottom: "0.25rem", borderBottom: `1px solid #E8E0D2` }}>{children}</h2>
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: S.textDark, marginTop: "2rem", marginBottom: "0.5rem", paddingBottom: "0.25rem", borderBottom: `1px solid #EBE3D4` }}>{children}</h2>
                       ),
                       h3: ({ children }) => (
-                        <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#6E5A2E", marginTop: "1.5rem", marginBottom: "0.4rem" }}>{children}</h3>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#5E4A2E", marginTop: "1.5rem", marginBottom: "0.4rem" }}>{children}</h3>
                       ),
                       p: ({ children }) => (
-                        <p style={{ marginBottom: "0.875rem", color: "#2E3742" }}>{children}</p>
+                        <p style={{ marginBottom: "0.875rem", color: "#2A3A4C" }}>{children}</p>
                       ),
                       a: ({ children, href }) => (
                         <a href={href} style={{ color: S.terracotta, textDecoration: "underline" }}>{children}</a>
@@ -1767,18 +1767,18 @@ export default function SuperAdmin() {
                         <ol style={{ paddingLeft: "1.4rem", marginBottom: "0.875rem", listStyleType: "decimal" }}>{children}</ol>
                       ),
                       li: ({ children }) => (
-                        <li style={{ marginBottom: "0.3rem", color: "#2E3742" }}>{children}</li>
+                        <li style={{ marginBottom: "0.3rem", color: "#2A3A4C" }}>{children}</li>
                       ),
                       code: ({ children, className }) => {
                         const isBlock = className?.includes("language-");
                         return isBlock ? (
-                          <code style={{ display: "block", background: "#F5F0E5", borderRadius: "8px", padding: "1rem", fontFamily: "'Courier New', monospace", fontSize: "0.82rem", color: "#1B2430", overflowX: "auto", marginBottom: "0.875rem", whiteSpace: "pre" }}>{children}</code>
+                          <code style={{ display: "block", background: "#F7F2E8", borderRadius: "8px", padding: "1rem", fontFamily: "'Courier New', monospace", fontSize: "0.82rem", color: "#18263A", overflowX: "auto", marginBottom: "0.875rem", whiteSpace: "pre" }}>{children}</code>
                         ) : (
-                          <code style={{ background: "#F5F0E5", borderRadius: "4px", padding: "0.15em 0.4em", fontFamily: "'Courier New', monospace", fontSize: "0.85em", color: "#6E531E" }}>{children}</code>
+                          <code style={{ background: "#F7F2E8", borderRadius: "4px", padding: "0.15em 0.4em", fontFamily: "'Courier New', monospace", fontSize: "0.85em", color: "#5E4A2E" }}>{children}</code>
                         );
                       },
                       pre: ({ children }) => (
-                        <pre style={{ background: "#F5F0E5", borderRadius: "8px", padding: "1rem", overflowX: "auto", marginBottom: "0.875rem" }}>{children}</pre>
+                        <pre style={{ background: "#F7F2E8", borderRadius: "8px", padding: "1rem", overflowX: "auto", marginBottom: "0.875rem" }}>{children}</pre>
                       ),
                       blockquote: ({ children }) => (
                         <blockquote style={{ borderLeft: `3px solid ${S.terracotta}`, paddingLeft: "1rem", margin: "1rem 0", color: S.textMid, fontStyle: "italic" }}>{children}</blockquote>
@@ -1789,16 +1789,16 @@ export default function SuperAdmin() {
                         </div>
                       ),
                       thead: ({ children }) => (
-                        <thead style={{ background: "#F5F0E5" }}>{children}</thead>
+                        <thead style={{ background: "#F7F2E8" }}>{children}</thead>
                       ),
                       th: ({ children }) => (
-                        <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 600, color: S.textDark, borderBottom: `2px solid #E0D8C5`, whiteSpace: "nowrap" }}>{children}</th>
+                        <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 600, color: S.textDark, borderBottom: `2px solid #E6DECF`, whiteSpace: "nowrap" }}>{children}</th>
                       ),
                       td: ({ children }) => (
-                        <td style={{ padding: "0.5rem 0.75rem", color: "#2E3742", borderBottom: `1px solid #EAE4D6` }}>{children}</td>
+                        <td style={{ padding: "0.5rem 0.75rem", color: "#2A3A4C", borderBottom: `1px solid #EDE7D9` }}>{children}</td>
                       ),
                       hr: () => (
-                        <hr style={{ border: "none", borderTop: `1px solid #E8E0D2`, margin: "1.75rem 0" }} />
+                        <hr style={{ border: "none", borderTop: `1px solid #EBE3D4`, margin: "1.75rem 0" }} />
                       ),
                       strong: ({ children }) => (
                         <strong style={{ fontWeight: 600, color: S.textDark }}>{children}</strong>

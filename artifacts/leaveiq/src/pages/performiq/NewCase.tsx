@@ -31,13 +31,13 @@ interface PiqDocumentContent {
 }
 
 const C = {
-  perf: "#7C9273",
+  perf: "#B68B5E",
   card: "#FFFFFF",
-  border: "#D2DBC9",
-  textDark: "#3A4A33",
-  textMuted: "#8DA384",
+  border: "#E8DBC4",
+  textDark: "#5E4A2E",
+  textMuted: "#C6A074",
   agentBg: "#EEF0E9",
-  userBg: "#7C9273",
+  userBg: "#B68B5E",
 };
 
 interface Employee {
@@ -294,7 +294,7 @@ export default function NewCase() {
                         ? C.perf
                         : STEPS.findIndex((x) => x.key === step) > i
                         ? "#D1FAE5"
-                        : "#ECF0E9",
+                        : "#F4ECDD",
                     color:
                       step === s.key
                         ? "#FFF"

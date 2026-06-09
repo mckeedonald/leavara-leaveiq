@@ -39,7 +39,7 @@ const DISPLAY_STATUS_STYLES: Record<string, { bg: string; text: string; border: 
   "Reviewed - Eligible":                  { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
   "Reviewed - Ineligible":                { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
   "Pending Additional Review":            { bg: "#FFFBEB", text: "#B45309", border: "#FDE68A" },
-  "Notices Drafted - Documentation Pending": { bg: "#FAF4E6", text: "#C39A4A", border: "#ECE0C2" },
+  "Notices Drafted - Documentation Pending": { bg: "#FBF7EF", text: "#B68B5E", border: "#EDE2CE" },
   "Approved":                             { bg: "#F0FDF4", text: "#166534", border: "#86EFAC" },
   "Denied":                               { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
   "Documentation Received":               { bg: "#ECFDF5", text: "#065F46", border: "#6EE7B7" },

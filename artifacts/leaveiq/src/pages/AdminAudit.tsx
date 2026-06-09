@@ -5,13 +5,13 @@ import { apiFetch } from "@/lib/auth";
 import { ClipboardList, Search, Filter, ChevronLeft, ChevronRight, Sparkles, Send, FileText, UserCheck } from "lucide-react";
 
 const C = {
-  bg: "#F4F1EA",
+  bg: "#F7F4EE",
   card: "#FFFFFF",
-  border: "#E0D8C5",
-  terracotta: "#C39A4A",
-  darkTerra: "#9C7A35",
-  textDark: "#1B2430",
-  textMid: "#6E5A2E",
+  border: "#E6DECF",
+  terracotta: "#B68B5E",
+  darkTerra: "#8E6A45",
+  textDark: "#18263A",
+  textMid: "#5E4A2E",
   textMuted: "#A89066",
 };
 

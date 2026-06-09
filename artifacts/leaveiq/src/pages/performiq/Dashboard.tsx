@@ -6,14 +6,14 @@ import { usePiqAuth, piqApiFetch } from "@/lib/piqAuth";
 import { format } from "date-fns";
 
 const C = {
-  perf: "#7C9273",
+  perf: "#B68B5E",
   perfDark: "#2E4D80",
   perfLight: "#7B97C4",
   perfBg: "#EDF1F8",
   card: "#FFFFFF",
-  border: "#D2DBC9",
-  textDark: "#3A4A33",
-  textMuted: "#8DA384",
+  border: "#E8DBC4",
+  textDark: "#5E4A2E",
+  textMuted: "#C6A074",
 };
 
 interface CaseSummary {
@@ -29,17 +29,17 @@ interface CaseSummary {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  draft:             { label: "Draft",              color: "#8DA384", bg: "#EDF1F8",   icon: Clock },
+  draft:             { label: "Draft",              color: "#C6A074", bg: "#EDF1F8",   icon: Clock },
   supervisor_review: { label: "Supervisor Review",  color: "#B45309", bg: "#FEF3C7",  icon: AlertTriangle },
   manager_revision:  { label: "Needs Revision",     color: "#B91C1C", bg: "#FEE2E2",  icon: AlertTriangle },
-  hr_approval:       { label: "HR Approval",        color: "#C39A4A", bg: "#F2E8CE",  icon: Clock },
+  hr_approval:       { label: "HR Approval",        color: "#B68B5E", bg: "#F1E7CF",  icon: Clock },
   delivery:          { label: "Ready to Deliver",   color: "#065F46", bg: "#D1FAE5",  icon: CheckCircle2 },
   closed:            { label: "Closed",             color: "#374151", bg: "#F3F4F6",  icon: CheckCircle2 },
   cancelled:         { label: "Cancelled",          color: "#6B7280", bg: "#F3F4F6",  icon: FolderOpen },
 };
 
 const BASE_TYPE_BADGE: Record<string, { label: string; color: string }> = {
-  coaching:       { label: "Coaching",        color: "#7C9273" },
+  coaching:       { label: "Coaching",        color: "#B68B5E" },
   written_warning:{ label: "Written Warning", color: "#B45309" },
   final_warning:  { label: "Final Warning",   color: "#B91C1C" },
 };
@@ -110,7 +110,7 @@ export default function PiqDashboard() {
           </Link>
           <Link href="/grow/cases?status=supervisor_review" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
             <p className="text-sm font-medium mb-1" style={{ color: C.textMuted }}>In Review</p>
-            <p className="text-3xl font-bold" style={{ color: "#C39A4A" }}>{inReview.length}</p>
+            <p className="text-3xl font-bold" style={{ color: "#B68B5E" }}>{inReview.length}</p>
             <p className="text-xs mt-1" style={{ color: C.textMuted }}>with supervisor or HR</p>
           </Link>
           <Link href="/grow/cases?status=closed" className="rounded-2xl p-5 border hover:shadow-md hover:-translate-y-0.5 transition-all block cursor-pointer" style={{ background: C.card, borderColor: C.border }}>
@@ -149,7 +149,7 @@ export default function PiqDashboard() {
           ) : (
             <div className="divide-y" style={{ borderColor: C.border }}>
               {cases.slice(0, 8).map((c) => {
-                const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#8DA384", bg: "#EDF1F8", icon: Clock };
+                const sc = STATUS_CONFIG[c.status] ?? { label: c.status, color: "#C6A074", bg: "#EDF1F8", icon: Clock };
                 const bt = BASE_TYPE_BADGE[c.docBaseType];
                 return (
                   <Link

@@ -165,7 +165,7 @@ export function AnalyzeCaseModal({
 
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           {autoFilled && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "#F0F7F4", color: "#1A5C44", border: "1px solid #A8D5C5" }}>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "#F0F7F4", color: "#1A5C44", border: "1px solid #D9B381" }}>
               <Sparkles className="w-3.5 h-3.5 shrink-0" />
               Fields pre-filled from your HRIS — verify before running analysis
             </div>

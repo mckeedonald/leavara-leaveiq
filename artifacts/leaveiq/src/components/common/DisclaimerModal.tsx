@@ -17,20 +17,20 @@ export function DisclaimerModal({ onConfirm, onCancel }: DisclaimerModalProps) {
       />
       <div
         className="relative w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
-        style={{ background: "#FAF8F3", border: "1px solid #E0D8C5" }}
+        style={{ background: "#FCFAF6", border: "1px solid #E6DECF" }}
       >
         <div
           className="px-6 py-5 flex items-center justify-between"
-          style={{ background: "#F4EEDF", borderBottom: "1px solid #E6CC98" }}
+          style={{ background: "#F5EFE2", borderBottom: "1px solid #E2C49A" }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "#C39A4A" }}
+              style={{ background: "#B68B5E" }}
             >
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <p className="font-display font-bold text-base" style={{ color: "#1B2430" }}>
+            <p className="font-display font-bold text-base" style={{ color: "#18263A" }}>
               Decision Support Only
             </p>
           </div>
@@ -44,11 +44,11 @@ export function DisclaimerModal({ onConfirm, onCancel }: DisclaimerModalProps) {
         </div>
 
         <div className="px-6 py-5">
-          <p className="text-sm leading-relaxed" style={{ color: "#2E3742" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "#2A3A4C" }}>
             Guildlight Leave provides AI-assisted decision support to help HR professionals
             analyze leave cases. The system&apos;s output is a recommendation only.
           </p>
-          <p className="text-sm leading-relaxed mt-3" style={{ color: "#2E3742" }}>
+          <p className="text-sm leading-relaxed mt-3" style={{ color: "#2A3A4C" }}>
             <strong>A human decision is always required.</strong> Guildlight Leave never
             independently approves or denies a leave request. You remain fully
             responsible for the final determination.
@@ -57,19 +57,19 @@ export function DisclaimerModal({ onConfirm, onCancel }: DisclaimerModalProps) {
 
         <div
           className="px-6 py-4 flex items-center justify-end gap-3"
-          style={{ borderTop: "1px solid #E6CC98" }}
+          style={{ borderTop: "1px solid #E2C49A" }}
         >
           <button
             onClick={onCancel}
             className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-            style={{ color: "#7E6638", background: "#EAE4D6" }}
+            style={{ color: "#7E6638", background: "#EDE7D9" }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             className="px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg"
-            style={{ background: "linear-gradient(135deg, #C9A455 0%, #A07E30 100%)" }}
+            style={{ background: "linear-gradient(135deg, #C9A455 0%, #8E6A45 100%)" }}
           >
             Continue
           </button>

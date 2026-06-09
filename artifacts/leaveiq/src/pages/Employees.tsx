@@ -11,20 +11,20 @@ import {
 
 /* ─── Brand palette ───────────────────────────────────────── */
 const S = {
-  bg:           "#F4F1EA",
+  bg:           "#F7F4EE",
   card:         "#FFFFFF",
-  border:       "#E0D8C5",
-  terracotta:   "#C39A4A",
-  darkTerra:    "#9C7A35",
+  border:       "#E6DECF",
+  terracotta:   "#B68B5E",
+  darkTerra:    "#8E6A45",
   mocha:        "#B39A6A",
-  textDark:     "#1B2430",
-  textMid:      "#6E5A2E",
+  textDark:     "#18263A",
+  textMid:      "#5E4A2E",
   textMuted:    "#A89066",
   green:        "#16A34A",
   red:          "#DC2626",
   amber:        "#D97706",
-  accentBg:     "#FAF6EC",
-  accentBorder: "#EDDDB8",
+  accentBg:     "#FBF7EF",
+  accentBorder: "#EBDCC0",
 };
 
 /* ─── Types ──────────────────────────────────────────────── */
@@ -226,7 +226,7 @@ export default function Employees() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr style={{ background: "#F5F0E5", borderBottom: `1px solid ${S.border}` }}>
+                      <tr style={{ background: "#F7F2E8", borderBottom: `1px solid ${S.border}` }}>
                         {["Name", "ID", "Position", "Department", "Location", "Email", "Source"].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: S.textMid }}>{h}</th>
                         ))}
@@ -234,7 +234,7 @@ export default function Employees() {
                     </thead>
                     <tbody>
                       {filtered.map((e, i) => (
-                        <tr key={e.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${S.border}` : undefined, background: i % 2 === 0 ? S.card : "#FAF8F3" }}>
+                        <tr key={e.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${S.border}` : undefined, background: i % 2 === 0 ? S.card : "#FCFAF6" }}>
                           <td className="px-4 py-3 font-medium whitespace-nowrap" style={{ color: S.textDark }}>{e.fullName}</td>
                           <td className="px-4 py-3 font-mono text-xs" style={{ color: S.textMid }}>{e.employeeId ?? "—"}</td>
                           <td className="px-4 py-3" style={{ color: S.textMid }}>{e.position ?? "—"}</td>
@@ -243,8 +243,8 @@ export default function Employees() {
                           <td className="px-4 py-3 text-xs" style={{ color: S.textMuted }}>{e.personalEmail ?? e.workEmail ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
-                              background: e.dataSource === "hris" ? "#ECF0E9" : e.dataSource === "csv" ? S.accentBg : "#F5F0E5",
-                              color: e.dataSource === "hris" ? "#7C9273" : e.dataSource === "csv" ? S.darkTerra : S.mocha,
+                              background: e.dataSource === "hris" ? "#F4ECDD" : e.dataSource === "csv" ? S.accentBg : "#F7F2E8",
+                              color: e.dataSource === "hris" ? "#B68B5E" : e.dataSource === "csv" ? S.darkTerra : S.mocha,
                             }}>
                               {e.dataSource}
                             </span>
@@ -296,7 +296,7 @@ export default function Employees() {
                   onDrop={(e) => { e.preventDefault(); setIsDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
                   onClick={() => fileInputRef.current?.click()}
                   className="border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all"
-                  style={{ borderColor: isDragOver ? S.terracotta : S.accentBorder, background: isDragOver ? S.accentBg : "#FAF9F4" }}
+                  style={{ borderColor: isDragOver ? S.terracotta : S.accentBorder, background: isDragOver ? S.accentBg : "#FBFAF5" }}
                 >
                   <input ref={fileInputRef} type="file" accept=".csv" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />

@@ -1,5 +1,5 @@
 # Guildlight Platform — Product Requirements Document
-**Version 1.2 | Last Updated: 2026-06-09**
+**Version 1.3 | Last Updated: 2026-06-09**
 
 > **Living Document Notice:** This PRD is the authoritative product definition for the Guildlight platform and its products — Guildlight Leave and Guildlight Grow. It is updated as features are designed, built, or changed. Sections marked `[Planned]` describe intended future functionality. Sections marked `[Built]` reflect what is implemented and deployed.
 
@@ -783,53 +783,57 @@ All "Built" items from Section 5. Core Guildlight Leave and Guildlight Grow work
 
 ### Guildlight Brand Palette
 
-Five core brand colors. "The beacon that guides the guild."
+Five core brand colors. "Guiding every people journey."
 
 ```
-Midnight Navy:   #1B2430   (primary text, dark surfaces, foreground)
-Antique Brass:   #C39A4A   (primary accent — sidebar, buttons, links)
-Warm Ivory:      #F4F1EA   (page background)
-Slate:           #5A6470   (secondary/muted text, captions)
-Sage:            #7C9273   (Guildlight Leave product accent)
+Midnight Navy:    #18263A   (Depth, trust, stability — primary text, dark surfaces, foreground)
+Champagne Bronze: #B68B5E   (Guidance, warmth, excellence — primary accent: sidebar, buttons, links)
+Warm Ivory:       #F7F4EE   (Warmth, approachability — page background)
+Slate:            #5D6875   (Balance, professionalism — secondary/muted text, captions)
+Silver Mist:      #C8CDD3   (Subtle accents, borders, supporting elements)
 ```
 
-Accessibility note: Antique Brass is an accent, not a body-text color on light
-backgrounds. Use Midnight Navy or Slate for body copy. Primary buttons use Navy
-text on Brass (contrast ≈ 5.7:1, WCAG AA).
+**Shiny bronze treatment:** Champagne Bronze is rendered as a *metallic* finish,
+not a flat fill. Large surfaces (sidebars) use a diagonal sheen (`.bronze-rail`),
+CTAs use a glossy top-highlight gradient (`.btn-bronze`), and wordmark accents can
+use a clipped-text gradient (`.text-bronze-shine`). Stops: highlight `#E8CDA1`,
+base `#B68B5E`, shadow `#8E6A45`.
+
+Accessibility note: Champagne Bronze is an accent, not a body-text color on light
+backgrounds. Use Midnight Navy or Slate for body copy. Primary buttons use light
+(Warm Ivory) text on the bronze gradient.
 
 ### Guildlight Leave — Brand Colors
 
 ```
-brass:        #C39A4A   (primary sidebar, buttons, accents)
-brassDk:      #9C7A35   (hover states, active)
-slateWarm:    #B39A6A   (secondary text, borders)
-slateDeep:    #6E5A2E   (dark text on light backgrounds)
-sageAccent:   #D9B87A   (soft accent, avatar gradients)
-sageAccentDk: #B58A48   (accent hover)
-bgWarm:       #F4F1EA   (page background — Warm Ivory)
-bgCard:       #FAF8F3   (card backgrounds)
-textDark:     #1B2430   (primary body text — Midnight Navy)
-textBody:     #2E3742   (secondary body text)
-textMuted:    #5A6470   (placeholder, caption text — Slate)
-textOnDark:   #F4F1EA   (text on dark/brass backgrounds)
+bronze:       #B68B5E   (primary sidebar, buttons, accents — Champagne Bronze)
+bronzeDk:     #8E6A45   (hover states, active, borders)
+bronzeHi:     #E8CDA1   (metallic highlight stop)
+slateWarm:    #B49B6B   (secondary text, borders)
+slateDeep:    #5E4A2E   (dark bronze text on light backgrounds)
+accentSoft:   #D9B381   (soft accent, avatar gradients)
+bgWarm:       #F7F4EE   (page background — Warm Ivory)
+bgCard:       #FCFAF6   (card backgrounds)
+textDark:     #18263A   (primary body text — Midnight Navy)
+textBody:     #2A3A4C   (secondary body text)
+textMuted:    #5D6875   (placeholder, caption text — Slate)
+silverMist:   #C8CDD3   (subtle borders, supporting elements)
+textOnDark:   #F7F4EE   (text on dark/bronze backgrounds)
 ```
 
 ### Guildlight Grow — Accent Colors
 
-```
-perf:         #7C9273   (primary — Sage)
-perfLight:    #A3B89B   (sage hover)
-perfDark:     #54684B   (sage active)
-perfBg:       #ECF0E9   (sage light background)
-```
+Guildlight Grow shares the unified Champagne Bronze accent (the brand no longer
+uses a separate green/sage accent). Grow surfaces use the same bronze + navy +
+ivory system as Guildlight Leave for a cohesive premium look.
 
 ### Typography
 
-- Display font: **Plus Jakarta Sans** (headings, weights 600–800)
+- Title/serif font: **Cinzel** (top-level page titles `h1`/`h2`, brand wordmark; weights 400–700)
+- Display font: **Plus Jakarta Sans** (sub-headings `h3`–`h6`, weights 600–800)
 - Body font: **Inter** (body, weights 400/500/600/700)
 - Loaded via Google Fonts in `index.html`
-- Heading weights: 600–700
-- Body: 400 (regular), 500 (medium emphasis)
+- Cinzel is a classic serif used sparingly for an authoritative, bespoke feel; not for dense UI labels
 
 ---
 
@@ -902,4 +906,5 @@ Recommended columns:
 |------|---------|--------|
 | 2026-05-21 | 1.0 | Initial PRD created; covers Guildlight Leave v1, Guildlight Grow v1, planned v1.1–v2.0 features, data model, AI architecture, deployment, security |
 | 2026-05-21 | 1.1 | Employee management overhaul: unified `/leaveiq/employees` page (Guildlight Leave palette, shared by both products); batch CSV upload (fixes 1789-row timeout); `employee_import_log` table; CSV error report; HRIS configuration moved to Super Admin panel; HRIS removed from HR Admin nav |
+| 2026-06-09 | 1.3 | **Brand refresh:** Adopted the new Guildlight brand guideline — palette updated to Midnight Navy `#18263A`, Champagne Bronze `#B68B5E`, Warm Ivory `#F7F4EE`, Slate `#5D6875`, Silver Mist `#C8CDD3` (replacing Antique Brass / Sage). Bronze now rendered as a **shiny metallic** finish (diagonal sheen on sidebars via `.bronze-rail`, glossy CTAs via `.btn-bronze`, clipped-text gradient via `.text-bronze-shine`). Added **Cinzel** serif for page titles & wordmark (Inter retained for body). Grow's sage accent unified into the bronze system. Applied across design tokens (`index.css`) and ~49 component/page files. |
 | 2026-06-09 | 1.2 | **Feature-status correction:** Guildlight Grow e-signature workflow marked [Built] (was incorrectly [Planned]) — covers signature request, public signing page, employee sign/decline, manager counter-sign, and signed-PDF download; corrected e-signature API paths to `/api/performiq/cases/:caseId/signatures/*` plus public `/api/piq/sign`. Marked [Built]: ADA acknowledgment email on creation, batch CSV insert, import log + error report, HRIS config under Super Admin, mobile hamburger nav, AnalyzeCaseModal auto-pull. **Unified auth:** documented single login / single `leavara_token` across both products; `piq_users` retained for reference; `PIQ_JWT_SECRET` deprecated. **Rebrand:** Leavara/LeaveIQ → Guildlight Leave, PerformIQ → Guildlight Grow; browser routes moved to `/leave/*` and `/grow/*` (API paths `/api/piq/*` and `/api/performiq/*` unchanged). Updated `piq_signatures` and `employee_import_log` data-model entries; roadmap v1.1/v1.2 marked Delivered. |

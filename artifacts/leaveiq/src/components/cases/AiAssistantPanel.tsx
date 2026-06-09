@@ -71,8 +71,8 @@ const ACTION_CONFIG = {
   APPROVE: {
     label: "Approve Leave",
     icon: CheckCircle2,
-    badgeClass: "bg-[#F4EEDF] text-[#9C7A35] border-[#C97E5966]",
-    iconClass: "text-[#C39A4A]",
+    badgeClass: "bg-[#F5EFE2] text-[#8E6A45] border-[#C97E5966]",
+    iconClass: "text-[#B68B5E]",
   },
   DENY: {
     label: "Deny Leave",
@@ -472,7 +472,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         <DisclaimerModal onConfirm={handleDisclaimerConfirm} onCancel={handleDisclaimerCancel} />
       )}
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl overflow-hidden shadow-sm">
-      <div className="p-5" style={{ background: "linear-gradient(135deg, #D4A02E 0%, #B8862E 100%)" }}>
+      <div className="p-5" style={{ background: "linear-gradient(135deg, #C49A5E 0%, #A07645 100%)" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-white" />
@@ -502,7 +502,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
             </button>
           )}
         </div>
-        <p className="text-sm mt-1.5" style={{ color: "#EAD6A8" }}>
+        <p className="text-sm mt-1.5" style={{ color: "#E4CBA0" }}>
           {isEligibility
             ? "Generate AI-drafted notices for this case — review, edit, and send directly from here"
             : "AI-powered case analysis, recommended actions, and legally-required notice drafts"}
@@ -597,10 +597,10 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
 
               {sendSuccess ? (
                 <div className="flex flex-col gap-2">
-                  <div className="border rounded-xl p-4 flex items-start gap-3" style={{ background: "#FAF6EC", borderColor: "#C97E5966" }}>
-                    <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#9C7A35" }} />
+                  <div className="border rounded-xl p-4 flex items-start gap-3" style={{ background: "#FBF7EF", borderColor: "#C97E5966" }}>
+                    <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#8E6A45" }} />
                     <div>
-                      <p className="font-medium text-sm" style={{ color: "#1B2430" }}>Notices recorded successfully</p>
+                      <p className="font-medium text-sm" style={{ color: "#18263A" }}>Notices recorded successfully</p>
                       <p className="text-sm mt-1" style={{ color: "#B39A6A" }}>
                         {editedNotices.filter((n) => n.reviewed).length} notice(s) archived to the audit log for{" "}
                         <strong>{overrideEmail}</strong>.
@@ -627,9 +627,9 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                   )}
                   <div
                     className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs"
-                    style={{ background: "#FAF4E8", border: "1px solid #E6CC98", color: "#6E5630" }}
+                    style={{ background: "#FAF4E8", border: "1px solid #E2C49A", color: "#6E5630" }}
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#C39A4A" }} />
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#B68B5E" }} />
                     <span>
                       <strong>Decision Support Only —</strong> Guildlight Leave provides recommendations to assist HR.
                       A human decision is always required before sending.
@@ -649,7 +649,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                           ? "text-white shadow-md"
                           : "bg-slate-200 text-slate-400 cursor-not-allowed",
                       )}
-                      style={canSend && !sending ? { background: "linear-gradient(135deg, #D4A02E 0%, #B8862E 100%)" } : undefined}
+                      style={canSend && !sending ? { background: "linear-gradient(135deg, #C49A5E 0%, #A07645 100%)" } : undefined}
                     >
                       {sending ? (
                         <>
@@ -675,7 +675,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
               <div className="mt-6 border-t pt-5">
                 <div
                   className="rounded-2xl overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, #D4A02E 0%, #B8862E 100%)" }}
+                  style={{ background: "linear-gradient(135deg, #C49A5E 0%, #A07645 100%)" }}
                 >
                   <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
                     <Sparkles className="w-4 h-4 text-white" />
@@ -689,7 +689,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                             className="rounded-xl px-3 py-2 text-sm max-w-[85%]"
                             style={msg.role === "user"
                               ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
-                              : { background: "rgba(0,0,0,0.25)", color: "#EAD6A8" }
+                              : { background: "rgba(0,0,0,0.25)", color: "#E4CBA0" }
                             }
                           >
                             {msg.role === "ave" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ave</span>}
@@ -729,8 +729,8 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
             {isNoticeDrafted && availableDocs.length > 0 && (
               <div className="mt-6 border-t pt-5">
                 <div className="flex items-center gap-2 mb-1">
-                  <ClipboardCheck className="w-4 h-4" style={{ color: "#C39A4A" }} />
-                  <h4 className="font-semibold text-sm" style={{ color: "#1B2430" }}>Review Submitted Documentation</h4>
+                  <ClipboardCheck className="w-4 h-4" style={{ color: "#B68B5E" }} />
+                  <h4 className="font-semibold text-sm" style={{ color: "#18263A" }}>Review Submitted Documentation</h4>
                 </div>
                 <p className="text-xs text-slate-500 mb-3">Select documents for Ave to analyze, then generate a final Designation Notice.</p>
 
@@ -762,7 +762,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                   onClick={() => void reviewDocumentation()}
                   disabled={selectedDocIds.size === 0 || docReviewLoading}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-40 text-white"
-                  style={{ background: "linear-gradient(135deg, #D4A02E 0%, #B8862E 100%)" }}
+                  style={{ background: "linear-gradient(135deg, #C49A5E 0%, #A07645 100%)" }}
                 >
                   {docReviewLoading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing…</>
@@ -774,7 +774,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                 {docReviewResult && docReviewNotice && (
                   <div className="mt-4 space-y-4">
                     {/* Analysis summary */}
-                    <div className="rounded-xl p-4 border" style={{ background: "#FAF6EC", borderColor: "#C97E5940" }}>
+                    <div className="rounded-xl p-4 border" style={{ background: "#FBF7EF", borderColor: "#C97E5940" }}>
                       <div className="flex items-center gap-2 mb-2">
                         <span className={cn(
                           "text-xs font-semibold px-2 py-0.5 rounded-full border",
@@ -808,7 +808,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                         onFocus={() => setDocReviewNotice((n) => n ? { ...n, reviewed: true } : n)}
                         rows={10}
                         className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 select-text"
-                        style={{ color: "#1B2430" }}
+                        style={{ color: "#18263A" }}
                       />
                     </div>
 
@@ -838,7 +838,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                           onClick={() => void sendDocReviewNotice()}
                           disabled={!docReviewNotice.reviewed || docReviewSending || !overrideEmail.trim()}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-40 transition-all"
-                          style={{ background: "linear-gradient(135deg, #D4A02E 0%, #B8862E 100%)" }}
+                          style={{ background: "linear-gradient(135deg, #C49A5E 0%, #A07645 100%)" }}
                         >
                           {docReviewSending ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
@@ -911,7 +911,7 @@ function RecommendationCard({ recommendation }: { recommendation: AiRecommendati
                 className={cn(
                   "h-full rounded-full transition-all",
                   confidence >= 85
-                    ? "bg-[#C39A4A]"
+                    ? "bg-[#B68B5E]"
                     : confidence >= 65
                     ? "bg-amber-400"
                     : "bg-red-400",
@@ -978,13 +978,13 @@ function NoticeEditor({
       >
         <div className="flex items-center gap-2.5">
           {notice.reviewed ? (
-            <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#C39A4A" }} />
+            <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#B68B5E" }} />
           ) : (
             <div className="w-4 h-4 rounded-full border-2 border-slate-300 shrink-0" />
           )}
           <span className="text-sm font-semibold text-slate-800">{notice.title}</span>
           {notice.reviewed && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "#F4EEDF", color: "#9C7A35" }}>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "#F5EFE2", color: "#8E6A45" }}>
               Reviewed
             </span>
           )}
@@ -1023,16 +1023,16 @@ function NoticeEditor({
             onChange={(e) => onEdit(e.target.value)}
             rows={12}
             className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 font-mono resize-y leading-relaxed"
-            style={{ color: "#1B2430" }}
+            style={{ color: "#18263A" }}
           />
           {!notice.reviewed && (
             <div className="flex justify-end mt-2">
               <button
                 onClick={onReviewed}
                 className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-all text-white"
-                style={{ background: "#C39A4A" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#9C7A35")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#C39A4A")}
+                style={{ background: "#B68B5E" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#8E6A45")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#B68B5E")}
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Mark as Reviewed

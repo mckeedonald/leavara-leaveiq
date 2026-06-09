@@ -7,12 +7,12 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { EmployeeDataUpload } from "@/components/EmployeeDataUpload";
 
 const C = {
-  perf: "#7C9273",
+  perf: "#B68B5E",
   card: "#FFFFFF",
-  border: "#D2DBC9",
-  textDark: "#3A4A33",
-  textMuted: "#8DA384",
-  agentBg: "#F4F1EA",
+  border: "#E8DBC4",
+  textDark: "#5E4A2E",
+  textMuted: "#C6A074",
+  agentBg: "#F7F4EE",
 };
 
 type Tab = "document_types" | "policies" | "users" | "employee_data";
@@ -514,7 +514,7 @@ export default function PiqAdminSettings() {
                             className="relative border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer mb-3 transition-colors"
                             style={{
                               borderColor: policyFileDragging ? C.perf : C.border,
-                              background: policyFileDragging ? "#ECF0E9" : C.agentBg,
+                              background: policyFileDragging ? "#F4ECDD" : C.agentBg,
                             }}
                             onDragOver={(e) => { e.preventDefault(); setPolicyFileDragging(true); }}
                             onDragLeave={() => setPolicyFileDragging(false)}
@@ -613,7 +613,7 @@ export default function PiqAdminSettings() {
                           <div className="flex items-center gap-2 mb-0.5">
                             <p className="font-medium text-sm" style={{ color: C.textDark }}>{p.title}</p>
                             {p.pdfStorageKey && (
-                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#F4EEDC", color: "#A07E30" }}>PDF</span>
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ background: "#F4EEDC", color: "#8E6A45" }}>PDF</span>
                             )}
                           </div>
                           <p className="text-xs capitalize" style={{ color: C.textMuted }}>

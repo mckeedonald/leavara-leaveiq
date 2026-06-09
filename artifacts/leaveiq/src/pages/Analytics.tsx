@@ -4,15 +4,15 @@ import { useListCases, LeaveState, type LeaveCase } from "@workspace/api-client-
 import { BarChart2, TrendingUp, Clock, CheckCircle2, Users, FileText } from "lucide-react";
 
 const PALETTE = {
-  primary: "#C39A4A",
+  primary: "#B68B5E",
   primaryLight: "#F5E8CE",
-  teal: "#7C9273",
-  tealLight: "#ECF0E9",
+  teal: "#B68B5E",
+  tealLight: "#F4ECDD",
   card: "#FFFFFF",
-  border: "#E8E0D2",
-  bg: "#FAF8F3",
-  textDark: "#1B2430",
-  textMuted: "#5A6470",
+  border: "#EBE3D4",
+  bg: "#FCFAF6",
+  textDark: "#18263A",
+  textMuted: "#5D6875",
 };
 
 const STATE_LABELS: Record<string, string> = {
@@ -32,8 +32,8 @@ const STATE_COLORS: Record<string, string> = {
 };
 
 const REASON_COLORS = [
-  "#C39A4A", "#7C9273", "#C39A4A", "#B45309", "#065F46",
-  "#1D4ED8", "#B91C1C", "#9C7A35", "#0891B2", "#A07E30",
+  "#B68B5E", "#B68B5E", "#B68B5E", "#B45309", "#065F46",
+  "#1D4ED8", "#B91C1C", "#8E6A45", "#0891B2", "#8E6A45",
 ];
 
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: typeof BarChart2; color: string }) {
@@ -154,7 +154,7 @@ export default function Analytics() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard label="Total Cases" value={cases.length} icon={FileText} color={PALETTE.primary} />
               <StatCard label="Active Cases" value={activeCases.length} icon={Clock} color="#F97316" />
-              <StatCard label="Awaiting HR Review" value={hrReview.length} icon={Users} color="#C39A4A" />
+              <StatCard label="Awaiting HR Review" value={hrReview.length} icon={Users} color="#B68B5E" />
               <StatCard label="Avg. Close Time" value={avgClose !== null ? `${avgClose}d` : "—"} icon={CheckCircle2} color={PALETTE.teal} />
             </div>
 

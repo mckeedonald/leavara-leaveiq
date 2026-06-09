@@ -221,7 +221,7 @@ export default function EmployeePortalCase() {
           <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
-          <h2 className="text-xl font-display font-bold mb-2" style={{ color: "#1B2430" }}>Unable to Load Case</h2>
+          <h2 className="text-xl font-display font-bold mb-2" style={{ color: "#18263A" }}>Unable to Load Case</h2>
           <p className="text-muted-foreground text-sm mb-4">{error || "Something went wrong. Please try again using the link in your email."}</p>
           <p className="text-xs text-muted-foreground">If this problem persists, please contact your HR department and provide the error message above.</p>
         </div>
@@ -234,7 +234,7 @@ export default function EmployeePortalCase() {
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-8 space-y-6">
         {/* Case Summary Card */}
         <div className="rounded-2xl border bg-white overflow-hidden shadow-sm">
-          <div className="px-6 py-5 flex items-center justify-between" style={{ background: "#C39A4A" }}>
+          <div className="px-6 py-5 flex items-center justify-between" style={{ background: "#B68B5E" }}>
             <div>
               <h2 className="font-display font-bold text-xl text-white">{caseData.caseNumber}</h2>
               <p className="text-sm text-white/80 mt-0.5">
@@ -296,8 +296,8 @@ export default function EmployeePortalCase() {
             <div
               className="border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer"
               style={{
-                borderColor: isDragging ? "#C39A4A" : "#E0D8C5",
-                background: isDragging ? "#FAF6EC" : "#FAF9F4",
+                borderColor: isDragging ? "#B68B5E" : "#E6DECF",
+                background: isDragging ? "#FBF7EF" : "#FBFAF5",
               }}
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
               onDragLeave={() => setIsDragging(false)}
@@ -319,10 +319,10 @@ export default function EmployeePortalCase() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#F4EEDF" }}>
-                    <Upload className="w-6 h-6" style={{ color: "#C39A4A" }} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#F5EFE2" }}>
+                    <Upload className="w-6 h-6" style={{ color: "#B68B5E" }} />
                   </div>
-                  <p className="font-medium text-sm" style={{ color: "#1B2430" }}>Drop a file here, or click to browse</p>
+                  <p className="font-medium text-sm" style={{ color: "#18263A" }}>Drop a file here, or click to browse</p>
                   <p className="text-xs text-muted-foreground">PDF, JPG, PNG, HEIC, DOC, DOCX · Max 20 MB</p>
                 </div>
               )}
@@ -404,16 +404,16 @@ export default function EmployeePortalCase() {
                       onChange={(e) => setRtwDate(e.target.value)}
                       disabled={rtwSubmitting}
                       className="w-full border rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2"
-                      style={{ borderColor: "#E0D8C5", color: "#1B2430" }}
+                      style={{ borderColor: "#E6DECF", color: "#18263A" }}
                     />
                   </div>
                   <button
                     onClick={handleRtwSubmit}
                     disabled={rtwSubmitting || !rtwDate}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white transition-all disabled:opacity-50 shrink-0"
-                    style={{ background: "#C39A4A" }}
-                    onMouseEnter={(e) => { if (!rtwSubmitting) e.currentTarget.style.background = "#9C7A35"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "#C39A4A"; }}
+                    style={{ background: "#B68B5E" }}
+                    onMouseEnter={(e) => { if (!rtwSubmitting) e.currentTarget.style.background = "#8E6A45"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#B68B5E"; }}
                   >
                     {rtwSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                     {rtwSubmitting ? "Submitting…" : "Report Return to Work"}

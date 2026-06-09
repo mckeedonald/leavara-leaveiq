@@ -65,7 +65,7 @@ export default function Dashboard() {
         <MetricCard
           title="Total Cases"
           value={stats.total}
-          icon={<Users className="w-5 h-5 text-[#C39A4A]" />}
+          icon={<Users className="w-5 h-5 text-[#B68B5E]" />}
           trend={caseTrend.label ?? undefined}
           href="/leave/cases"
         />
@@ -176,7 +176,7 @@ function MetricCard({ title, value, icon, trend, trendDirection = "neutral", hig
       ? { color: "#166534", background: "#dcfce7" }
       : trendDirection === "down"
       ? { color: "#991b1b", background: "#fee2e2" }
-      : { color: "#9C7A35", background: "#F4EEDF" };
+      : { color: "#8E6A45", background: "#F5EFE2" };
 
   const inner = (
     <>

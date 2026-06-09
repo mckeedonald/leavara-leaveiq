@@ -4,13 +4,13 @@ import { piqApiFetch } from "@/lib/piqAuth";
 import { BarChart2, Clock, CheckCircle2, AlertTriangle, FileText, Users } from "lucide-react";
 
 const C = {
-  perf: "#7C9273",
-  perfLight: "#ECF0E9",
+  perf: "#B68B5E",
+  perfLight: "#F4ECDD",
   card: "#FFFFFF",
-  border: "#D2DBC9",
-  textDark: "#3A4A33",
-  textMuted: "#8DA384",
-  agentBg: "#F4F1EA",
+  border: "#E8DBC4",
+  textDark: "#5E4A2E",
+  textMuted: "#C6A074",
+  agentBg: "#F7F4EE",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const BASE_TYPE_COLORS: Record<string, string> = {
-  coaching: "#7C9273",
+  coaching: "#B68B5E",
   written_warning: "#B45309",
   final_warning: "#B91C1C",
 };
@@ -46,8 +46,8 @@ const BASE_TYPE_LABELS: Record<string, string> = {
 };
 
 const CHART_COLORS = [
-  "#7C9273", "#B45309", "#B91C1C", "#C39A4A", "#065F46",
-  "#1D4ED8", "#A07E30", "#0891B2", "#9C7A35", "#B91C1C",
+  "#B68B5E", "#B45309", "#B91C1C", "#B68B5E", "#065F46",
+  "#1D4ED8", "#8E6A45", "#0891B2", "#8E6A45", "#B91C1C",
 ];
 
 interface CaseSummary {

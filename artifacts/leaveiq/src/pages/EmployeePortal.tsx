@@ -687,7 +687,7 @@ export default function EmployeePortal() {
               <BotAvatar />
               <div
                 className="bg-white shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5"
-                style={{ border: "1px solid #E0D8C5" }}
+                style={{ border: "1px solid #E6DECF" }}
               >
                 <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:0ms]" style={{ background: "#CCB888" }} />
                 <span className="w-2 h-2 rounded-full animate-bounce [animation-delay:150ms]" style={{ background: "#CCB888" }} />
@@ -722,7 +722,7 @@ export default function EmployeePortal() {
             <form
               onSubmit={(e) => { e.preventDefault(); handleTextSubmit(inputValue); }}
               className="flex items-center gap-2 bg-white rounded-2xl shadow-sm px-4 py-2 sticky bottom-0"
-              style={{ border: "1px solid #E0D8C5" }}
+              style={{ border: "1px solid #E6DECF" }}
             >
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -731,14 +731,14 @@ export default function EmployeePortal() {
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder={inputPlaceholder()}
                 className="flex-1 text-sm bg-transparent outline-none py-1"
-                style={{ color: "#1B2430" }}
+                style={{ color: "#18263A" }}
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
                 className="disabled:opacity-40 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-opacity hover:opacity-90"
-                style={{ background: "#C39A4A" }}
+                style={{ background: "#B68B5E" }}
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -769,7 +769,7 @@ function TextareaInput({
   return (
     <div
       className="flex flex-col gap-2 bg-white rounded-2xl shadow-sm px-4 py-3 sticky bottom-0"
-      style={{ border: "1px solid #E0D8C5" }}
+      style={{ border: "1px solid #E6DECF" }}
     >
       <textarea
         ref={inputRef}
@@ -784,7 +784,7 @@ function TextareaInput({
         placeholder={placeholder}
         rows={3}
         className="flex-1 text-sm bg-transparent outline-none resize-none py-1 w-full"
-        style={{ color: "#1B2430" }}
+        style={{ color: "#18263A" }}
         autoFocus
       />
       <div className="flex justify-between items-center">
@@ -795,7 +795,7 @@ function TextareaInput({
           onClick={onSubmit}
           disabled={!value.trim() && !allowEmpty}
           className="disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-xl text-xs font-medium transition-opacity hover:opacity-90 flex items-center gap-1.5"
-          style={{ background: "#C39A4A" }}
+          style={{ background: "#B68B5E" }}
         >
           <Send className="w-3 h-3" /> Submit
         </button>
@@ -819,31 +819,31 @@ function SubmittedCard({
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3 text-center mt-2 shadow-sm"
-      style={{ background: "#FAF6EC", border: "1.5px solid #C97E5966" }}
+      style={{ background: "#FBF7EF", border: "1.5px solid #C97E5966" }}
     >
       <div className="flex items-center justify-center">
         <div
           className="w-14 h-14 rounded-full flex items-center justify-center"
           style={{ background: "#C97E5922" }}
         >
-          <CheckCircle className="w-8 h-8" style={{ color: "#C39A4A" }} />
+          <CheckCircle className="w-8 h-8" style={{ color: "#B68B5E" }} />
         </div>
       </div>
-      <p className="font-bold text-lg" style={{ color: "#1B2430" }}>
+      <p className="font-bold text-lg" style={{ color: "#18263A" }}>
         {isAda ? "Accommodation Request Submitted" : "Leave Request Submitted"}
       </p>
       <div
         className="rounded-xl px-4 py-3"
-        style={{ background: "#F4EEDF", border: "1px solid #C97E5933" }}
+        style={{ background: "#F5EFE2", border: "1px solid #C97E5933" }}
       >
         <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#B39A6A" }}>
           Your Case Number
         </p>
-        <p className="font-mono font-bold text-xl" style={{ color: "#9C7A35" }}>
+        <p className="font-mono font-bold text-xl" style={{ color: "#8E6A45" }}>
           {caseNumber}
         </p>
       </div>
-      <p className="text-sm" style={{ color: "#2E3742" }}>
+      <p className="text-sm" style={{ color: "#2A3A4C" }}>
         {isAda
           ? "HR will review your request and contact you to begin the interactive accommodation process — typically within 2–3 business days."
           : "HR will review your eligibility and contact you — typically within 2–3 business days."}
@@ -870,7 +870,7 @@ function BotAvatar() {
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-      style={{ background: "#C39A4A", boxShadow: "0 2px 6px #C97E5944" }}
+      style={{ background: "#B68B5E", boxShadow: "0 2px 6px #C97E5944" }}
     >
       <UserRound className="w-4 h-4 text-white" />
     </div>
@@ -896,7 +896,7 @@ function MessageBubble({
       ) : (
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-          style={{ background: "linear-gradient(135deg, #C39A4A, #D9B87A)" }}
+          style={{ background: "linear-gradient(135deg, #B68B5E, #D9B381)" }}
         >
           <User className="w-4 h-4 text-white" />
         </div>
@@ -910,8 +910,8 @@ function MessageBubble({
           )}
           style={
             isBot
-              ? { background: "#FFFFFF", border: "1px solid #E0D8C5", color: "#1B2430" }
-              : { background: "#C39A4A", color: "#FFFFFF" }
+              ? { background: "#FFFFFF", border: "1px solid #E6DECF", color: "#18263A" }
+              : { background: "#B68B5E", color: "#FFFFFF" }
           }
         >
           {renderText(message.text)}
@@ -956,14 +956,14 @@ function OptionButton({
       )}
       style={
         disabled
-          ? { background: "#FAF8F3", borderColor: "#E0D8C5", color: "#5A6470" }
-          : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#6E5A2E" }
+          ? { background: "#FCFAF6", borderColor: "#E6DECF", color: "#5D6875" }
+          : { background: "#FFFFFF", borderColor: "#C97E5966", color: "#5E4A2E" }
       }
       onMouseEnter={(e) => {
         if (!disabled) {
           const el = e.currentTarget as HTMLButtonElement;
-          el.style.background = "#C39A4A";
-          el.style.borderColor = "#C39A4A";
+          el.style.background = "#B68B5E";
+          el.style.borderColor = "#B68B5E";
           el.style.color = "#FFFFFF";
         }
       }}
@@ -972,7 +972,7 @@ function OptionButton({
           const el = e.currentTarget as HTMLButtonElement;
           el.style.background = "#FFFFFF";
           el.style.borderColor = "#C97E5966";
-          el.style.color = "#6E5A2E";
+          el.style.color = "#5E4A2E";
         }
       }}
     >

@@ -50,11 +50,11 @@ interface CalendarAccommodation {
 const PROGRAM_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   own_health:           { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" },
   care_family:          { bg: "#D1FAE5", text: "#065F46", border: "#A7F3D0" },
-  pregnancy_disability: { bg: "#F2E8CE", text: "#9C7A35", border: "#ECE0C2" },
+  pregnancy_disability: { bg: "#F1E7CF", text: "#8E6A45", border: "#EDE2CE" },
   bonding:              { bg: "#FEF3C7", text: "#92400E", border: "#FDE68A" },
-  personal:             { bg: "#F2E6C8", text: "#9C7A35", border: "#FDBA74" },
+  personal:             { bg: "#F1E7CF", text: "#8E6A45", border: "#FDBA74" },
   military:             { bg: "#F1F5F9", text: "#334155", border: "#CBD5E1" },
-  bereavement:          { bg: "#FAF4E6", text: "#9C7A35", border: "#ECE0C2" },
+  bereavement:          { bg: "#FBF7EF", text: "#8E6A45", border: "#EDE2CE" },
   jury_duty:            { bg: "#FEF9C3", text: "#713F12", border: "#FDE68A" },
   other:                { bg: "#F0FDFA", text: "#065F46", border: "#99F6E4" },
 };
@@ -72,8 +72,8 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 // Purple shades for accommodations
-const ADA_LEAVE_COLORS     = { bg: "#F2E8CE", text: "#9C7A35", border: "#ECE0C2" };
-const ADA_ONGOING_COLORS   = { bg: "#FAF4E6", text: "#C39A4A", border: "#E0CC98" };
+const ADA_LEAVE_COLORS     = { bg: "#F1E7CF", text: "#8E6A45", border: "#EDE2CE" };
+const ADA_ONGOING_COLORS   = { bg: "#FBF7EF", text: "#B68B5E", border: "#E0CC98" };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function employeeName(c: CalendarCase): string {
@@ -107,7 +107,7 @@ function CalendarGrid({ days, children }: { days: Date[]; children: React.ReactN
             <div
               key={day.toISOString()}
               className="flex-1 text-center py-2 text-xs font-semibold border-l first:border-l-0"
-              style={{ color: "#2E3742", borderColor: "#E8E2D5" }}
+              style={{ color: "#2A3A4C", borderColor: "#EBE5D7" }}
             >
               <span className="hidden sm:block">{format(day, "d")}</span>
               <span className="sm:hidden">{format(day, "d")}</span>
@@ -176,11 +176,11 @@ function LeaveCalendarTab({
               <div
                 key={c.caseId}
                 className="flex items-center border-t hover:bg-slate-50/50 transition-colors"
-                style={{ minHeight: "52px", borderColor: "#E8E2D5" }}
+                style={{ minHeight: "52px", borderColor: "#EBE5D7" }}
               >
                 <div
                   className="shrink-0 px-4 py-2 text-sm font-medium truncate border-r"
-                  style={{ width: "200px", borderColor: "#E8E2D5", color: "#1B2430" }}
+                  style={{ width: "200px", borderColor: "#EBE5D7", color: "#18263A" }}
                   title={name}
                 >
                   <p className="truncate">{name}</p>
@@ -277,7 +277,7 @@ function AccommodationsCalendarTab({
           <EmptyCalendar
             label={`No accommodations in ${format(currentMonth, "MMMM yyyy")}`}
             sub="Approved accommodations will appear here once recorded in an ADA case."
-            icon={<ShieldCheck className="w-12 h-12 mb-3 opacity-20" style={{ color: "#C39A4A" }} />}
+            icon={<ShieldCheck className="w-12 h-12 mb-3 opacity-20" style={{ color: "#B68B5E" }} />}
           />
         ) : (
           sorted.map((acc) => {
@@ -292,11 +292,11 @@ function AccommodationsCalendarTab({
               <div
                 key={acc.id}
                 className="flex items-center border-t hover:bg-slate-50/50 transition-colors"
-                style={{ minHeight: "52px", borderColor: "#E8E2D5" }}
+                style={{ minHeight: "52px", borderColor: "#EBE5D7" }}
               >
                 <div
                   className="shrink-0 px-4 py-2 text-sm font-medium truncate border-r"
-                  style={{ width: "200px", borderColor: "#E8E2D5", color: "#1B2430" }}
+                  style={{ width: "200px", borderColor: "#EBE5D7", color: "#18263A" }}
                   title={label}
                 >
                   <p className="truncate">{label}</p>
@@ -430,7 +430,7 @@ export default function Calendar() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: "#FAF8F3", border: "1px solid #E0D8C5" }}>
+        <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: "#FCFAF6", border: "1px solid #E6DECF" }}>
           <button
             onClick={() => setActiveTab("leave")}
             className={cn(
@@ -439,7 +439,7 @@ export default function Calendar() {
                 ? "shadow-sm text-white"
                 : "text-muted-foreground hover:text-foreground"
             )}
-            style={activeTab === "leave" ? { background: "#C39A4A" } : {}}
+            style={activeTab === "leave" ? { background: "#B68B5E" } : {}}
           >
             <CalendarDays className="w-4 h-4" /> Leave
           </button>
@@ -451,7 +451,7 @@ export default function Calendar() {
                 ? "shadow-sm text-white"
                 : "text-muted-foreground hover:text-foreground"
             )}
-            style={activeTab === "accommodations" ? { background: "#C39A4A" } : {}}
+            style={activeTab === "accommodations" ? { background: "#B68B5E" } : {}}
           >
             <ShieldCheck className="w-4 h-4" /> Accommodations
           </button>

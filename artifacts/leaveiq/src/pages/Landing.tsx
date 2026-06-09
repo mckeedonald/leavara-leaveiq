@@ -15,24 +15,24 @@ import {
 
 /* ─── Brand palette ─────────────────────────────────────────────── */
 const C = {
-  bg:           "#F4F1EA",
-  bgCard:       "#FAF8F3",
+  bg:           "#F7F4EE",
+  bgCard:       "#FCFAF6",
   khaki:        "#C9BD9E",
   mocha:        "#B39A6A",
-  mochaDeep:    "#6E5A2E",
-  terracotta:   "#C39A4A",
-  terracottaDk: "#9C7A35",
-  rose:         "#D9B87A",
+  mochaDeep:    "#5E4A2E",
+  terracotta:   "#B68B5E",
+  terracottaDk: "#8E6A45",
+  rose:         "#D9B381",
   roseDark:     "#B58A48",
-  textDark:     "#1B2430",
-  textBody:     "#2E3742",
-  textMuted:    "#5A6470",
-  textOnDark:   "#F4F1EA",
+  textDark:     "#18263A",
+  textBody:     "#2A3A4C",
+  textMuted:    "#5D6875",
+  textOnDark:   "#F7F4EE",
   // Guildlight Grow accent — teal
-  perf:         "#7C9273",
-  perfLight:    "#A3B89B",
-  perfDark:     "#54684B",
-  perfBg:       "#ECF0E9",
+  perf:         "#B68B5E",
+  perfLight:    "#D0B488",
+  perfDark:     "#6B5230",
+  perfBg:       "#F4ECDD",
 };
 
 /* ─── Typewriter hook ──────────────────────────────────────────── */
@@ -209,7 +209,7 @@ function GuildlightGrowIllustration() {
 
       {/* Agent chat card */}
       <g style={{ opacity: visible ? 1 : 0, transition: "opacity 0.5s" }}>
-        <rect x="10" y="10" width="268" height="258" rx="14" fill={C.bgCard} stroke="#BFCDB3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="10" y="10" width="268" height="258" rx="14" fill={C.bgCard} stroke="#E4CBA0" strokeWidth="1.5" filter="url(#ps1)" />
         {/* Header */}
         <rect x="10" y="10" width="268" height="44" rx="14" fill={C.perfDark} />
         <rect x="10" y="38" width="268" height="16" fill={C.perfDark} />
@@ -251,9 +251,9 @@ function GuildlightGrowIllustration() {
       <g style={{ opacity: visible ? 1 : 0, transform: visible ? "none" : "translateX(20px)", transition: "all 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
 
         {/* Workflow tracker */}
-        <rect x="286" y="10" width="128" height="120" rx="12" fill={C.bgCard} stroke="#BFCDB3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="286" y="10" width="128" height="120" rx="12" fill={C.bgCard} stroke="#E4CBA0" strokeWidth="1.5" filter="url(#ps1)" />
         <text x="350" y="28" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={C.perfDark} fontFamily="Inter, sans-serif">Approval Workflow</text>
-        <line x1="296" y1="34" x2="406" y2="34" stroke="#BFCDB3" strokeWidth="0.8" />
+        <line x1="296" y1="34" x2="406" y2="34" stroke="#E4CBA0" strokeWidth="0.8" />
         {workflowSteps.map(({ label, done }, i) => (
           <g key={label}>
             <circle cx="303" cy={50 + i * 22} r="7"
@@ -281,7 +281,7 @@ function GuildlightGrowIllustration() {
         <rect x="296" y="206" width="110" height="4" rx="2" fill="white" opacity="0.18" />
 
         {/* Case closed card */}
-        <rect x="286" y="230" width="128" height="66" rx="12" fill={C.bgCard} stroke="#BFCDB3" strokeWidth="1.5" filter="url(#ps1)" />
+        <rect x="286" y="230" width="128" height="66" rx="12" fill={C.bgCard} stroke="#E4CBA0" strokeWidth="1.5" filter="url(#ps1)" />
         <text x="298" y="249" fontSize="8" fontWeight="600" fill={C.textMuted} fontFamily="Inter, sans-serif">CASE FILED</text>
         <rect x="296" y="255" width="110" height="5" rx="2.5" fill={C.perf} opacity="0.7" />
         <rect x="296" y="265" width="80" height="5" rx="2.5" fill={C.perf} opacity="0.35" />
@@ -395,7 +395,7 @@ export default function Landing() {
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EAE4D6 60%, ${C.bg} 100%)` }}>
+        style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EDE7D9 60%, ${C.bg} 100%)` }}>
         <div className="absolute top-[-80px] right-[-80px] w-[500px] h-[500px] rounded-full blur-[110px] pointer-events-none"
           style={{ background: C.terracotta + "1a" }} />
         <div className="absolute bottom-[-60px] left-[-60px] w-[350px] h-[350px] rounded-full blur-[90px] pointer-events-none"
@@ -533,8 +533,8 @@ export default function Landing() {
 
             {/* Guildlight Grow Card */}
             <div id="performiq" className="rounded-3xl border overflow-hidden"
-              style={{ background: C.bgCard, borderColor: "#BFCDB3" }}>
-              <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#BFCDB3" }}>
+              style={{ background: C.bgCard, borderColor: "#E4CBA0" }}>
+              <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#E4CBA0" }}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl"
                     style={{ background: C.perf + "20" }}>📋</div>
@@ -574,7 +574,7 @@ export default function Landing() {
                   </Link>
                   <Link href="/interest"
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold border hover:opacity-80 transition-opacity"
-                    style={{ borderColor: "#BFCDB3", color: C.perfDark }}>
+                    style={{ borderColor: "#E4CBA0", color: C.perfDark }}>
                     Request Access
                   </Link>
                 </div>
@@ -631,9 +631,9 @@ export default function Landing() {
             </div>
 
             {/* Guildlight Grow Video */}
-            <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: "#BFCDB3" }}>
+            <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: "#E4CBA0" }}>
               <div className="px-5 py-4 border-b flex items-center gap-3"
-                style={{ background: C.perf + "0d", borderColor: "#BFCDB3" }}>
+                style={{ background: C.perf + "0d", borderColor: "#E4CBA0" }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
                   style={{ background: C.perf + "20" }}>📋</div>
                 <div>

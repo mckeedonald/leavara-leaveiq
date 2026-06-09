@@ -107,29 +107,29 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
   return (
     <div
       className="rounded-2xl border overflow-hidden flex flex-col"
-      style={{ background: "#FAFAFA", borderColor: "#ECE0C2" }}
+      style={{ background: "#FAFAFA", borderColor: "#EDE2CE" }}
     >
       {/* Header */}
       <button
         onClick={() => setIsCollapsed((c) => !c)}
         className="flex items-center justify-between px-5 py-4 w-full text-left transition-colors hover:bg-violet-50/50"
-        style={{ background: "#FAF4E6", borderBottom: isCollapsed ? "none" : "1px solid #ECE0C2" }}
+        style={{ background: "#FBF7EF", borderBottom: isCollapsed ? "none" : "1px solid #EDE2CE" }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
-            style={{ background: "linear-gradient(135deg, #C39A4A, #C9A455)" }}
+            style={{ background: "linear-gradient(135deg, #B68B5E, #C9A455)" }}
           >
             <ShieldCheck className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="font-semibold text-sm" style={{ color: "#7A5E28" }}>Ada — ADA Specialist</p>
-            <p className="text-xs" style={{ color: "#C39A4A" }}>Interactive process guidance & accommodation research</p>
+            <p className="font-semibold text-sm" style={{ color: "#6B5230" }}>Ada — ADA Specialist</p>
+            <p className="text-xs" style={{ color: "#B68B5E" }}>Interactive process guidance & accommodation research</p>
           </div>
         </div>
         {isCollapsed
-          ? <ChevronDown className="w-4 h-4" style={{ color: "#C39A4A" }} />
-          : <ChevronUp className="w-4 h-4" style={{ color: "#C39A4A" }} />
+          ? <ChevronDown className="w-4 h-4" style={{ color: "#B68B5E" }} />
+          : <ChevronUp className="w-4 h-4" style={{ color: "#B68B5E" }} />
         }
       </button>
 
@@ -139,11 +139,11 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
           <div ref={chatListRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-[200px] max-h-[420px]">
             {history.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full py-8 text-center gap-2">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#F2E8CE" }}>
-                  <ShieldCheck className="w-6 h-6" style={{ color: "#C39A4A" }} />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#F1E7CF" }}>
+                  <ShieldCheck className="w-6 h-6" style={{ color: "#B68B5E" }} />
                 </div>
-                <p className="font-medium text-sm" style={{ color: "#7A5E28" }}>Hi, I'm Ada</p>
-                <p className="text-xs max-w-xs leading-relaxed" style={{ color: "#A07E30" }}>
+                <p className="font-medium text-sm" style={{ color: "#6B5230" }}>Hi, I'm Ada</p>
+                <p className="text-xs max-w-xs leading-relaxed" style={{ color: "#8E6A45" }}>
                   I'll guide you through the ADA interactive process — from reviewing this request and
                   researching accommodations, to drafting letters and scheduling follow-ups. How can I help?
                 </p>
@@ -161,7 +161,7 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
                         setTimeout(() => textareaRef.current?.focus(), 50);
                       }}
                       className="px-3 py-1.5 text-xs rounded-lg border transition-colors hover:bg-violet-50"
-                      style={{ borderColor: "#ECE0C2", color: "#9C7A35", background: "#FFFFFF" }}
+                      style={{ borderColor: "#EDE2CE", color: "#8E6A45", background: "#FFFFFF" }}
                     >
                       {prompt}
                     </button>
@@ -182,8 +182,8 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
                   )}
                   style={
                     msg.role === "user"
-                      ? { background: "#C39A4A", color: "#FFFFFF" }
-                      : { background: "#FFFFFF", border: "1px solid #ECE0C2", color: "#2A2410" }
+                      ? { background: "#B68B5E", color: "#FFFFFF" }
+                      : { background: "#FFFFFF", border: "1px solid #EDE2CE", color: "#2A2410" }
                   }
                 >
                   {renderMarkdown(msg.content)}
@@ -195,7 +195,7 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
               <div className="flex justify-start">
                 <div
                   className="px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-2 text-sm shadow-sm"
-                  style={{ background: "#FFFFFF", border: "1px solid #ECE0C2", color: "#A07E30" }}
+                  style={{ background: "#FFFFFF", border: "1px solid #EDE2CE", color: "#8E6A45" }}
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
                   {lastJanUsed ? "Looking up JAN accommodations…" : "Ada is thinking…"}
@@ -208,27 +208,27 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
           {/* JAN lookup toggle */}
           <div
             className="flex items-center gap-3 px-4 py-2 border-t border-b"
-            style={{ borderColor: "#F2E8CE", background: "#FAF4E6" }}
+            style={{ borderColor: "#F1E7CF", background: "#FBF7EF" }}
           >
-            <BookOpen className="w-3.5 h-3.5 shrink-0" style={{ color: "#C39A4A" }} />
-            <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: "#9C7A35" }}>
+            <BookOpen className="w-3.5 h-3.5 shrink-0" style={{ color: "#B68B5E" }} />
+            <label className="flex items-center gap-2 cursor-pointer text-xs" style={{ color: "#8E6A45" }}>
               <input
                 type="checkbox"
                 checked={janToggle}
                 onChange={(e) => setJanToggle(e.target.checked)}
                 className="rounded"
-                style={{ accentColor: "#C39A4A" }}
+                style={{ accentColor: "#B68B5E" }}
               />
               Always search JAN database for this message
             </label>
-            <span className="ml-auto text-xs opacity-60" style={{ color: "#C39A4A" }}>askjan.org</span>
+            <span className="ml-auto text-xs opacity-60" style={{ color: "#B68B5E" }}>askjan.org</span>
           </div>
 
           {/* Input */}
-          <div className="p-3" style={{ background: "#FAF9F4" }}>
+          <div className="p-3" style={{ background: "#FBFAF5" }}>
             <div
               className="flex flex-col gap-2 rounded-xl border px-3 py-2"
-              style={{ borderColor: "#ECE0C2", background: "#FFFFFF" }}
+              style={{ borderColor: "#EDE2CE", background: "#FFFFFF" }}
             >
               <textarea
                 ref={textareaRef}
@@ -247,14 +247,14 @@ export function AdaAgentPanel({ caseId, onActionSuggested, onFollowUpSuggested }
                 disabled={isLoading}
               />
               <div className="flex justify-between items-center">
-                <span className="text-xs opacity-50" style={{ color: "#C39A4A" }}>
+                <span className="text-xs opacity-50" style={{ color: "#B68B5E" }}>
                   Enter to send · Shift+Enter for new line
                 </span>
                 <button
                   onClick={sendMessage}
                   disabled={!inputValue.trim() || isLoading}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
-                  style={{ background: "#C39A4A" }}
+                  style={{ background: "#B68B5E" }}
                 >
                   <Send className="w-3 h-3" /> Send
                 </button>
@@ -274,7 +274,7 @@ function renderMarkdown(text: string) {
     if (line.startsWith("- ") || line.startsWith("• ")) {
       return (
         <div key={li} className="flex gap-2">
-          <span className="shrink-0 mt-1" style={{ color: "#C39A4A" }}>•</span>
+          <span className="shrink-0 mt-1" style={{ color: "#B68B5E" }}>•</span>
           <span>{inlineMarkdown(line.slice(2))}</span>
         </div>
       );
