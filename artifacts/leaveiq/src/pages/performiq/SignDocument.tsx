@@ -185,7 +185,7 @@ export default function SignDocument() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: C.muted }}>
-                {data?.organizationName ?? "Leavara PerformIQ"}
+                {data?.organizationName ?? "Guildlight Grow"}
               </p>
               <h1 className="text-xl font-bold" style={{ color: C.dark }}>{data?.docLabel ?? "Performance Document"}</h1>
               <p className="text-sm mt-1" style={{ color: C.muted }}>
@@ -317,7 +317,7 @@ export default function SignDocument() {
         )}
 
         <p className="text-center text-xs mt-6" style={{ color: C.muted }}>
-          Powered by Leavara PerformIQ — Secure electronic document management
+          Powered by Guildlight Grow — Secure electronic document management
         </p>
       </div>
     </div>

@@ -24,7 +24,7 @@ const features = [
   { icon: TrendingUp, title: "Analytics", desc: "AI-powered performance trends" },
 ];
 
-export default function PerformIQDashboard() {
+export default function GuildlightGrowDashboard() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
 
@@ -38,7 +38,7 @@ export default function PerformIQDashboard() {
           className="flex items-center gap-2 text-sm font-medium mb-8 transition-opacity hover:opacity-70"
           style={{ color: C.perf }}
         >
-          <ArrowLeft className="w-4 h-4" /> Back to LeaveIQ
+          <ArrowLeft className="w-4 h-4" /> Back to Guildlight Leave
         </button>
 
         {/* Header */}
@@ -84,12 +84,12 @@ export default function PerformIQDashboard() {
         <div className="rounded-2xl p-6 text-center border" style={{ background: C.card, borderColor: C.border }}>
           <p className="text-sm font-medium mb-1" style={{ color: C.textDark }}>Your organization is on the early access list.</p>
           <p className="text-sm" style={{ color: C.textMuted }}>
-            You'll be notified as soon as PerformIQ is ready for your team.
+            You'll be notified as soon as Guildlight Grow is ready for your team.
           </p>
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: C.textMuted }}>
-          © 2026 Leavara · PerformIQ is coming soon
+          © 2026 Guildlight · Guildlight Grow is coming soon
         </p>
       </div>
     </div>

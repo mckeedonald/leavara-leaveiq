@@ -9,7 +9,7 @@
  *  5. Draft approval or denial letters
  *  6. Suggest follow-up scheduling
  *
- * Distinct from Ava (leave management) — Ada focuses exclusively on
+ * Distinct from Ave (leave management) — Ada focuses exclusively on
  * ADA accommodations, undue hardship analysis, and the interactive process.
  */
 
@@ -19,7 +19,7 @@ import { retrieveRelevantChunks } from "./rag.js";
 import { logger } from "./logger.js";
 import type { AdaCase } from "@workspace/db";
 
-const ADA_SYSTEM_PROMPT = `You are Ada, an expert ADA (Americans with Disabilities Act) accommodation specialist embedded in the Leavara LeaveIQ platform. You assist HR professionals with the complete ADA interactive process.
+const ADA_SYSTEM_PROMPT = `You are Ada, an expert ADA (Americans with Disabilities Act) accommodation specialist embedded in the Guildlight Leave platform. You assist HR professionals with the complete ADA interactive process.
 
 YOUR EXPERTISE COVERS:
 - ADA Title I requirements (employers with 15+ employees)

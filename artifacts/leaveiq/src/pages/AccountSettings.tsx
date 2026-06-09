@@ -217,7 +217,7 @@ export default function AccountSettings() {
         {/* Profile section */}
         <SectionCard
           title="Profile Information"
-          description="Update your name and job title as they appear in LeaveIQ."
+          description="Update your name and job title as they appear in Guildlight Leave."
           icon={User}
         >
           {/* Read-only account info */}

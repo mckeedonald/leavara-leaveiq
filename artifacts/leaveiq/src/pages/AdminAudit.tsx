@@ -31,7 +31,7 @@ function actionLabel(action: string): string {
   const map: Record<string, string> = {
     CASE_CREATED: "Case Created",
     AI_RECOMMENDATION_GENERATED: "AI Recommendation",
-    AI_DOCUMENTATION_REVIEW: "Doc Review (Ava)",
+    AI_DOCUMENTATION_REVIEW: "Doc Review (Ave)",
     HR_DOCUMENT_UPLOADED: "Document Uploaded",
     CASE_CLOSED_RTW_CONFIRMED: "Case Closed — RTW",
     NOTICE_SENT_ELIGIBILITY_NOTICE: "Eligibility Notice Sent",

@@ -19,14 +19,14 @@ export default function OrgLanding() {
           {/* Product info cards — display only, no per-card sign-in */}
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
             <ProductInfoCard
-              title="LeaveIQ"
+              title="Guildlight Leave"
               subtitle="Leave Management"
               accentColor="#C97E59"
               primaryLabel="Request Leave"
               primaryHref="/leaveiq/request"
             />
             <ProductInfoCard
-              title="PerformIQ"
+              title="Guildlight Grow"
               subtitle="Performance Management"
               accentColor="#2E7B7B"
               primaryLabel={null}
@@ -93,9 +93,9 @@ export default function OrgLanding() {
 
       {/* Footer */}
       <div className="mt-10 flex items-center gap-2.5 opacity-60">
-        <img src="/leavara-logo.png" alt="Leavara" className="h-5 w-5 object-contain" />
+        <img src="/leavara-logo.png" alt="Guildlight" className="h-5 w-5 object-contain" />
         <span className="text-sm font-medium" style={{ color: "#7A5540" }}>
-          Powered by Leavara
+          Powered by Guildlight
         </span>
       </div>
     </div>

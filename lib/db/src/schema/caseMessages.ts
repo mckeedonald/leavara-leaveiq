@@ -1,7 +1,7 @@
 import { pgTable, text, uuid, timestamp } from "drizzle-orm/pg-core";
 
 /**
- * Unified case messaging table for both LeaveIQ and PerformIQ.
+ * Unified case messaging table for both Guildlight Leave and Guildlight Grow.
  * caseId references either leaveCasesTable.id or piqCasesTable.id, determined by `product`.
  * senderType = "hr" means senderId is a usersTable.id; "employee" means the sender is the employee (identified by name).
  */

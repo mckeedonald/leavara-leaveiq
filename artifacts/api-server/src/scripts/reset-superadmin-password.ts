@@ -14,7 +14,7 @@ import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const email = process.env["ADMIN_EMAIL"] ?? "admin@leavara.net";
+const email = process.env["ADMIN_EMAIL"] ?? "admin@guildlight.co";
 const newPassword = process.env["ADMIN_PASSWORD"] ?? "LeaveIQ2026!";
 
 if (newPassword.length < 8) {

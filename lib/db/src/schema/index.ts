@@ -28,7 +28,7 @@ export * from "./leaveKnowledgeSources";
 export * from "./orgRoles";
 export * from "./orgRolePermissions";
 
-// PerformIQ tables (piqUsers kept for reference, data now in hr_user)
+// Guildlight Grow tables (piqUsers kept for reference, data now in hr_user)
 export * from "./piqUsers";
 export * from "./piqEmployees";
 export * from "./piqDocumentTypes";

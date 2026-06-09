@@ -32,15 +32,15 @@ const COMPANY_SIZES = [
 
 const PRODUCTS = [
   {
-    id: "LeaveIQ",
-    label: "LeaveIQ",
+    id: "Guildlight Leave",
+    label: "Guildlight Leave",
     desc: "Smart Leave of Absence Management",
     icon: "📅",
     accent: "#C97E59",
   },
   {
-    id: "PerformIQ",
-    label: "PerformIQ",
+    id: "Guildlight Grow",
+    label: "Guildlight Grow",
     desc: "AI-Assisted Performance Documentation",
     icon: "📋",
     accent: "#2E7B7B",
@@ -139,11 +139,11 @@ export default function Interest() {
           <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: C.terracotta + "20" }}>
             <CheckCircle2 className="w-10 h-10" style={{ color: C.terracotta }} />
           </div>
-          <img src="/leavara-logo.png" alt="Leavara" className="h-10 w-10 object-contain mx-auto mb-3" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-10 w-10 object-contain mx-auto mb-3" />
           <h1 className="text-2xl font-bold mb-3" style={{ color: C.textDark }}>Thank You!</h1>
           <p className="text-base mb-2" style={{ color: C.textBody }}>
             We've received your interest in{" "}
-            {form.products.length > 0 ? `Leavara ${form.products.join(" & ")}` : "Leavara"}.
+            {form.products.length > 0 ? `Guildlight ${form.products.join(" & ")}` : "Guildlight"}.
           </p>
           <p className="text-sm mb-8" style={{ color: C.textMuted }}>
             A member of our team will be in touch shortly to walk you through the platform and discuss how it fits your organization.
@@ -154,7 +154,7 @@ export default function Interest() {
             style={{ color: C.terracotta }}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Leavara
+            Back to Guildlight
           </Link>
         </div>
       </div>
@@ -166,9 +166,9 @@ export default function Interest() {
       <header className="sticky top-0 z-50 border-b shadow-sm" style={{ background: `${C.bg}f5`, borderColor: C.khaki }}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
+            <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
             <span className="font-bold text-lg" style={{ color: C.textDark }}>
-              Leavara <span style={{ color: C.terracottaDk }}>LeaveIQ</span>
+              Guildlight <span style={{ color: C.terracottaDk }}>Guildlight Leave</span>
             </span>
           </Link>
           <Link
@@ -185,8 +185,8 @@ export default function Interest() {
       <main className="flex-1 flex items-start justify-center px-6 py-14">
         <div className="w-full max-w-xl">
           <div className="mb-8">
-            <img src="/leavara-logo.png" alt="Leavara" className="h-12 w-12 object-contain mb-4" />
-            <h1 className="text-3xl font-bold mb-2" style={{ color: C.textDark }}>Get Started with Leavara</h1>
+            <img src="/leavara-logo.png" alt="Guildlight" className="h-12 w-12 object-contain mb-4" />
+            <h1 className="text-3xl font-bold mb-2" style={{ color: C.textDark }}>Get Started with Guildlight</h1>
             <p style={{ color: C.textBody }}>
               Tell us a bit about your organization and the products you're interested in — we'll reach out to walk you through what's right for your team.
             </p>
@@ -351,7 +351,7 @@ export default function Interest() {
               </button>
 
               <p className="text-xs text-center" style={{ color: C.textMuted }}>
-                We respect your privacy. Your information is only used to contact you about Leavara products.
+                We respect your privacy. Your information is only used to contact you about Guildlight products.
               </p>
             </form>
           </div>
@@ -359,7 +359,7 @@ export default function Interest() {
       </main>
 
       <footer className="border-t py-6 text-center text-xs" style={{ background: C.terracotta, borderColor: C.terracotta, color: C.bg + "bb" }}>
-        © {new Date().getFullYear()} Leavara, LLC · All rights reserved.
+        © {new Date().getFullYear()} Guildlight, LLC · All rights reserved.
       </footer>
     </div>
   );

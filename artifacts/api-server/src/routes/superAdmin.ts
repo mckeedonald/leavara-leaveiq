@@ -205,7 +205,7 @@ router.post("/superadmin/organizations/:orgId/users", requireSuperAdmin, async (
   res.status(201).json({ user: newUser });
 });
 
-// POST /superadmin/organizations/:orgId/piq-users — create a PerformIQ user for an org
+// POST /superadmin/organizations/:orgId/piq-users — create a Guildlight Grow user for an org
 router.post("/superadmin/organizations/:orgId/piq-users", requireSuperAdmin, async (req: Request, res: Response): Promise<void> => {
   const { orgId } = req.params;
   const { email, fullName, role, password } = req.body as {
@@ -228,7 +228,7 @@ router.post("/superadmin/organizations/:orgId/piq-users", requireSuperAdmin, asy
   }
 
   if (!org.hasPerformIq) {
-    res.status(400).json({ error: "This organization does not have PerformIQ enabled. Enable it first." });
+    res.status(400).json({ error: "This organization does not have Guildlight Grow enabled. Enable it first." });
     return;
   }
 
@@ -238,7 +238,7 @@ router.post("/superadmin/organizations/:orgId/piq-users", requireSuperAdmin, asy
     .where(eq(piqUsersTable.email, email.toLowerCase().trim()));
 
   if (existing) {
-    res.status(409).json({ error: "A PerformIQ user with this email already exists" });
+    res.status(409).json({ error: "A Guildlight Grow user with this email already exists" });
     return;
   }
 

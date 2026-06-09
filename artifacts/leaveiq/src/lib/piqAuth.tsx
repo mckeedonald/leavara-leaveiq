@@ -1,6 +1,6 @@
 /**
  * piqAuth — thin wrapper over the unified auth context.
- * PerformIQ pages import usePiqAuth / usePiqRole / piqApiFetch from here.
+ * Guildlight Grow pages import usePiqAuth / usePiqRole / piqApiFetch from here.
  * All state is stored in leavara_token (unified).
  */
 import { useAuth, apiFetch, type AuthUser } from "./auth";

@@ -1,7 +1,7 @@
 /**
  * piqJwtAuth — backward-compat shim.
  * Auth is now handled by jwtAuth.ts (unified token).
- * This shim bridges the old `req.piqUser` API used by PerformIQ route files.
+ * This shim bridges the old `req.piqUser` API used by Guildlight Grow route files.
  */
 import type { Request, Response, NextFunction } from "express";
 import {
@@ -18,7 +18,7 @@ import {
 
 export type { JwtPayload as PiqJwtPayload };
 
-/** PerformIQ request type — exposes `piqUser` alias for the unified JWT payload */
+/** Guildlight Grow request type — exposes `piqUser` alias for the unified JWT payload */
 export interface PiqAuthenticatedRequest extends Request {
   piqUser: JwtPayload;
   user: JwtPayload;

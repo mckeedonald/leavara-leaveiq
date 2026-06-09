@@ -21,7 +21,7 @@ function normalizeRole(dbRole: string): UnifiedRole {
   return "hr_user";
 }
 
-// POST /auth/login — unified login for LeaveIQ and PerformIQ
+// POST /auth/login — unified login for Guildlight Leave and Guildlight Grow
 router.post("/auth/login", loginLimiter, async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body as { email?: string; password?: string };
 

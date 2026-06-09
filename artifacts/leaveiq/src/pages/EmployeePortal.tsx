@@ -8,7 +8,7 @@ function getOrgSlug(): string {
   if (typeof window === "undefined") return "";
   const hostname = window.location.hostname;
   const parts = hostname.split(".");
-  if (parts.length >= 3 && parts.slice(-2).join(".") === "leavara.net") {
+  if (parts.length >= 3 && parts.slice(-2).join(".") === "guildlight.co") {
     return parts[0];
   }
   return new URLSearchParams(window.location.search).get("org") ?? "";
@@ -104,7 +104,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: "welcome-1",
     role: "bot",
-    text: "👋 Hi! I'm Ava, your leave and accommodations assistant. I'm here to help you submit a request — it only takes a few minutes, and your HR team will take it from there.",
+    text: "👋 Hi! I'm Ave, your leave and accommodations assistant. I'm here to help you submit a request — it only takes a few minutes, and your HR team will take it from there.",
   },
   {
     id: "welcome-2",

@@ -28,7 +28,7 @@ const C = {
   textBody:     "#5C3D28",
   textMuted:    "#8C7058",
   textOnDark:   "#F0EEE9",
-  // PerformIQ accent — teal
+  // Guildlight Grow accent — teal
   perf:         "#2E7B7B",
   perfLight:    "#5BA8A8",
   perfDark:     "#1E5555",
@@ -73,8 +73,8 @@ function Cursor({ visible, color }: { visible: boolean; color?: string }) {
   );
 }
 
-/* ─── LeaveIQ Hero Illustration ────────────────────────────────── */
-function LeaveIQIllustration() {
+/* ─── Guildlight Leave Hero Illustration ────────────────────────────────── */
+function GuildlightLeaveIllustration() {
   const [visible, setVisible] = useState(false);
   const [dotsLit, setDotsLit] = useState(0);
   const [cardVisible, setCardVisible] = useState(false);
@@ -164,8 +164,8 @@ function LeaveIQIllustration() {
   );
 }
 
-/* ─── PerformIQ Illustration ────────────────────────────────────── */
-function PerformIQIllustration() {
+/* ─── Guildlight Grow Illustration ────────────────────────────────────── */
+function GuildlightGrowIllustration() {
   const [visible, setVisible] = useState(false);
   const [typedLen, setTypedLen] = useState(0);
   const [step, setStep] = useState(0);
@@ -317,8 +317,8 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
-            <span className="font-bold text-xl tracking-tight" style={{ color: C.textDark }}>Leavara</span>
+            <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+            <span className="font-bold text-xl tracking-tight" style={{ color: C.textDark }}>Guildlight</span>
           </div>
 
           {/* Desktop nav */}
@@ -340,7 +340,7 @@ export default function Landing() {
                     <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                       style={{ background: C.terracotta + "20" }}>📅</span>
                     <div>
-                      <p className="font-semibold text-sm" style={{ color: C.textDark }}>LeaveIQ</p>
+                      <p className="font-semibold text-sm" style={{ color: C.textDark }}>Guildlight Leave</p>
                       <p className="text-xs" style={{ color: C.textMuted }}>Smart Leave Management</p>
                     </div>
                   </a>
@@ -349,14 +349,14 @@ export default function Landing() {
                     <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                       style={{ background: C.perf + "20" }}>📊</span>
                     <div>
-                      <p className="font-semibold text-sm" style={{ color: C.textDark }}>PerformIQ</p>
+                      <p className="font-semibold text-sm" style={{ color: C.textDark }}>Guildlight Grow</p>
                       <p className="text-xs" style={{ color: C.textMuted }}>Smart Performance Management</p>
                     </div>
                   </a>
                 </div>
               )}
             </div>
-            <a href="#why-leavara" className="hover:opacity-70 transition-opacity">Why Leavara</a>
+            <a href="#why-guildlight" className="hover:opacity-70 transition-opacity">Why Guildlight</a>
             <a href="#cta" className="hover:opacity-70 transition-opacity">Get Started</a>
           </nav>
 
@@ -380,9 +380,9 @@ export default function Landing() {
         {mobileOpen && (
           <div className="md:hidden border-t px-6 py-4 flex flex-col gap-4 text-sm font-medium"
             style={{ background: C.bg, borderColor: C.khaki, color: C.textBody }}>
-            <a href="#leaveiq" onClick={() => setMobileOpen(false)}>LeaveIQ</a>
-            <a href="#performiq" onClick={() => setMobileOpen(false)}>PerformIQ</a>
-            <a href="#why-leavara" onClick={() => setMobileOpen(false)}>Why Leavara</a>
+            <a href="#leaveiq" onClick={() => setMobileOpen(false)}>Guildlight Leave</a>
+            <a href="#performiq" onClick={() => setMobileOpen(false)}>Guildlight Grow</a>
+            <a href="#why-guildlight" onClick={() => setMobileOpen(false)}>Why Guildlight</a>
             <Link href="/leaveiq/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
             <Link href="/interest" onClick={() => setMobileOpen(false)}
               className="text-center py-2.5 rounded-lg font-semibold text-white"
@@ -432,12 +432,12 @@ export default function Landing() {
             <a href="#leaveiq"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:shadow-md"
               style={{ background: C.terracotta + "15", borderColor: C.terracotta + "50", color: C.terracottaDk }}>
-              📅 LeaveIQ — Smart Leave Management
+              📅 Guildlight Leave — Smart Leave Management
             </a>
             <a href="#performiq"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-sm transition-all hover:shadow-md"
               style={{ background: C.perf + "12", borderColor: C.perf + "50", color: C.perfDark }}>
-              📋 PerformIQ — AI Performance Documentation
+              📋 Guildlight Grow — AI Performance Documentation
             </a>
           </div>
 
@@ -466,12 +466,12 @@ export default function Landing() {
                     ? { background: p === "leaveiq" ? C.terracotta : C.perfDark, color: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }
                     : { background: C.bgCard, color: C.textMuted, border: `1px solid ${C.khaki}` }
                   }>
-                  {p === "leaveiq" ? "LeaveIQ Preview" : "PerformIQ Preview"}
+                  {p === "leaveiq" ? "Guildlight Leave Preview" : "Guildlight Grow Preview"}
                 </button>
               ))}
             </div>
             <div className="flex justify-center">
-              {activeProduct === "leaveiq" ? <LeaveIQIllustration /> : <PerformIQIllustration />}
+              {activeProduct === "leaveiq" ? <GuildlightLeaveIllustration /> : <GuildlightGrowIllustration />}
             </div>
           </div>
         </div>
@@ -490,7 +490,7 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* LeaveIQ Card */}
+            {/* Guildlight Leave Card */}
             <div id="leaveiq" className="rounded-3xl border overflow-hidden"
               style={{ background: C.bgCard, borderColor: C.khaki }}>
               <div className="px-8 py-6 border-b" style={{ background: C.terracotta + "12", borderColor: C.khaki }}>
@@ -498,7 +498,7 @@ export default function Landing() {
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl"
                     style={{ background: C.terracotta + "25" }}>📅</div>
                   <div>
-                    <h3 className="font-bold text-xl" style={{ color: C.textDark }}>LeaveIQ</h3>
+                    <h3 className="font-bold text-xl" style={{ color: C.textDark }}>Guildlight Leave</h3>
                     <p className="text-sm font-medium" style={{ color: C.terracottaDk }}>Smart Leave Management</p>
                   </div>
                 </div>
@@ -531,7 +531,7 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* PerformIQ Card */}
+            {/* Guildlight Grow Card */}
             <div id="performiq" className="rounded-3xl border overflow-hidden"
               style={{ background: C.bgCard, borderColor: "#A8CFCF" }}>
               <div className="px-8 py-6 border-b" style={{ background: C.perf + "0d", borderColor: "#A8CFCF" }}>
@@ -540,7 +540,7 @@ export default function Landing() {
                     style={{ background: C.perf + "20" }}>📋</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-xl" style={{ color: C.textDark }}>PerformIQ</h3>
+                      <h3 className="font-bold text-xl" style={{ color: C.textDark }}>Guildlight Grow</h3>
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold"
                         style={{ background: C.perf + "20", color: C.perfDark }}>Now Available</span>
                     </div>
@@ -570,7 +570,7 @@ export default function Landing() {
                   <Link href="/leaveiq/login"
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                     style={{ background: C.perfDark }}>
-                    Sign In to PerformIQ <ArrowRight className="w-4 h-4" />
+                    Sign In to Guildlight Grow <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link href="/interest"
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold border hover:opacity-80 transition-opacity"
@@ -601,16 +601,16 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* LeaveIQ Video */}
+            {/* Guildlight Leave Video */}
             <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: C.khaki }}>
               <div className="px-5 py-4 border-b flex items-center gap-3"
                 style={{ background: C.terracotta + "12", borderColor: C.khaki }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
                   style={{ background: C.terracotta + "25" }}>📅</div>
                 <div>
-                  <p className="font-bold text-sm" style={{ color: C.textDark }}>LeaveIQ in Action</p>
+                  <p className="font-bold text-sm" style={{ color: C.textDark }}>Guildlight Leave in Action</p>
                   <p className="text-xs" style={{ color: C.textMuted }}>
-                    Employee portal · Ava AI intake · Eligibility analysis · HR decision
+                    Employee portal · Ave AI intake · Eligibility analysis · HR decision
                   </p>
                 </div>
               </div>
@@ -630,14 +630,14 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* PerformIQ Video */}
+            {/* Guildlight Grow Video */}
             <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ borderColor: "#A8CFCF" }}>
               <div className="px-5 py-4 border-b flex items-center gap-3"
                 style={{ background: C.perf + "0d", borderColor: "#A8CFCF" }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0"
                   style={{ background: C.perf + "20" }}>📋</div>
                 <div>
-                  <p className="font-bold text-sm" style={{ color: C.textDark }}>PerformIQ in Action</p>
+                  <p className="font-bold text-sm" style={{ color: C.textDark }}>Guildlight Grow in Action</p>
                   <p className="text-xs" style={{ color: C.textMuted }}>
                     AI document drafting · Approval workflow · E-signature · PDF filing
                   </p>
@@ -661,7 +661,7 @@ export default function Landing() {
                     style={{ background: C.perf + "30", border: `1px solid ${C.perf}50` }}>
                     <span style={{ color: C.perfLight, fontSize: 28 }}>▶</span>
                   </div>
-                  <p className="text-xs font-semibold" style={{ color: C.perfLight + "bb" }}>PerformIQ Workflow Demo</p>
+                  <p className="text-xs font-semibold" style={{ color: C.perfLight + "bb" }}>Guildlight Grow Workflow Demo</p>
                 </div>
               </div>
             </div>
@@ -669,14 +669,14 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── WHY LEAVARA ── */}
-      <section id="why-leavara" style={{ background: C.mochaDeep }}>
+      {/* ── WHY GUILDLIGHT ── */}
+      <section id="why-guildlight" style={{ background: C.mochaDeep }}>
         <div className="max-w-7xl mx-auto px-6 py-20 text-center">
           <h2 className="text-3xl font-bold mb-2" style={{ color: C.textOnDark }}>
-            Why HR Teams Choose Leavara
+            Why HR Teams Choose Guildlight
           </h2>
           <p className="mb-12 text-sm max-w-lg mx-auto" style={{ color: C.khaki }}>
-            We built Leavara because HR teams deserve tools as smart as the people they support.
+            We built Guildlight because HR teams deserve tools as smart as the people they support.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
@@ -716,20 +716,20 @@ export default function Landing() {
       {/* ── SIGN IN SECTION ── */}
       <section className="py-16 border-b" style={{ background: C.bgCard, borderColor: C.khaki }}>
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-2xl font-bold mb-2" style={{ color: C.textDark }}>Already a Leavara customer?</h2>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: C.textDark }}>Already a Guildlight customer?</h2>
           <p className="mb-8 text-sm" style={{ color: C.textBody }}>
-            One login gives you access to all the Leavara products your organization has activated.
+            One login gives you access to all the Guildlight products your organization has activated.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/leaveiq/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
               style={{ background: C.terracotta }}>
-              Sign In to LeaveIQ <ArrowRight className="w-4 h-4" />
+              Sign In to Guildlight Leave <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/leaveiq/login"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity shadow-md"
               style={{ background: C.perfDark }}>
-              Sign In to PerformIQ <ArrowRight className="w-4 h-4" />
+              Sign In to Guildlight Grow <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/interest"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-xl font-semibold text-sm border hover:opacity-80 transition-opacity"
@@ -763,12 +763,12 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
           style={{ color: C.textOnDark }}>
           <div className="flex items-center gap-2">
-            <img src="/leavara-logo.png" alt="Leavara" className="h-5 w-5 object-contain" />
-            <span className="font-semibold">Leavara</span>
+            <img src="/leavara-logo.png" alt="Guildlight" className="h-5 w-5 object-contain" />
+            <span className="font-semibold">Guildlight</span>
             <span style={{ color: C.khaki }}>·</span>
-            <span style={{ color: C.khaki }}>LeaveIQ &amp; PerformIQ</span>
+            <span style={{ color: C.khaki }}>Guildlight Leave &amp; Guildlight Grow</span>
           </div>
-          <span style={{ color: C.khaki }}>© {new Date().getFullYear()} Leavara, LLC · All rights reserved.</span>
+          <span style={{ color: C.khaki }}>© {new Date().getFullYear()} Guildlight, LLC · All rights reserved.</span>
           <div className="flex gap-5" style={{ color: C.khaki }}>
             <Link href="/leaveiq/login" className="hover:opacity-70 transition-opacity">Sign In</Link>
             <Link href="/interest" className="hover:opacity-70 transition-opacity">Get Started</Link>

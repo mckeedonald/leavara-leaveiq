@@ -13,7 +13,7 @@ import { logger } from "../lib/logger.js";
 
 const router = Router();
 
-// ── LeaveIQ Case Messages ────────────────────────────────────────────────────
+// ── Guildlight Leave Case Messages ────────────────────────────────────────────────────
 
 // GET /api/cases/:caseId/messages  (HR auth)
 router.get("/cases/:caseId/messages", requireAuth, async (req: Request, res: Response) => {
@@ -201,7 +201,7 @@ router.post("/portal/cases/:caseId/messages", async (req: Request, res: Response
   }
 });
 
-// ── PerformIQ Case Messages ──────────────────────────────────────────────────
+// ── Guildlight Grow Case Messages ──────────────────────────────────────────────────
 
 // GET /api/performiq/cases/:caseId/messages  (PIQ auth)
 router.get("/performiq/cases/:caseId/messages", requirePiqAuth, async (req: Request, res: Response) => {

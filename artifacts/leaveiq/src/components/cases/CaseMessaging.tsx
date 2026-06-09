@@ -16,7 +16,7 @@ interface CaseMessagingProps {
   sendMessage: (content: string) => Promise<CaseMessage>;
   /** Who is currently viewing ("hr" | "employee") */
   viewerType: "hr" | "employee";
-  /** Accent color (defaults to terracotta for LeaveIQ) */
+  /** Accent color (defaults to terracotta for Guildlight Leave) */
   accentColor?: string;
   /** Border/card styles */
   borderColor?: string;

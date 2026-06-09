@@ -783,14 +783,14 @@ function OrgDetailPanel({
           {[
             {
               key: "hasLeaveIq" as const,
-              label: "LeaveIQ",
+              label: "Guildlight Leave",
               description: "Leave management, FMLA tracking, AI-assisted notices, and HR case workflow.",
               color: S.terracotta,
               enabled: org.hasLeaveIq,
             },
             {
               key: "hasPerformIq" as const,
-              label: "PerformIQ",
+              label: "Guildlight Grow",
               description: "Performance management, disciplinary documents, coaching workflows, and e-signatures.",
               color: "#2E7B7B",
               enabled: org.hasPerformIq,
@@ -1386,7 +1386,7 @@ export default function SuperAdmin() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Super Admin</h1>
-            <p className="text-sm text-white/70">Leavara platform administration — all tenants</p>
+            <p className="text-sm text-white/70">Guildlight platform administration — all tenants</p>
           </div>
         </div>
 
@@ -1543,7 +1543,7 @@ export default function SuperAdmin() {
                       <h3 className="font-semibold text-sm" style={{ color: S.textDark }}>Import Employees from CSV</h3>
                     </div>
                     <p className="text-xs mb-4" style={{ color: S.textMuted }}>
-                      Upload a CSV with employee data. Only <strong>employee_name</strong> is required. Data is shared between LeaveIQ and PerformIQ.
+                      Upload a CSV with employee data. Only <strong>employee_name</strong> is required. Data is shared between Guildlight Leave and Guildlight Grow.
                     </p>
 
                     <div

@@ -139,7 +139,7 @@ export function BenefitsContinuationPanel({ caseId, employeeEmail }: Props) {
           <div>
             <p className="font-bold text-white text-base">Benefits Continuation Letter</p>
             <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
-              Enter benefits details — Ava will generate the letter
+              Enter benefits details — Ave will generate the letter
             </p>
           </div>
         </div>

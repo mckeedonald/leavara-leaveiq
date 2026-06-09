@@ -1,7 +1,7 @@
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const email = process.env["ADMIN_EMAIL"] ?? "admin@leavara.net";
+const email = process.env["ADMIN_EMAIL"] ?? "admin@guildlight.co";
 
 const result = await db.update(usersTable)
   .set({ isSuperAdmin: true })

@@ -35,7 +35,7 @@ router.post("/performiq/auth/login", async (req: Request, res: Response) => {
       return;
     }
 
-    // Verify org has PerformIQ enabled
+    // Verify org has Guildlight Grow enabled
     let hasLeaveIq = false;
     let hasPerformIq = false;
     if (user.organizationId) {
@@ -45,7 +45,7 @@ router.post("/performiq/auth/login", async (req: Request, res: Response) => {
         .where(eq(organizationsTable.id, user.organizationId))
         .limit(1);
       if (!org?.hasPerformIq) {
-        res.status(403).json({ error: "Your organization does not have PerformIQ enabled" });
+        res.status(403).json({ error: "Your organization does not have Guildlight Grow enabled" });
         return;
       }
       hasLeaveIq = org.hasLeaveIq ?? false;

@@ -6,7 +6,7 @@ import type { PiqDocumentContent } from "@workspace/db";
 
 const anthropic = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
 
-const SYSTEM_PROMPT = `You are the Performance Specialist, an AI documentation partner inside PerformIQ — Leavara's performance management platform. You help managers create legally sound, professionally written performance documentation.
+const SYSTEM_PROMPT = `You are the Performance Specialist, an AI documentation partner inside Guildlight Grow — Guildlight's performance management platform. You help managers create legally sound, professionally written performance documentation.
 
 ---
 
@@ -155,7 +155,7 @@ Do not generate the document until the manager has confirmed the summary.
 
 ### CRITICAL RULE: docBaseType MUST match document content
 
-The \`docBaseType\` field in the JSON output MUST accurately reflect what the document actually recommends. This field controls how the case is categorized and routed in PerformIQ. Getting this wrong creates serious compliance problems.
+The \`docBaseType\` field in the JSON output MUST accurately reflect what the document actually recommends. This field controls how the case is categorized and routed in Guildlight Grow. Getting this wrong creates serious compliance problems.
 
 **Mapping rules — do not deviate:**
 - If the document recommends termination or documents grounds for termination → \`"termination_request"\` (NEVER \`"coaching"\` or \`"written_warning"\`)
@@ -180,7 +180,7 @@ When generating, produce the document content as JSON wrapped in <document> tags
   "incidentDescription": "Factual, chronological, specific description. Observable behavior only — no characterizations. Include dates, times, locations, observations. If a pattern, describe chronologically with specific examples.",
   "policyViolations": "Name the specific policy and section. State how the employee's conduct failed to meet that standard. If no specific policy, reference the general performance or conduct standard.",
   "impactConsequences": "Documented impact of the behavior or performance issue. Include impact on team, customers, operations, safety, quality, or morale as applicable.",
-  "priorDisciplineHistory": "Prior PerformIQ documentation history from [EMPLOYEE CONTEXT] → Prior PerformIQ Documentation. If none: 'This represents the first formal documentation of a performance concern for [Employee Name].'",
+  "priorDisciplineHistory": "Prior Guildlight Grow documentation history from [EMPLOYEE CONTEXT] → Prior Guildlight Grow Documentation. If none: 'This represents the first formal documentation of a performance concern for [Employee Name].'",
   "expectationsGoingForward": "Specific, observable, measurable, time-bound expectations. Use clear language: 'Effective immediately, [Employee Name] is expected to...'",
   "failureConsequences": "Clear, factual statement of what further discipline may result if expectations are not met. Align with org's progressive discipline policy.",
   "additionalNotes": "Any sensitive flags for HR review, policy gaps, workflow notes, or other case notes. Leave empty string if none."
@@ -192,7 +192,7 @@ MANDATORY DOCUMENT HEADER: Every document MUST begin with these fields populated
 - employeeName: the employee's full name
 - managerName: the employee's manager name
 - deliveryDate: today's date formatted as MM/DD/YYYY (use the date from [TODAY'S DATE] context)
-- priorDisciplineHistory: populated from Prior PerformIQ Documentation in context, or "No prior documentation on record."
+- priorDisciplineHistory: populated from Prior Guildlight Grow Documentation in context, or "No prior documentation on record."
 
 These fields must be present in every generated document regardless of document type.
 
@@ -314,7 +314,7 @@ export async function runAgentTurn({
         : "\n\n[POLICY CONTEXT]\nOrganizational policies are provided as PDF documents alongside this message. Reference them when applicable.";
 
   const employeeContext = employeeInfo
-    ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}\n- Company: ${orgName ?? "Unknown"}\n${priorCases ? `- Prior PerformIQ Documentation:\n${priorCases}` : "- Prior Documentation: None on record in PerformIQ"}`
+    ? `\n\n[EMPLOYEE CONTEXT]\n- Name: ${employeeInfo.fullName}\n- Job Title: ${employeeInfo.jobTitle}\n- Department: ${employeeInfo.department}\n- Hire Date: ${employeeInfo.hireDate ?? "Unknown"}\n- Manager: ${employeeInfo.managerName}\n- Company: ${orgName ?? "Unknown"}\n${priorCases ? `- Prior Guildlight Grow Documentation:\n${priorCases}` : "- Prior Documentation: None on record in Guildlight Grow"}`
     : "";
 
   const roleContext = userRole

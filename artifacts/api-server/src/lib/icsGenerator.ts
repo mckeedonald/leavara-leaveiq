@@ -12,7 +12,7 @@ function escapeIcs(str: string): string {
 }
 
 function generateUid(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}@leavara.com`;
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}@guildlight.co`;
 }
 
 export interface IcsEventOptions {
@@ -43,7 +43,7 @@ export function generateIcs(opts: IcsEventOptions): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Leavara//LeaveIQ//EN",
+    "PRODID:-//Guildlight//Guildlight Leave//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:REQUEST",
     "BEGIN:VEVENT",

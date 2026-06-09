@@ -45,11 +45,11 @@ export function DisclaimerModal({ onConfirm, onCancel }: DisclaimerModalProps) {
 
         <div className="px-6 py-5">
           <p className="text-sm leading-relaxed" style={{ color: "#5C3D28" }}>
-            LeaveIQ provides AI-assisted decision support to help HR professionals
+            Guildlight Leave provides AI-assisted decision support to help HR professionals
             analyze leave cases. The system&apos;s output is a recommendation only.
           </p>
           <p className="text-sm leading-relaxed mt-3" style={{ color: "#5C3D28" }}>
-            <strong>A human decision is always required.</strong> LeaveIQ never
+            <strong>A human decision is always required.</strong> Guildlight Leave never
             independently approves or denies a leave request. You remain fully
             responsible for the final determination.
           </p>

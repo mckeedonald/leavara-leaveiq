@@ -74,7 +74,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         style={{ background: S.sidebar, borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
             Perform<span style={{ color: "#A8D9D9" }}>IQ</span>
           </span>
@@ -144,7 +144,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
       >
         {/* Brand */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
-          <img src="/leavara-logo.png" alt="Leavara" className="h-9 w-9 object-contain shrink-0" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
               Perform<span style={{ color: "#A8D9D9" }}>IQ</span>
@@ -228,7 +228,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
           <div />
           <div className="flex items-center gap-2 text-sm" style={{ color: "#8C7058" }}>
             <span className="w-2 h-2 rounded-full" style={{ background: "#2E7B7B" }} />
-            <span className="font-medium">PerformIQ</span>
+            <span className="font-medium">Guildlight Grow</span>
           </div>
         </header>
 

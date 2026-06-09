@@ -28,7 +28,7 @@ export default function ProductSelector() {
       style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8DDD4 100%)` }}
     >
       <div className="mb-8 text-center">
-        <img src="/leavara-logo.png" alt="Leavara" className="h-14 w-14 object-contain mx-auto mb-4" />
+        <img src="/leavara-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
         <h1 className="text-2xl font-bold" style={{ color: C.textDark }}>
           Welcome, {user.firstName}
         </h1>
@@ -50,7 +50,7 @@ export default function ProductSelector() {
             >
               <TrendingDown className="w-6 h-6" style={{ color: C.terracotta }} />
             </div>
-            <h2 className="text-lg font-bold mb-1" style={{ color: C.textDark }}>LeaveIQ</h2>
+            <h2 className="text-lg font-bold mb-1" style={{ color: C.textDark }}>Guildlight Leave</h2>
             <p className="text-sm" style={{ color: C.textMuted }}>
               Leave management, FMLA tracking, and HR case workflow
             </p>
@@ -58,7 +58,7 @@ export default function ProductSelector() {
               className="mt-5 text-sm font-semibold"
               style={{ color: C.terracotta }}
             >
-              Open LeaveIQ →
+              Open Guildlight Leave →
             </div>
           </button>
         )}
@@ -75,7 +75,7 @@ export default function ProductSelector() {
             >
               <TrendingUp className="w-6 h-6" style={{ color: C.teal }} />
             </div>
-            <h2 className="text-lg font-bold mb-1" style={{ color: "#1A3333" }}>PerformIQ</h2>
+            <h2 className="text-lg font-bold mb-1" style={{ color: "#1A3333" }}>Guildlight Grow</h2>
             <p className="text-sm" style={{ color: "#6B9090" }}>
               Performance management, disciplinary documentation, and coaching workflows
             </p>
@@ -83,7 +83,7 @@ export default function ProductSelector() {
               className="mt-5 text-sm font-semibold"
               style={{ color: C.teal }}
             >
-              Open PerformIQ →
+              Open Guildlight Grow →
             </div>
           </button>
         )}

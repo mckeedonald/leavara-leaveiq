@@ -57,7 +57,7 @@ async function fetchWithTimeout(url: string): Promise<string> {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Leavara-Ada-ADA-Assistant/1.0 (compliance research; contact admin@leavara.com)" },
+      headers: { "User-Agent": "Guildlight-Ada-ADA-Assistant/1.0 (compliance research; contact admin@guildlight.co)" },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();

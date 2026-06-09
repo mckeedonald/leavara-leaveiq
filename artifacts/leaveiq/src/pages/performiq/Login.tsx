@@ -59,7 +59,7 @@ export default function PiqLogin() {
             Perform<span style={{ color: C.perf }}>IQ</span>
           </h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-            Smart Performance Management · by Leavara
+            Smart Performance Management · by Guildlight
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export default function PiqLogin() {
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: C.textMuted }}>
-          © 2026 Leavara · PerformIQ Performance Management
+          © 2026 Guildlight · Guildlight Grow Performance Management
         </p>
       </div>
     </div>

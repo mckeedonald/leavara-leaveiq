@@ -22,12 +22,12 @@ const C = {
   textDark:     "#3D2010",
   textBody:     "#5C3D28",
   textMuted:    "#8C7058",
-  // LeaveIQ
+  // Guildlight Leave
   leave:        "#C97E59",
   leaveDark:    "#9E5D38",
   leaveBg:      "#FDF6F0",
   leaveBorder:  "#E8C9B0",
-  // PerformIQ
+  // Guildlight Grow
   perf:         "#2E7B7B",
   perfDark:     "#1E5555",
   perfBg:       "#EBF5F5",
@@ -186,13 +186,13 @@ export default function HubDashboard() {
       .finally(() => setPerfLoading(false));
   }, [user?.hasPerformIq]);
 
-  /* LeaveIQ derived stats */
+  /* Guildlight Leave derived stats */
   const leaveTotal    = leaveCases.length;
   const leavePending  = leaveCases.filter((c) => c.state === "hr_review_queue").length;
   const leaveAnalysis = leaveCases.filter((c) => c.state === "eligibility_analysis").length;
   const leaveNewMonth = leaveCases.filter((c) => thisMonth(c.createdAt)).length;
 
-  /* PerformIQ derived stats */
+  /* Guildlight Grow derived stats */
   const perfActive  = perfCases.filter((c) => !["closed", "cancelled"].includes(c.status)).length;
   const perfPending = perfCases.filter((c) =>
     ["draft", "manager_revision", "delivery"].includes(c.status)
@@ -217,8 +217,8 @@ export default function HubDashboard() {
         style={{ background: "#FFFFFF", borderBottom: `1px solid ${C.border}` }}
       >
         <div className="flex items-center gap-2.5">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-lg tracking-tight" style={{ color: C.textDark }}>Leavara</span>
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+          <span className="font-bold text-lg tracking-tight" style={{ color: C.textDark }}>Guildlight</span>
         </div>
         <button
           onClick={handleLogout}
@@ -246,7 +246,7 @@ export default function HubDashboard() {
           {user?.hasLeaveIq && (
             <ProductCard
               product="leave"
-              title="LeaveIQ"
+              title="Guildlight Leave"
               subtitle="Leave Management"
               accent={C.leave}
               accentDark={C.leaveDark}
@@ -267,7 +267,7 @@ export default function HubDashboard() {
           {user?.hasPerformIq && (
             <ProductCard
               product="perf"
-              title="PerformIQ"
+              title="Guildlight Grow"
               subtitle="Performance Management"
               accent={C.perf}
               accentDark={C.perfDark}
@@ -289,7 +289,7 @@ export default function HubDashboard() {
 
       {/* Footer */}
       <footer className="py-6 text-center text-xs" style={{ color: C.textMuted }}>
-        © {new Date().getFullYear()} Leavara, LLC · All rights reserved.
+        © {new Date().getFullYear()} Guildlight, LLC · All rights reserved.
       </footer>
     </div>
   );

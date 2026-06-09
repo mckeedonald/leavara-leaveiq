@@ -46,7 +46,7 @@ export default function Login() {
       }
 
       const hostname = window.location.hostname;
-      const isRootDomain = hostname === "leavara.net" || hostname === "www.leavara.net";
+      const isRootDomain = hostname === "guildlight.co" || hostname === "www.guildlight.co";
 
       // Determine destination based on enrolled products
       const hasBoth = loggedInUser.hasLeaveIq && loggedInUser.hasPerformIq;
@@ -57,7 +57,7 @@ export default function Login() {
           : "/leaveiq/dashboard";
 
       if (isRootDomain && loggedInUser.organizationSlug) {
-        window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.leavara.net${dest}`;
+        window.location.href = `${window.location.protocol}//${loggedInUser.organizationSlug}.guildlight.co${dest}`;
         return;
       }
 
@@ -74,8 +74,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-16 w-16 object-contain mb-4" />
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Leavara</h1>
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-16 w-16 object-contain mb-4" />
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Guildlight</h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>HR Decision Support Platform</p>
         </div>
 
@@ -163,7 +163,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: C.textMuted }}>
-          © 2026 Leavara · Leave of Absence Management
+          © 2026 Guildlight · Leave of Absence Management
         </p>
       </div>
     </div>

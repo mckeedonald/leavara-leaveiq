@@ -73,7 +73,7 @@ router.post("/performiq/agent/sessions", requirePiqAuth, async (req: Request, re
       .limit(1);
     if (orgRow) orgName = orgRow.name;
 
-    // Load prior PerformIQ cases for the employee
+    // Load prior Guildlight Grow cases for the employee
     let priorCases: string | undefined;
     if (employeeId) {
       const priorCaseRows = await db

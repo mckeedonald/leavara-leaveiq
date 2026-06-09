@@ -113,7 +113,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         style={{ background: S.sidebar, borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
             Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
           </span>
@@ -156,7 +156,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               );
             })}
-            {/* App switcher — shown when org has PerformIQ */}
+            {/* App switcher — shown when org has Guildlight Grow */}
             {hasPerformIq && (
               <Link
                 href="/hub"
@@ -165,7 +165,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 style={{ color: S.textMutedDark, borderColor: S.sidebarBorder, paddingLeft: "calc(0.75rem + 3px)" }}
               >
                 <TrendingUp className="w-5 h-5" style={{ color: S.textMutedDark }} />
-                Switch to PerformIQ
+                Switch to Guildlight Grow
               </Link>
             )}
           </nav>
@@ -188,7 +188,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       >
         {/* Logo */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
-          <img src="/leavara-logo.png" alt="Leavara" className="h-9 w-9 object-contain shrink-0" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
               Leave<span style={{ color: "#FFD4B8" }}>IQ</span>
@@ -197,7 +197,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </div>
 
-        {/* Switch product link — shown when org has PerformIQ */}
+        {/* Switch product link — shown when org has Guildlight Grow */}
         {hasPerformIq && (
           <Link
             href="/hub"

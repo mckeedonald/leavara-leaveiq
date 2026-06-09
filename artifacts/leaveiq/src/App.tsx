@@ -27,10 +27,10 @@ import AccountSettings from "@/pages/AccountSettings";
 import SuperAdmin from "@/pages/SuperAdmin";
 import HrisSettings from "@/pages/HrisSettings";
 import Calendar from "@/pages/Calendar";
-import PerformIQDashboard from "@/pages/PerformIQDashboard";
+import GuildlightGrowDashboard from "@/pages/GuildlightGrowDashboard";
 import NotFound from "@/pages/not-found";
 
-// PerformIQ pages
+// Guildlight Grow pages
 import PiqLogin from "@/pages/performiq/Login";
 import PiqDashboard from "@/pages/performiq/Dashboard";
 import PiqCaseList from "@/pages/performiq/CaseList";
@@ -114,7 +114,7 @@ function Router() {
       {/* Public interest / get-started form */}
       <Route path="/interest" component={Interest} />
 
-      {/* LeaveIQ employee routes */}
+      {/* Guildlight Leave employee routes */}
       <Route path="/leaveiq/request" component={EmployeePortal} />
       <Route path="/leaveiq/portal" component={EmployeePortalCase} />
 
@@ -124,7 +124,7 @@ function Router() {
       {/* Legacy product selector → hub */}
       <Route path="/product-select" component={() => <Redirect to="/hub" />} />
 
-      {/* LeaveIQ HR routes */}
+      {/* Guildlight Leave HR routes */}
       <Route path="/leaveiq/login" component={() => <GuestRoute component={Login} />} />
       <Route path="/leaveiq/forgot-password" component={() => <GuestRoute component={ForgotPassword} />} />
       <Route path="/leaveiq/reset-password" component={ResetPassword} />
@@ -144,10 +144,10 @@ function Router() {
       <Route path="/leaveiq/ada-cases/:caseId" component={() => <ProtectedRoute component={AdaCase} />} />
       <Route path="/leaveiq/superadmin" component={() => <SuperAdminRoute component={SuperAdmin} />} />
 
-      {/* PerformIQ public routes — no auth required */}
+      {/* Guildlight Grow public routes — no auth required */}
       <Route path="/performiq/sign" component={SignDocument} />
 
-      {/* PerformIQ routes — login redirects to unified portal */}
+      {/* Guildlight Grow routes — login redirects to unified portal */}
       <Route path="/performiq/login" component={() => <Redirect to="/leaveiq/login" />} />
       <Route path="/performiq/dashboard" component={() => <PiqProtectedRoute component={PiqDashboard} />} />
       <Route path="/performiq/analytics" component={() => <PiqProtectedRoute component={PiqAnalytics} />} />

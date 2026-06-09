@@ -90,8 +90,8 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #E8DDD4 100%)` }}>
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-16 w-16 object-contain mb-4" />
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Leavara LeaveIQ</h1>
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-16 w-16 object-contain mb-4" />
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.textDark }}>Guildlight Leave</h1>
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>HR Decision Support Platform</p>
         </div>
 
@@ -107,10 +107,10 @@ export default function Register() {
             </div>
           ) : !token ? (
             <div className="text-center">
-              <img src="/leavara-logo.png" alt="Leavara" className="h-14 w-14 object-contain mx-auto mb-4" />
+              <img src="/leavara-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2" style={{ color: C.textDark }}>Enrollment by Invitation</h2>
               <p className="text-sm mb-6" style={{ color: C.textBody }}>
-                To create a Leavara LeaveIQ account, you need an invitation link from your administrator. Please contact your HR administrator to request access.
+                To create a Guildlight Leave account, you need an invitation link from your administrator. Please contact your HR administrator to request access.
               </p>
               <Link href="/leaveiq/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: C.terracotta }}>
                 Back to sign in

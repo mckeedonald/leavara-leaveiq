@@ -24,7 +24,7 @@ app.use(
             scriptSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:"],
-            connectSrc: ["'self'", "*.leavara.net"],
+            connectSrc: ["'self'", "*.guildlight.co"],
             frameAncestors: ["'none'"],
           },
         },
@@ -37,8 +37,8 @@ app.use(
 const ALLOWED_ORIGINS = [
   /^https?:\/\/localhost(:\d+)?$/,
   /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
-  /^https?:\/\/leavara\.net$/,
-  /^https?:\/\/[a-z0-9-]+\.leavara\.net$/,
+  /^https?:\/\/guildlight\.co$/,
+  /^https?:\/\/[a-z0-9-]+\.guildlight\.co$/,
   /\.replit\.dev$/,
   /\.picard\.replit\.dev$/,
 ];

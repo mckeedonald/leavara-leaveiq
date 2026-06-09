@@ -131,7 +131,7 @@ export function EmployeeDataUpload({
         </div>
         <p className="mt-2" style={{ color: "#8C7058" }}>
           Only <span className="font-semibold">employee_name</span> is required. Include <span className="font-semibold">personal_email</span> so employees can receive notices at their personal address. Include manager_name to build the reporting hierarchy.
-          Date format: YYYY-MM-DD. Data is shared across LeaveIQ and PerformIQ.
+          Date format: YYYY-MM-DD. Data is shared across Guildlight Leave and Guildlight Grow.
         </p>
       </div>
 
@@ -183,7 +183,7 @@ export function EmployeeDataUpload({
         <div className="flex items-start gap-2 text-sm rounded-xl px-4 py-3 border" style={{ background: "#F0FDF4", borderColor: "#86EFAC", color: "#166534" }}>
           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
           Successfully imported <strong>{result.imported}</strong> employee record{result.imported !== 1 ? "s" : ""}.
-          Employee data is now available in both LeaveIQ and PerformIQ.
+          Employee data is now available in both Guildlight Leave and Guildlight Grow.
         </div>
       )}
 

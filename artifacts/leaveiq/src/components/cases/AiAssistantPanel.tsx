@@ -100,7 +100,7 @@ interface Props {
 
 type DisclaimerAction = "generate" | "regenerate";
 
-// Per-case localStorage key for persisting Ava's generated notices
+// Per-case localStorage key for persisting Ave's generated notices
 function avaStorageKey(caseId: string) { return `leaveiq_ava_${caseId}`; }
 
 type AvaSavedState = { result: AiResult; editedNotices: EditedNotice[] };
@@ -149,7 +149,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
   const [pendingRegenerateType, setPendingRegenerateType] = useState<string | null>(null);
 
   const [chatInput, setChatInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ava"; text: string }>>([]);
+  const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "ave"; text: string }>>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
   // Auto-restart flag: set on mount if generation was in progress when user left
@@ -347,9 +347,9 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         })),
       );
       setExpandedNotices(new Set(data.notices.map((n) => n.noticeType)));
-      setChatHistory(prev => [...prev, { role: "ava", text: "I've updated the notices based on your feedback. Please review the changes above." }]);
+      setChatHistory(prev => [...prev, { role: "ave", text: "I've updated the notices based on your feedback. Please review the changes above." }]);
     } catch (err) {
-      setChatHistory(prev => [...prev, { role: "ava", text: `Sorry, I couldn't process that: ${err instanceof Error ? err.message : "Unknown error"}` }]);
+      setChatHistory(prev => [...prev, { role: "ave", text: `Sorry, I couldn't process that: ${err instanceof Error ? err.message : "Unknown error"}` }]);
     } finally {
       setChatLoading(false);
     }
@@ -476,7 +476,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-white" />
-            <h3 className="font-display font-bold text-white text-lg">Ava</h3>
+            <h3 className="font-display font-bold text-white text-lg">Ave</h3>
           </div>
           {!result && !loading && (
             <button
@@ -631,7 +631,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                   >
                     <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#C97E59" }} />
                     <span>
-                      <strong>Decision Support Only —</strong> LeaveIQ provides recommendations to assist HR.
+                      <strong>Decision Support Only —</strong> Guildlight Leave provides recommendations to assist HR.
                       A human decision is always required before sending.
                     </span>
                   </div>
@@ -679,7 +679,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                 >
                   <div className="px-4 py-3 flex items-center gap-2 border-b border-white/10">
                     <Sparkles className="w-4 h-4 text-white" />
-                    <span className="text-sm font-semibold text-white">Give Ava feedback</span>
+                    <span className="text-sm font-semibold text-white">Give Ave feedback</span>
                   </div>
                   {chatHistory.length > 0 && (
                     <div className="px-4 py-3 space-y-2 max-h-48 overflow-y-auto">
@@ -692,7 +692,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                               : { background: "rgba(0,0,0,0.25)", color: "#FDDBB4" }
                             }
                           >
-                            {msg.role === "ava" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ava</span>}
+                            {msg.role === "ave" && <span className="font-semibold text-xs block mb-0.5" style={{ color: "#fde68a" }}>Ave</span>}
                             {msg.text}
                           </div>
                         </div>
@@ -719,7 +719,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                     </button>
                   </div>
                   <p className="text-xs px-4 pb-3" style={{ color: "rgba(255,255,255,0.65)" }}>
-                    Ava will regenerate all notices based on your feedback.
+                    Ave will regenerate all notices based on your feedback.
                   </p>
                 </div>{/* end gradient container */}
               </div>
@@ -732,7 +732,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                   <ClipboardCheck className="w-4 h-4" style={{ color: "#C97E59" }} />
                   <h4 className="font-semibold text-sm" style={{ color: "#3D2010" }}>Review Submitted Documentation</h4>
                 </div>
-                <p className="text-xs text-slate-500 mb-3">Select documents for Ava to analyze, then generate a final Designation Notice.</p>
+                <p className="text-xs text-slate-500 mb-3">Select documents for Ave to analyze, then generate a final Designation Notice.</p>
 
                 <div className="space-y-2 mb-4">
                   {availableDocs.map((doc) => (
@@ -767,7 +767,7 @@ export function AiAssistantPanel({ caseId, employeeEmail, caseState, onNoticesSe
                   {docReviewLoading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing…</>
                   ) : (
-                    <><Sparkles className="w-4 h-4" /> Analyze with Ava</>
+                    <><Sparkles className="w-4 h-4" /> Analyze with Ave</>
                   )}
                 </button>
 
@@ -1052,7 +1052,7 @@ function HistoryEntry({ entry }: { entry: AuditEntry }) {
 
   const actionLabel: Record<string, string> = {
     AI_RECOMMENDATION_GENERATED: "AI Recommendation Generated",
-    AI_DOCUMENTATION_REVIEW: "Documentation Reviewed by Ava",
+    AI_DOCUMENTATION_REVIEW: "Documentation Reviewed by Ave",
     NOTICE_SENT_ELIGIBILITY_NOTICE: "Eligibility Notice Sent",
     NOTICE_SENT_RIGHTS_RESPONSIBILITIES: "Rights & Responsibilities Sent",
     NOTICE_SENT_DESIGNATION_NOTICE: "Designation Notice Sent",

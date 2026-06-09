@@ -13,7 +13,7 @@ export const usersTable = pgTable("hr_user", {
   lastName: text("last_name").notNull(),
   fullName: text("full_name").notNull().default(""),
   position: text("position").default(""),
-  // Unified role across LeaveIQ and PerformIQ
+  // Unified role across Guildlight Leave and Guildlight Grow
   role: text("role").$type<UnifiedRole>().notNull().default("hr_user"),
   // FK to org_role if using a custom role (no Drizzle-level FK to avoid circular import)
   customRoleId: uuid("custom_role_id"),

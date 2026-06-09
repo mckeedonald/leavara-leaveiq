@@ -27,9 +27,9 @@ export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName
           </Link>
         )}
         <div className="flex items-center gap-3">
-          <img src="/leavara-logo.png" alt="Leavara" className="h-8 w-8 object-contain" />
+          <img src="/leavara-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
           <div>
-            <h1 className="font-bold text-lg leading-none" style={{ color: "#3D2010" }}>Leavara LeaveIQ</h1>
+            <h1 className="font-bold text-lg leading-none" style={{ color: "#3D2010" }}>Guildlight Leave</h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold leading-none mt-0.5" style={{ color: "#EAA292" }}>Employee Portal</p>
           </div>
           {orgLogoUrl && (

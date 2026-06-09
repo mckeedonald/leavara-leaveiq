@@ -1,7 +1,7 @@
 import { logger } from "./logger";
 
 const RESEND_API_KEY = process.env["RESEND_API_KEY"];
-const FROM_EMAIL = process.env["RESEND_FROM_EMAIL"] ?? "noreply@leavara.net";
+const FROM_EMAIL = process.env["RESEND_FROM_EMAIL"] ?? "noreply@guildlight.co";
 
 export interface EmailAttachment {
   filename: string;
@@ -59,15 +59,15 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
   const link = `${getAppUrl()}/reset-password?token=${token}`;
   await sendEmail(
     to,
-    "LeaveIQ — Reset Your Password",
+    "Guildlight Leave — Reset Your Password",
     `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <h2 style="color:#3D2010">Reset Your Password</h2>
-      <p>You requested a password reset for your Leavara LeaveIQ account. Click the button below to set a new password. This link expires in 1 hour.</p>
+      <p>You requested a password reset for your Guildlight Leave account. Click the button below to set a new password. This link expires in 1 hour.</p>
       <a href="${link}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Reset Password</a>
       <p style="color:#8C7058;font-size:14px">If you did not request this, you can safely ignore this email.</p>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -82,16 +82,16 @@ export async function sendInviteEmail(
   const link = `${getAppUrl()}/register?token=${token}`;
   await sendEmail(
     to,
-    "You've been invited to Leavara LeaveIQ",
+    "You've been invited to Guildlight Leave",
     `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-      <h2 style="color:#3D2010">Welcome to Leavara LeaveIQ</h2>
-      <p>${sentByName} has invited you to join Leavara LeaveIQ as an <strong>${role === "admin" ? "Administrator" : "HR User"}</strong>.</p>
+      <h2 style="color:#3D2010">Welcome to Guildlight Leave</h2>
+      <p>${sentByName} has invited you to join Guildlight Leave as an <strong>${role === "admin" ? "Administrator" : "HR User"}</strong>.</p>
       <p>Click the button below to complete your enrollment. This invitation expires in 7 days.</p>
       <a href="${link}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Accept Invitation</a>
       <p style="color:#8C7058;font-size:14px">If you were not expecting this invitation, you can safely ignore this email.</p>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -118,7 +118,7 @@ export async function sendNoticeEmail(data: {
   };
 
   const title = noticeTitles[data.noticeType] ?? data.noticeType.replace(/_/g, " ");
-  const subject = `LeaveIQ — ${title} (Case ${data.caseNumber})`;
+  const subject = `Guildlight Leave — ${title} (Case ${data.caseNumber})`;
 
   const formattedContent = data.content
     .split("\n")
@@ -138,7 +138,7 @@ export async function sendNoticeEmail(data: {
         ${formattedContent}
       </div>
       <p style="color:#A47864;font-size:12px;margin-top:16px;text-align:center">
-        This notice was generated and approved by your HR team via Leavara LeaveIQ.
+        This notice was generated and approved by your HR team via Guildlight Leave.
         <br/>If you have questions, please contact your HR department directly.
       </p>
     </div>
@@ -157,16 +157,16 @@ export async function sendWelcomeEmail(data: {
   const loginUrl = getAppUrl();
   await sendEmail(
     data.to,
-    "Welcome to Leavara LeaveIQ — Your Account Details",
+    "Welcome to Guildlight Leave — Your Account Details",
     `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
-        <h2 style="color:#fff;margin:0">Welcome to Leavara LeaveIQ</h2>
+        <h2 style="color:#fff;margin:0">Welcome to Guildlight Leave</h2>
         <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">${data.orgName}</p>
       </div>
       <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;padding:24px;color:#3D2010">
         <p>Hi ${data.firstName} ${data.lastName},</p>
-        <p>Your LeaveIQ account has been created. You can sign in immediately using the credentials below.</p>
+        <p>Your Guildlight Leave account has been created. You can sign in immediately using the credentials below.</p>
         <div style="background:#F7F4F0;border:1px solid #D4C9BB;border-radius:8px;padding:16px;margin:16px 0">
           <table style="width:100%;border-collapse:collapse">
             <tr>
@@ -180,10 +180,10 @@ export async function sendWelcomeEmail(data: {
           </table>
         </div>
         <p style="color:#8C7058;font-size:13px">We recommend changing your password after your first login via Account Settings.</p>
-        <a href="${loginUrl}/login" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Sign In to LeaveIQ</a>
+        <a href="${loginUrl}/login" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Sign In to Guildlight Leave</a>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support &bull; ${data.orgName}</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support &bull; ${data.orgName}</p>
     </div>
     `,
   );
@@ -220,7 +220,7 @@ export async function sendMagicLinkEmail(
         <p style="color:#8C7058;font-size:13px">If you have questions, contact your HR department directly.</p>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -234,7 +234,7 @@ export async function sendDocumentUploadNotification(
 ): Promise<void> {
   await sendEmail(
     to,
-    `LeaveIQ — Document Uploaded for Case ${caseNumber}`,
+    `Guildlight Leave — Document Uploaded for Case ${caseNumber}`,
     `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
       <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
@@ -259,11 +259,11 @@ export async function sendDocumentUploadNotification(
             </tr>
           </table>
         </div>
-        <p>Please log in to LeaveIQ to review the uploaded documentation.</p>
-        <a href="${getAppUrl()}/cases" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Cases in LeaveIQ</a>
+        <p>Please log in to Guildlight Leave to review the uploaded documentation.</p>
+        <a href="${getAppUrl()}/cases" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Cases in Guildlight Leave</a>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -315,10 +315,10 @@ export async function sendNewCaseNotificationEmail(params: {
             </tr>
           </table>
         </div>
-        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in LeaveIQ</a>
+        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in Guildlight Leave</a>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -361,10 +361,10 @@ export async function sendReturnToWorkNotification(params: {
           </table>
         </div>
         <p style="color:#8C7058;font-size:13px">Please review the case and close it if appropriate.</p>
-        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in LeaveIQ</a>
+        <a href="${params.caseUrl}" style="display:inline-block;background:#C97E59;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:8px 0">View Case in Guildlight Leave</a>
       </div>
       <hr style="border:none;border-top:1px solid #D4C9BB;margin:24px 0"/>
-      <p style="color:#A47864;font-size:12px">Leavara LeaveIQ &mdash; HR Decision Support</p>
+      <p style="color:#A47864;font-size:12px">Guildlight Leave &mdash; HR Decision Support</p>
     </div>
     `,
   );
@@ -399,12 +399,12 @@ export async function sendInterestEmail(data: {
     .join("");
 
   await sendEmail(
-    "donnie@leavara.net",
-    `LeaveIQ Interest: ${data.companyName}`,
+    "donnie@guildlight.co",
+    `Guildlight Leave Interest: ${data.companyName}`,
     `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
       <div style="background:#C97E59;padding:20px 24px;border-radius:8px 8px 0 0">
-        <h2 style="color:#fff;margin:0">New LeaveIQ Interest Submission</h2>
+        <h2 style="color:#fff;margin:0">New Guildlight Leave Interest Submission</h2>
         <p style="color:#f0eee9;margin:4px 0 0;font-size:14px">${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
       </div>
       <div style="border:1px solid #D4C9BB;border-top:none;border-radius:0 0 8px 8px;overflow:hidden">
@@ -412,7 +412,7 @@ export async function sendInterestEmail(data: {
           ${tableRows}
         </table>
       </div>
-      <p style="color:#A47864;font-size:12px;margin-top:16px">Sent from the Leavara LeaveIQ interest form at leavara.net</p>
+      <p style="color:#A47864;font-size:12px;margin-top:16px">Sent from the Guildlight Leave interest form at guildlight.co</p>
     </div>
     `,
   );

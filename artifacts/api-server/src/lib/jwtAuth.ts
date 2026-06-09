@@ -34,8 +34,8 @@ export interface AuthenticatedRequest extends Request {
  *   const orgId = requireOrgId(req, res);
  *   if (!orgId) return;
  *
- * Works for both LeaveIQ (`req.user`) and PerformIQ (`req.piqUser`) routes,
- * since the PerformIQ shim aliases `piqUser` to the same JWT payload as `user`.
+ * Works for both Guildlight Leave (`req.user`) and Guildlight Grow (`req.piqUser`) routes,
+ * since the Guildlight Grow shim aliases `piqUser` to the same JWT payload as `user`.
  */
 export function requireOrgId(req: Request, res: Response): string | null {
   const org = (req as AuthenticatedRequest).user?.organizationId ?? null;
@@ -119,7 +119,7 @@ export async function requireLeaveIq(req: Request, res: Response, next: NextFunc
   await requireAuth(req, res, async () => {
     const { user } = req as AuthenticatedRequest;
     if (!user.hasLeaveIq && !user.isSuperAdmin) {
-      res.status(403).json({ error: "LeaveIQ access required" });
+      res.status(403).json({ error: "Guildlight Leave access required" });
       return;
     }
     next();
@@ -130,7 +130,7 @@ export async function requirePerformIq(req: Request, res: Response, next: NextFu
   await requireAuth(req, res, async () => {
     const { user } = req as AuthenticatedRequest;
     if (!user.hasPerformIq && !user.isSuperAdmin) {
-      res.status(403).json({ error: "PerformIQ access required" });
+      res.status(403).json({ error: "Guildlight Grow access required" });
       return;
     }
     next();

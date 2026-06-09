@@ -8,7 +8,7 @@ export const isOrgSubdomain: boolean = (() => {
   const h = window.location.hostname;
   const parts = h.split(".");
   if (parts.length < 3) return false;
-  if (parts.slice(-2).join(".") !== "leavara.net") return false;
+  if (parts.slice(-2).join(".") !== "guildlight.co") return false;
   const sub = parts.slice(0, -2).join(".");
   return !RESERVED_SUBDOMAINS.has(sub);
 })();
@@ -18,7 +18,7 @@ export function getOrgSlug(): string | null {
   const h = window.location.hostname;
   const parts = h.split(".");
   if (parts.length < 3) return null;
-  if (parts.slice(-2).join(".") !== "leavara.net") return null;
+  if (parts.slice(-2).join(".") !== "guildlight.co") return null;
   const sub = parts.slice(0, -2).join(".");
   if (RESERVED_SUBDOMAINS.has(sub)) return null;
   return sub;

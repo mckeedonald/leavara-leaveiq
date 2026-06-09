@@ -180,7 +180,7 @@ export default function Employees() {
           <div>
             <h1 className="text-2xl font-bold" style={{ color: S.textDark }}>Employees</h1>
             <p className="text-sm mt-0.5" style={{ color: S.textMuted }}>
-              Employee directory shared across LeaveIQ and PerformIQ — {employees.length.toLocaleString()} record{employees.length !== 1 ? "s" : ""}
+              Employee directory shared across Guildlight Leave and Guildlight Grow — {employees.length.toLocaleString()} record{employees.length !== 1 ? "s" : ""}
             </p>
           </div>
           {isAdmin && (

@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 
-const email = process.env["ADMIN_EMAIL"] ?? "admin@leavara.net";
+const email = process.env["ADMIN_EMAIL"] ?? "admin@guildlight.co";
 const password = process.env["ADMIN_PASSWORD"] ?? "ChangeMe123!";
 const firstName = process.env["ADMIN_FIRST_NAME"] ?? "System";
 const lastName = process.env["ADMIN_LAST_NAME"] ?? "Admin";

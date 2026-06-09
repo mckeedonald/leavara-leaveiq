@@ -221,7 +221,7 @@ async function fetchText(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Leavara-LeaveIQ-LegalRAG/1.0 (automated compliance research)" },
+      headers: { "User-Agent": "Guildlight-Guildlight Leave-LegalRAG/1.0 (automated compliance research)" },
     });
     if (!res.ok) return null;
     const html = await res.text();

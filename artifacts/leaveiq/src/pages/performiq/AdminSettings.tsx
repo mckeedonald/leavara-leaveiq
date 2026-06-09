@@ -283,7 +283,7 @@ export default function PiqAdminSettings() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold" style={{ color: C.textDark }}>Admin Settings</h1>
-          <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>Configure PerformIQ for your organization</p>
+          <p className="text-sm mt-0.5" style={{ color: C.textMuted }}>Configure Guildlight Grow for your organization</p>
         </div>
 
         {/* Tab bar */}

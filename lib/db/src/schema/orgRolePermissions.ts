@@ -3,10 +3,10 @@ import { orgRolesTable } from "./orgRoles";
 
 /**
  * Permission key format: "{product}.{resource}.{action}"
- * LeaveIQ: leaveiq.cases.view | leaveiq.cases.manage | leaveiq.calendar.view
+ * Guildlight Leave: leaveiq.cases.view | leaveiq.cases.manage | leaveiq.calendar.view
  *          leaveiq.employees.view | leaveiq.employees.manage
  *          leaveiq.settings.manage | leaveiq.users.manage
- * PerformIQ: performiq.cases.view | performiq.cases.create | performiq.cases.manage
+ * Guildlight Grow: performiq.cases.view | performiq.cases.create | performiq.cases.manage
  *            performiq.employees.view | performiq.employees.manage
  *            performiq.settings.manage | performiq.users.manage
  */

@@ -4,7 +4,7 @@ import { usersTable } from "./users";
 
 /**
  * ADA Accommodation Cases
- * Lives in LeaveIQ as a first-class case type.
+ * Lives in Guildlight Leave as a first-class case type.
  * Tracks the full ADA interactive process from initial request → decision.
  */
 export const adaCasesTable = pgTable("ada_case", {
