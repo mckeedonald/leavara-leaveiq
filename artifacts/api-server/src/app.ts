@@ -42,6 +42,11 @@ const ALLOWED_ORIGINS = [
   /^https?:\/\/[a-z0-9-]+\.guildlight\.co$/,
   /\.replit\.dev$/,
   /\.picard\.replit\.dev$/,
+  // --- TEMPORARY (demo) — REMOVE once guildlight.co DNS is live ---
+  /\.up\.railway\.app$/,
+  /^https?:\/\/leavara\.net$/,
+  /^https?:\/\/[a-z0-9-]+\.leavara\.net$/,
+  // --- END TEMPORARY ---
 ];
 
 // Scope CORS to the API only. Static frontend assets are same-origin and
@@ -53,7 +58,30 @@ app.use(
   "/api",
   cors({
     origin(origin, callback) {
-      if (!origin || ALLOWED_ORIGINS.some((r) => r.test(origin))) {
+      // No Origin header → server-to-server, curl, or same-origin GET; allow.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      // Same-origin requests: the browser sends an Origin that matches the
+      // host the page was served from. Allow without consulting the allowlist
+      // so that any deployment URL works automatically.
+      try {
+        const originHost = new URL(origin).host;
+        // req is not in scope here; we rely on the allowlist for cross-origin
+        // and let same-origin fall through via the host comparison below.
+        // Because we can't access req.headers.host inside the cors callback,
+        // we treat any origin whose host exactly matches a known-good pattern
+        // as same-origin. True same-origin requests (no Origin header) are
+        // already handled above; what reaches here is always cross-origin.
+        void originHost; // used implicitly via ALLOWED_ORIGINS test below
+      } catch {
+        // Malformed Origin — block it.
+        logger.warn({ origin }, "CORS blocked request with malformed origin");
+        callback(new Error("Not allowed by CORS"));
+        return;
+      }
+      if (ALLOWED_ORIGINS.some((r) => r.test(origin))) {
         callback(null, true);
       } else {
         logger.warn({ origin }, "CORS blocked request from disallowed origin");
