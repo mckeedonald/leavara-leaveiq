@@ -676,7 +676,7 @@ export default function Landing() {
             Why HR Teams Choose Guildlight
           </h2>
           <p className="mb-12 text-sm max-w-lg mx-auto" style={{ color: C.khaki }}>
-            We built Guildlight because HR teams deserve tools as smart as the people they support.
+            The beacon that guides the guild. We built Guildlight because HR teams deserve tools as smart as the people they support.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
