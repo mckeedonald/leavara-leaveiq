@@ -1,5 +1,5 @@
 # Guildlight Platform — Product Requirements Document
-**Version 1.0 | Last Updated: 2026-05-21**
+**Version 1.2 | Last Updated: 2026-06-09**
 
 > **Living Document Notice:** This PRD is the authoritative product definition for the Guildlight platform and its products — Guildlight Leave and Guildlight Grow. It is updated as features are designed, built, or changed. Sections marked `[Planned]` describe intended future functionality. Sections marked `[Built]` reflect what is implemented and deployed.
 
@@ -178,16 +178,16 @@ Guildlight is differentiated by its opinionated, compliance-first AI layer. Unli
 - [Built] State disability and paid leave program information embedded in notices (CA, NY, NJ, WA, MA, CO, OR, CT, RI, HI, DC)
 - [Built] Case status lifecycle (open → in review → designation pending → closed)
 - [Built] Calendar invite support for leave start/end
-- [Built] HR Admin audit log page at `/leaveiq/audit`
+- [Built] HR Admin audit log page at `/leave/audit`
 
-### 5.2 Guildlight Leave — Planned
+### 5.2 Guildlight Leave — Recently Delivered (v1.1–v1.2)
 
-- [Planned] Employee ID lookup auto-fill during portal intake (simplified: no public endpoint, employee enters their own data)
-- [Planned] Unified employee page (Guildlight Leave color palette, shared across products)
-- [Planned] HRIS integration configuration moved to super admin only
-- [Planned] Import log and CSV error reporting for employee uploads
-- [Planned] Mobile-responsive navigation (hamburger menu on small screens)
-- [Planned] Run Analysis modal auto-pull employee data from case record
+- [Built] Simplified portal intake — no public lookup endpoint; employee enters their own data directly
+- [Built] Unified employee page (Guildlight Leave color palette, shared across products) at `/leave/employees`
+- [Built] HRIS integration configuration moved to super admin only
+- [Built] Import log and CSV error reporting for employee uploads (`employee_import_log`)
+- [Built] Mobile-responsive navigation (hamburger menu on small screens)
+- [Built] Run Analysis modal auto-pull employee data from case record
 
 ### 5.3 Guildlight Grow — Built (v1)
 
@@ -200,12 +200,12 @@ Guildlight is differentiated by its opinionated, compliance-first AI layer. Unli
 - [Built] Admin settings — document types, workflow templates, policy management
 - [Built] Audit log per org via `piq_audit_log`
 
-### 5.4 Guildlight Grow — Planned
+### 5.4 Guildlight Grow — Recently Delivered (v1.1–v1.2)
 
-- [Planned] E-signature workflow (employee signs via secure token link, manager signs in-platform, final signed PDF generated)
-- [Planned] Employee signing page at `/performiq/sign`
-- [Planned] Manager e-sign panel in case detail
-- [Planned] Signature status lifecycle (sent → signed / declined → completed)
+- [Built] E-signature workflow (employee signs via secure token link, manager signs in-platform, final signed PDF generated)
+- [Built] Employee signing page at `/grow/sign`
+- [Built] Manager e-sign panel in case detail
+- [Built] Signature status lifecycle (sent → employee_signed → manager_signed → completed; or declined)
 
 ### 5.5 Out of Scope (All Versions)
 
@@ -223,46 +223,46 @@ Guildlight is differentiated by its opinionated, compliance-first AI layer. Unli
 ### 6.1 Guildlight Leave Navigation (Authenticated HR Users)
 
 ```
-Dashboard          /leaveiq/dashboard
-  Leave Cases      /leaveiq/cases
-  Case Detail      /leaveiq/cases/:caseId
-  ADA Cases        /leaveiq/ada-cases
-  ADA Case Detail  /leaveiq/ada-cases/:caseId
-  Employees        /leaveiq/employees   ← unified, shared with Guildlight Grow
-  Audit Log        /leaveiq/audit       (HR Admin only)
-  Org Settings     /leaveiq/settings    (HR Admin only)
-  Knowledge Base   /leaveiq/knowledge   (HR Admin only)
+Dashboard          /leave/dashboard
+  Leave Cases      /leave/cases
+  Case Detail      /leave/cases/:caseId
+  ADA Cases        /leave/ada-cases
+  ADA Case Detail  /leave/ada-cases/:caseId
+  Employees        /leave/employees   ← unified, shared with Guildlight Grow
+  Audit Log        /leave/audit       (HR Admin only)
+  Org Settings     /leave/settings    (HR Admin only)
+  Knowledge Base   /leave/knowledge   (HR Admin only)
 ```
 
 ### 6.2 Employee Portal (No Login)
 
 ```
-Portal Entry     /leaveiq/request?org={slug}
-Portal Return    /leaveiq/portal?token={accessToken}
+Portal Entry     /leave/request?org={slug}
+Portal Return    /leave/portal?token={accessToken}
 Document Sign    (token-based, via email link)
 ```
 
-### 6.3 Guildlight Grow Navigation (Authenticated PIQ Users)
+### 6.3 Guildlight Grow Navigation (Authenticated Grow Users)
 
 ```
-Dashboard          /performiq/dashboard
-  Cases            /performiq/cases
-  Case Detail      /performiq/cases/:caseId
-  Employees        /leaveiq/employees   ← same unified page
-  Admin Settings   /performiq/admin     (admin roles)
-  Sign Document    /performiq/sign      (public, token-based)
+Dashboard          /grow/dashboard
+  Cases            /grow/cases
+  Case Detail      /grow/cases/:caseId
+  Employees        /leave/employees   ← same unified page
+  Admin Settings   /grow/admin     (admin roles)
+  Sign Document    /grow/sign      (public, token-based)
 ```
 
 ### 6.4 Super Admin Panel
 
 ```
-Super Admin      /leaveiq/superadmin
+Super Admin      /leave/superadmin
   Organizations  → per-org: users, products, knowledge base
   Cases          → view/restore deleted cases across all orgs
   Users          → view/manage users across all orgs
   Audit          → per-org filterable audit log + CSV export
-  HRIS Setup     → [Planned] HRIS connection configuration per org
-  Employees      → [Planned] Manual employee CSV upload per org
+  HRIS Setup     → [Built] HRIS connection configuration per org
+  Employees      → [Built] Manual employee CSV upload per org
   Docs/PRD       → This document (rendered inline)
 ```
 
@@ -291,8 +291,8 @@ Super Admin      /leaveiq/superadmin
 
 - Conversational chatbot intake (no account required)
 - Flow: welcome → branch selection (leave vs accommodation) → employee ID → employee name → email → leave/ADA-specific questions → summary confirmation
-- Accessible at `/leaveiq/request?org={slug}`
-- Token-based return URL for document uploads at `/leaveiq/portal?token={accessToken}`
+- Accessible at `/leave/request?org={slug}`
+- Token-based return URL for document uploads at `/leave/portal?token={accessToken}`
 - Portal can accept: completed medical certifications, supporting documents
 - Access token scoped to a single case; expires on use or after 90 days
 
@@ -327,7 +327,7 @@ Super Admin      /leaveiq/superadmin
 
 - Every significant case action logged to `audit_log` table
 - Logged events: case created, case updated, AI recommendation generated (with metadata: action, confidence score, reasoning, notice types, feedback), notice sent (with recipient email and notice type), document uploaded, case closed, case deleted, case restored
-- Per-org audit log viewable by HR Admin at `/leaveiq/audit` (filterable by action, actor, date range)
+- Per-org audit log viewable by HR Admin at `/leave/audit` (filterable by action, actor, date range)
 - Per-org audit exportable as CSV by super admin
 
 ### 7.7 Calendar Integration
@@ -371,23 +371,24 @@ Super Admin      /leaveiq/superadmin
 - Documents generated by PIQ agent or uploaded manually
 - Each document has: title, type, content, version, status
 - Workflow: draft → manager review → HR approval → sent to employee → signed → archived
-- E-signature workflow [Planned]: employee receives secure link, signs or declines, manager counter-signs, final PDF generated
+- E-signature workflow [Built]: employee receives secure link, signs or declines, manager counter-signs, final PDF generated
 
-### 8.5 E-Signature [Planned]
+### 8.5 E-Signature [Built]
 
-- `POST /api/piq/cases/:caseId/signatures/request` — creates signature record, emails employee
-- Employee signs at `/performiq/sign?token={employeeAccessToken}`
+- `POST /api/performiq/cases/:caseId/signatures/request` — creates signature record, emails employee
+- `GET /api/performiq/cases/:caseId/signatures` — lists signature records for a case
+- Public signing page at `/grow/sign?token={employeeAccessToken}`, backed by public token endpoints `GET /api/piq/sign?token=` and `POST /api/piq/sign`
 - On sign: signature stored, status → "employee_signed", manager notified
 - On decline: comment stored, status → "declined", HR/manager notified
-- Manager signs in-platform → final signed PDF generated, case → "completed"
-- `GET /api/piq/cases/:caseId/signatures/download-pdf` — downloads signed PDF
+- Manager signs in-platform via `POST /api/performiq/cases/:caseId/signatures/manager-sign` → final signed PDF generated, status → "manager_signed"/"completed"
+- `GET /api/performiq/cases/:caseId/signatures/download-pdf` — downloads signed PDF (stored in `signed_pdf_content`)
 
 ### 8.6 Admin Settings
 
 - Document type configuration (name, description, workflow template)
 - Workflow step templates (step name, order, required signers)
 - Policy management (add/edit/delete text and PDF policies)
-- Guildlight Grow user management (separate user table: `piq_users`)
+- Guildlight Grow user management — now part of the unified user model (see §9.3); `piq_users` retained for reference only, with active user data consolidated into the shared `users`/`hr_user` table
 
 ---
 
@@ -400,9 +401,9 @@ Super Admin      /leaveiq/superadmin
 - Employees uploaded via CSV; upsert by employee_id (or full_name if no ID)
 - Manager relationships resolved in second pass after all employees inserted
 - Required CSV columns: `employee_name`; recommended: `employee_id`, `position`, `location`, `department`, `manager_name`, `start_date`, `avg_hours_worked`, `work_email`, `personal_email`
-- [Planned] Batch inserts (replace sequential per-row upserts to fix timeout on large files)
-- [Planned] Import log table: records each import attempt with timestamp, row count, error count, status (success/partial/failed)
-- [Planned] CSV error report: generated only when errors occur; lists row number, field, error, and correction guidance; downloadable by HR Admin
+- [Built] Batch inserts (replaced sequential per-row upserts to fix timeout on large files)
+- [Built] Import log table (`employee_import_log`): records each import attempt with timestamp, row count, error count, status (success/partial/failed)
+- [Built] CSV error report: generated only when errors occur; lists row number, field, error, and correction guidance; downloadable by HR Admin
 
 ### 9.2 Organization Management
 
@@ -413,15 +414,12 @@ Super Admin      /leaveiq/superadmin
 
 ### 9.3 User Management
 
-**Guildlight Leave Users** (`users` table):
-- Roles: `admin` (HR Admin), `user` (HR User)
-- Authentication: email + password (bcrypt), JWT with 7-day expiry
+**Unified User Model** (`users`/`hr_user` table):
+- [Built] Single login serves both Guildlight Leave and Guildlight Grow. Users authenticate once at `/api/auth/login`; a single JWT (stored client-side as `leavara_token`) carries access to both products based on org product flags and role.
+- Roles (`UnifiedRole`): `hr_admin` (HR Admin), `hr_user` (HR User), `manager`. Legacy `admin` role values are normalized to `hr_admin` at read time via `normalizeRole()`.
+- Authentication: email + password (bcrypt), JWT with 7-day expiry, signed with `JWT_SECRET`
 - Invite flow: super admin or HR Admin creates user → welcome email with temporary password sent via Resend
-
-**Guildlight Grow Users** (`piq_users` table — separate):
-- Roles: `hr_admin`, `hr_user`, `manager`, `supervisor`, `system_admin`
-- Authentication: separate JWT, same bcrypt approach
-- Created by super admin in organization panel
+- The legacy `piq_users` table is retained for reference only; active Guildlight Grow user data is consolidated into the shared table. The legacy `/api/performiq/auth/login` endpoint redirects to the unified `/api/auth/login`.
 
 ### 9.4 Notifications and Email
 
@@ -429,12 +427,12 @@ Super Admin      /leaveiq/superadmin
 - Email types:
   - Welcome email (new user created)
   - Leave case intake confirmation (employee)
-  - ADA case acknowledgment (employee) [Planned: send on creation]
+  - ADA case acknowledgment (employee) [Built: sent on case creation]
   - Notice delivery (employee) — with case documents attached
   - Medical certification request (employee) — with PDF cert attached
   - Calendar invite (leave start/end)
-  - E-signature request (employee, Guildlight Grow) [Planned]
-  - E-signature completion (HR, Guildlight Grow) [Planned]
+  - E-signature request (employee, Guildlight Grow) [Built]
+  - E-signature completion (HR, Guildlight Grow) [Built]
 
 ### 9.5 File Storage
 
@@ -479,7 +477,7 @@ Super Admin      /leaveiq/superadmin
 ### 10.5 Browser Support
 
 - Modern evergreen browsers (Chrome, Firefox, Safari, Edge latest 2 versions)
-- Mobile responsive: core HR workflows accessible on mobile (hamburger nav [Planned])
+- Mobile responsive: core HR workflows accessible on mobile (hamburger nav [Built])
 - Employee portal: fully mobile-friendly (primary device for employees)
 
 ---
@@ -515,7 +513,7 @@ Super Admin      /leaveiq/superadmin
 | `piq_policies` | Policy documents (text or PDF-backed) |
 | `piq_agent_sessions` | PIQ agent conversation sessions |
 | `piq_audit_log` | PIQ-specific audit events |
-| `piq_signatures` | E-signature records [Planned: additional fields] |
+| `piq_signatures` | E-signature records — statuses (`sent`, `signed`, `employee_signed`, `manager_signed`, `completed`, `declined`); fields include `signed_at`, `employee_signed_at`, `manager_signed_at`, `signed_pdf_content` |
 | `piq_integration_logs` | HRIS/integration sync logs |
 
 ### 11.3 Supporting Tables
@@ -531,12 +529,11 @@ Super Admin      /leaveiq/superadmin
 | `calendar_invites` | Leave start/end calendar events |
 | `password_resets` | Password reset tokens |
 | `invites` | HR user invite tokens |
+| `employee_import_log` | [Built] Record of each CSV import: timestamp, filename, row count, inserted, updated, errors, status |
 
 ### 11.4 Planned Tables
 
-| Table | Description |
-|-------|-------------|
-| `employee_import_log` | Record of each CSV import: timestamp, filename, row count, inserted, updated, errors, status |
+_None currently outstanding. (The `employee_import_log` table, previously planned, is now built — see §11.3.)_
 
 ### 11.5 Key Relationships
 
@@ -599,14 +596,14 @@ employee (many) → (1) employee [manager_id self-referential]
 - **Supported systems:** BambooHR (fully implemented), Workday (stub), ADP (stub), Rippling (stub)
 - **Sync mechanism:** Pull-based; HR Admin triggers sync; data written to `hris_employee_cache` then promoted to `employee`
 - **Credential storage:** AES-256 encrypted in `hris_connections`; encryption key from `HRIS_ENCRYPTION_KEY` env var
-- **Configuration:** [Planned] Moved from HR Admin interface to Super Admin panel
+- **Configuration:** [Built] Moved from HR Admin interface to Super Admin panel
 - **Routes:** `artifacts/api-server/src/routes/hris.ts` (requireAdmin gated)
 
 ### 13.2 Email — Resend
 
 - **Service:** Resend (`resend` npm package)
 - **From address:** Configured via `RESEND_FROM_EMAIL` env var
-- **Functions:** `sendWelcomeEmail`, `sendNoticeEmail`, `sendAdaAcknowledgmentEmail` [Planned], `sendCalendarInvite` in `artifacts/api-server/src/lib/email.ts`
+- **Functions:** `sendWelcomeEmail`, `sendNoticeEmail`, `sendAdaAcknowledgmentEmail`, `sendCalendarInvite`, and Guildlight Grow e-signature request/completion emails in `artifacts/api-server/src/lib/email.ts`
 - **Attachments:** PDF base64 encoded in Resend `attachments` array
 
 ### 13.3 File Storage — Cloudflare R2
@@ -648,7 +645,7 @@ leavara-leaveiq/
 
 ### 14.2 Frontend Stack
 
-- **Framework:** React 18 with Vite
+- **Framework:** React 19 with Vite
 - **Routing:** Wouter (lightweight, SPA-friendly)
 - **State/Data:** TanStack Query (useQuery, useMutation)
 - **UI Components:** shadcn/ui (Radix UI primitives + Tailwind CSS)
@@ -681,7 +678,7 @@ leavara-leaveiq/
 
 ### 15.1 Authentication and Authorization
 
-- JWT-based; separate tokens for Guildlight Leave users and Guildlight Grow users
+- JWT-based; a single unified token (`leavara_token`) serves both Guildlight Leave and Guildlight Grow
 - `isSuperAdmin` claim on JWT gates `/api/superadmin/*` endpoints
 - `organizationId` claim on JWT; all queries filtered by it server-side
 - Employee portal uses case-scoped access tokens (UUID); not JWT
@@ -727,7 +724,7 @@ leavara-leaveiq/
 
 All "Built" items from Section 5. Core Guildlight Leave and Guildlight Grow workflows functional end-to-end. AI assistants (Ave, Ada, PIQ Agent) operational. Employee portal live. Super admin panel operational.
 
-### v1.1 — In Progress
+### v1.1 — Delivered
 
 - Employee data management overhaul: unified employee page, super admin upload, import log, CSV error report
 - HRIS configuration moved to super admin
@@ -737,13 +734,15 @@ All "Built" items from Section 5. Core Guildlight Leave and Guildlight Grow work
 - Employee portal simplified (no public lookup endpoint)
 - Guildlight Grow e-signature workflow
 
-### v1.2 — Planned
+### v1.2 — Delivered
 
 - Run analysis auto-pull employee data in AnalyzeCaseModal
-- Disability pay replacement info in Ave notices (already built — state programs section)
+- Disability pay replacement info in Ave notices (state programs section)
 - ADA physician cert as PDF with autofill + portal return instructions
 - Med cert timing fix (not in case docs until sent to employee)
 - Claim case for ADA accommodation cases
+- Unified login across Guildlight Leave and Guildlight Grow (single `leavara_token`)
+- Rebrand to Guildlight Leave / Guildlight Grow; browser routes moved to `/leave/*` and `/grow/*`
 
 ### v2.0 — Future
 
@@ -764,7 +763,7 @@ All "Built" items from Section 5. Core Guildlight Leave and Guildlight Grow work
 
 1. **HIPAA compliance path:** At what employee count / ACV threshold does a BAA become necessary? Should medical certification content be encrypted at the application layer before DB write?
 
-2. **Multi-product auth:** Guildlight Leave and Guildlight Grow currently have separate user tables and JWT flows. Should v1.2 unify them into a single login with product-level permission flags?
+2. **Multi-product auth:** ~~Guildlight Leave and Guildlight Grow currently have separate user tables and JWT flows. Should v1.2 unify them into a single login with product-level permission flags?~~ **Resolved (v1.2):** Unified into a single login with a single `leavara_token`; access governed by org product flags and `UnifiedRole`. `piq_users` retained for reference only.
 
 3. **HRIS sync schedule:** Once HRIS config moves to super admin, should HR admins be able to trigger manual syncs from the employee page, or super admin only?
 
@@ -841,8 +840,8 @@ perfBg:       #ECF0E9   (sage light background)
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret for signing Guildlight Leave JWTs |
-| `PIQ_JWT_SECRET` | Secret for signing Guildlight Grow JWTs |
+| `JWT_SECRET` | Secret for signing unified platform JWTs (Guildlight Leave + Guildlight Grow) |
+| `PIQ_JWT_SECRET` | Deprecated — no longer used after the unified-auth migration; safe to remove |
 | `RESEND_API_KEY` | Resend email service API key |
 | `RESEND_FROM_EMAIL` | Sender address for all transactional emails |
 | `ANTHROPIC_API_KEY` | Anthropic API key for Claude (Ave, Ada, PIQ agent) |
@@ -903,3 +902,4 @@ Recommended columns:
 |------|---------|--------|
 | 2026-05-21 | 1.0 | Initial PRD created; covers Guildlight Leave v1, Guildlight Grow v1, planned v1.1–v2.0 features, data model, AI architecture, deployment, security |
 | 2026-05-21 | 1.1 | Employee management overhaul: unified `/leaveiq/employees` page (Guildlight Leave palette, shared by both products); batch CSV upload (fixes 1789-row timeout); `employee_import_log` table; CSV error report; HRIS configuration moved to Super Admin panel; HRIS removed from HR Admin nav |
+| 2026-06-09 | 1.2 | **Feature-status correction:** Guildlight Grow e-signature workflow marked [Built] (was incorrectly [Planned]) — covers signature request, public signing page, employee sign/decline, manager counter-sign, and signed-PDF download; corrected e-signature API paths to `/api/performiq/cases/:caseId/signatures/*` plus public `/api/piq/sign`. Marked [Built]: ADA acknowledgment email on creation, batch CSV insert, import log + error report, HRIS config under Super Admin, mobile hamburger nav, AnalyzeCaseModal auto-pull. **Unified auth:** documented single login / single `leavara_token` across both products; `piq_users` retained for reference; `PIQ_JWT_SECRET` deprecated. **Rebrand:** Leavara/LeaveIQ → Guildlight Leave, PerformIQ → Guildlight Grow; browser routes moved to `/leave/*` and `/grow/*` (API paths `/api/piq/*` and `/api/performiq/*` unchanged). Updated `piq_signatures` and `employee_import_log` data-model entries; roadmap v1.1/v1.2 marked Delivered. |
