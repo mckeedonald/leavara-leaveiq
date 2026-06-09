@@ -26,6 +26,7 @@ app.use(
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'", "*.guildlight.co"],
             frameAncestors: ["'none'"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
           },
         },
     crossOriginEmbedderPolicy: false,
