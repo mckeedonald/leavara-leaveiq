@@ -93,7 +93,7 @@ export default function OrgLanding() {
 
       {/* Footer */}
       <div className="mt-10 flex items-center gap-2.5 opacity-60">
-        <img src="/guildlight-logo.png" alt="Guildlight" className="h-5 w-5 object-contain" />
+        <img src="/guildlight-mark-flat.svg" alt="Guildlight" className="h-5 w-5 object-contain" />
         <span className="text-sm font-medium" style={{ color: "#5E4A2E" }}>
           Powered by Guildlight
         </span>

@@ -217,7 +217,7 @@ export default function HubDashboard() {
         style={{ borderBottom: "1px solid #2A3A4C" }}
       >
         <div className="flex items-center gap-2.5">
-          <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+          <img src="/guildlight-mark-gold.svg" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-bold text-lg tracking-tight" style={{ color: "#F7F4EE" }}>Guildlight</span>
         </div>
         <button

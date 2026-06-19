@@ -74,7 +74,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
         style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}
       >
         <div className="flex items-center gap-2">
-          <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+          <img src="/guildlight-mark-gold.svg" alt="Guildlight" className="h-8 w-8 object-contain" />
           <span className="font-display font-bold text-lg tracking-tight" style={{ color: S.textOnDark }}>
             Guildlight <span style={{ color: "#E4CBA0" }}>Grow</span>
           </span>
@@ -146,7 +146,7 @@ export function PiqLayout({ children }: PiqLayoutProps) {
       >
         {/* Brand */}
         <div className="p-5 flex items-center gap-3" style={{ borderBottom: `1px solid ${S.sidebarBorder}` }}>
-          <img src="/guildlight-logo.png" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
+          <img src="/guildlight-mark-gold.svg" alt="Guildlight" className="h-9 w-9 object-contain shrink-0" />
           <div>
             <h1 className="font-display font-bold text-xl tracking-tight" style={{ color: S.textOnDark }}>
               Guildlight <span style={{ color: "#E4CBA0" }}>Grow</span>

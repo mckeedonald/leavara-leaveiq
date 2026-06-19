@@ -27,7 +27,7 @@ export function EmployeeLayout({ children, showBack = false, orgLogoUrl, orgName
           </Link>
         )}
         <div className="flex items-center gap-3">
-          <img src="/guildlight-logo.png" alt="Guildlight" className="h-8 w-8 object-contain" />
+          <img src="/guildlight-mark-flat.svg" alt="Guildlight" className="h-8 w-8 object-contain" />
           <div>
             <h1 className="font-bold text-lg leading-none" style={{ color: "#18263A" }}>Guildlight Leave</h1>
             <p className="text-[10px] uppercase tracking-wider font-semibold leading-none mt-0.5" style={{ color: "#D9B381" }}>Employee Portal</p>

@@ -28,7 +28,7 @@ export default function ProductSelector() {
       style={{ background: `linear-gradient(135deg, ${C.bg} 0%, #EBE3D4 100%)` }}
     >
       <div className="navy-hero rounded-2xl shadow-premium px-10 py-8 mb-8 text-center w-full max-w-xl">
-        <img src="/guildlight-logo.png" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
+        <img src="/guildlight-mark-gold.svg" alt="Guildlight" className="h-14 w-14 object-contain mx-auto mb-4" />
         <h1 className="text-2xl font-bold" style={{ color: "#F7F4EE" }}>
           Welcome, {user.firstName}
         </h1>
